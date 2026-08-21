@@ -1,0 +1,496 @@
+{
+  "version": 1,
+  "layout": "rows-are-directions-columns-are-frames",
+  "rowOrder": [
+    "N",
+    "NE",
+    "E",
+    "SE",
+    "S",
+    "SW",
+    "W",
+    "NW"
+  ],
+  "frameOrder": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "fourDirectionRows": {
+    "north": 0,
+    "east": 2,
+    "south": 4,
+    "west": 6
+  },
+  "indexFormula": "frameIndex = directionRow * 6 + animationFrame",
+  "atlases": [
+    {
+      "category": "boss",
+      "id": "bell-warden",
+      "action": "move",
+      "file": "boss-bell-warden-move-8dir-6f-atlas.png",
+      "columns": 6,
+      "rows": 8,
+      "framesPerDirection": 6,
+      "directions": [
+        "N",
+        "NE",
+        "E",
+        "SE",
+        "S",
+        "SW",
+        "W",
+        "NW"
+      ],
+      "cellWidth": 234,
+      "cellHeight": 140,
+      "width": 1404,
+      "height": 1120,
+      "sourceWidth": 1402,
+      "sourceHeight": 1122,
+      "alpha": true,
+      "removedBackgroundPixels": 1095748,
+      "repairedGridLines": {
+        "vertical": [],
+        "horizontal": []
+      }
+    },
+    {
+      "category": "boss",
+      "id": "eclipse-mother",
+      "action": "move",
+      "file": "boss-eclipse-mother-move-8dir-6f-atlas.png",
+      "columns": 6,
+      "rows": 8,
+      "framesPerDirection": 6,
+      "directions": [
+        "N",
+        "NE",
+        "E",
+        "SE",
+        "S",
+        "SW",
+        "W",
+        "NW"
+      ],
+      "cellWidth": 181,
+      "cellHeight": 181,
+      "width": 1086,
+      "height": 1448,
+      "sourceWidth": 1086,
+      "sourceHeight": 1448,
+      "alpha": true,
+      "removedBackgroundPixels": 1050068,
+      "repairedGridLines": {
+        "vertical": [],
+        "horizontal": []
+      }
+    },
+    {
+      "category": "boss",
+      "id": "hollow-stag",
+      "action": "move",
+      "file": "boss-hollow-stag-move-8dir-6f-atlas.png",
+      "columns": 6,
+      "rows": 8,
+      "framesPerDirection": 6,
+      "directions": [
+        "N",
+        "NE",
+        "E",
+        "SE",
+        "S",
+        "SW",
+        "W",
+        "NW"
+      ],
+      "cellWidth": 181,
+      "cellHeight": 181,
+      "width": 1086,
+      "height": 1448,
+      "sourceWidth": 1086,
+      "sourceHeight": 1448,
+      "alpha": true,
+      "removedBackgroundPixels": 1155447,
+      "repairedGridLines": {
+        "vertical": [],
+        "horizontal": []
+      }
+    },
+    {
+      "category": "enemy",
+      "id": "bomber",
+      "action": "move",
+      "file": "enemy-bomber-move-8dir-6f-atlas.png",
+      "columns": 6,
+      "rows": 8,
+      "framesPerDirection": 6,
+      "directions": [
+        "N",
+        "NE",
+        "E",
+        "SE",
+        "S",
+        "SW",
+        "W",
+        "NW"
+      ],
+      "cellWidth": 181,
+      "cellHeight": 181,
+      "width": 1086,
+      "height": 1448,
+      "sourceWidth": 1086,
+      "sourceHeight": 1448,
+      "alpha": true,
+      "removedBackgroundPixels": 936385,
+      "repairedGridLines": {
+        "vertical": [],
+        "horizontal": []
+      }
+    },
+    {
+      "category": "enemy",
+      "id": "brute",
+      "action": "move",
+      "file": "enemy-brute-move-8dir-6f-atlas.png",
+      "columns": 6,
+      "rows": 8,
+      "framesPerDirection": 6,
+      "directions": [
+        "N",
+        "NE",
+        "E",
+        "SE",
+        "S",
+        "SW",
+        "W",
+        "NW"
+      ],
+      "cellWidth": 181,
+      "cellHeight": 181,
+      "width": 1086,
+      "height": 1448,
+      "sourceWidth": 1086,
+      "sourceHeight": 1448,
+      "alpha": true,
+      "removedBackgroundPixels": 1021901,
+      "repairedGridLines": {
+        "vertical": [],
+        "horizontal": []
+      }
+    },
+    {
+      "category": "enemy",
+      "id": "charger",
+      "action": "move",
+      "file": "enemy-charger-move-8dir-6f-atlas.png",
+      "columns": 6,
+      "rows": 8,
+      "framesPerDirection": 6,
+      "directions": [
+        "N",
+        "NE",
+        "E",
+        "SE",
+        "S",
+        "SW",
+        "W",
+        "NW"
+      ],
+      "cellWidth": 181,
+      "cellHeight": 181,
+      "width": 1086,
+      "height": 1448,
+      "sourceWidth": 1086,
+      "sourceHeight": 1448,
+      "alpha": true,
+      "removedBackgroundPixels": 0,
+      "repairedGridLines": {
+        "vertical": [],
+        "horizontal": []
+      }
+    },
+    {
+      "category": "enemy",
+      "id": "crawler",
+      "action": "move",
+      "file": "enemy-crawler-move-8dir-6f-atlas.png",
+      "columns": 6,
+      "rows": 8,
+      "framesPerDirection": 6,
+      "directions": [
+        "N",
+        "NE",
+        "E",
+        "SE",
+        "S",
+        "SW",
+        "W",
+        "NW"
+      ],
+      "cellWidth": 181,
+      "cellHeight": 181,
+      "width": 1086,
+      "height": 1448,
+      "sourceWidth": 1086,
+      "sourceHeight": 1448,
+      "alpha": true,
+      "removedBackgroundPixels": 0,
+      "repairedGridLines": {
+        "vertical": [],
+        "horizontal": []
+      }
+    },
+    {
+      "category": "enemy",
+      "id": "creeper",
+      "action": "move",
+      "file": "enemy-creeper-move-8dir-6f-atlas.png",
+      "columns": 6,
+      "rows": 8,
+      "framesPerDirection": 6,
+      "directions": [
+        "N",
+        "NE",
+        "E",
+        "SE",
+        "S",
+        "SW",
+        "W",
+        "NW"
+      ],
+      "cellWidth": 181,
+      "cellHeight": 181,
+      "width": 1086,
+      "height": 1448,
+      "sourceWidth": 1086,
+      "sourceHeight": 1448,
+      "alpha": true,
+      "removedBackgroundPixels": 0,
+      "repairedGridLines": {
+        "vertical": [],
+        "horizontal": []
+      }
+    },
+    {
+      "category": "enemy",
+      "id": "spitter",
+      "action": "move",
+      "file": "enemy-spitter-move-8dir-6f-atlas.png",
+      "columns": 6,
+      "rows": 8,
+      "framesPerDirection": 6,
+      "directions": [
+        "N",
+        "NE",
+        "E",
+        "SE",
+        "S",
+        "SW",
+        "W",
+        "NW"
+      ],
+      "cellWidth": 181,
+      "cellHeight": 182,
+      "width": 1086,
+      "height": 1456,
+      "sourceWidth": 1083,
+      "sourceHeight": 1452,
+      "alpha": true,
+      "removedBackgroundPixels": 0,
+      "repairedGridLines": {
+        "vertical": [],
+        "horizontal": []
+      }
+    },
+    {
+      "category": "enemy",
+      "id": "splitter",
+      "action": "move",
+      "file": "enemy-splitter-move-8dir-6f-atlas.png",
+      "columns": 6,
+      "rows": 8,
+      "framesPerDirection": 6,
+      "directions": [
+        "N",
+        "NE",
+        "E",
+        "SE",
+        "S",
+        "SW",
+        "W",
+        "NW"
+      ],
+      "cellWidth": 181,
+      "cellHeight": 181,
+      "width": 1086,
+      "height": 1448,
+      "sourceWidth": 1086,
+      "sourceHeight": 1448,
+      "alpha": true,
+      "removedBackgroundPixels": 1131679,
+      "repairedGridLines": {
+        "vertical": [],
+        "horizontal": []
+      }
+    },
+    {
+      "category": "enemy",
+      "id": "wingling",
+      "action": "move",
+      "file": "enemy-wingling-move-8dir-6f-atlas.png",
+      "columns": 6,
+      "rows": 8,
+      "framesPerDirection": 6,
+      "directions": [
+        "N",
+        "NE",
+        "E",
+        "SE",
+        "S",
+        "SW",
+        "W",
+        "NW"
+      ],
+      "cellWidth": 181,
+      "cellHeight": 181,
+      "width": 1086,
+      "height": 1448,
+      "sourceWidth": 1086,
+      "sourceHeight": 1448,
+      "alpha": true,
+      "removedBackgroundPixels": 1273783,
+      "repairedGridLines": {
+        "vertical": [],
+        "horizontal": []
+      }
+    },
+    {
+      "category": "hero",
+      "id": "kage",
+      "action": "move",
+      "file": "hero-kage-move-8dir-6f-atlas.png",
+      "columns": 6,
+      "rows": 8,
+      "framesPerDirection": 6,
+      "directions": [
+        "N",
+        "NE",
+        "E",
+        "SE",
+        "S",
+        "SW",
+        "W",
+        "NW"
+      ],
+      "cellWidth": 181,
+      "cellHeight": 181,
+      "width": 1086,
+      "height": 1448,
+      "sourceWidth": 1086,
+      "sourceHeight": 1448,
+      "alpha": true,
+      "removedBackgroundPixels": 1184118,
+      "repairedGridLines": {
+        "vertical": [],
+        "horizontal": []
+      }
+    },
+    {
+      "category": "hero",
+      "id": "nyra",
+      "action": "move",
+      "file": "hero-nyra-move-8dir-6f-atlas.png",
+      "columns": 6,
+      "rows": 8,
+      "framesPerDirection": 6,
+      "directions": [
+        "N",
+        "NE",
+        "E",
+        "SE",
+        "S",
+        "SW",
+        "W",
+        "NW"
+      ],
+      "cellWidth": 181,
+      "cellHeight": 181,
+      "width": 1086,
+      "height": 1448,
+      "sourceWidth": 1086,
+      "sourceHeight": 1448,
+      "alpha": true,
+      "removedBackgroundPixels": 1182027,
+      "repairedGridLines": {
+        "vertical": [],
+        "horizontal": []
+      }
+    },
+    {
+      "category": "hero",
+      "id": "sola",
+      "action": "move",
+      "file": "hero-sola-move-8dir-6f-atlas.png",
+      "columns": 6,
+      "rows": 8,
+      "framesPerDirection": 6,
+      "directions": [
+        "N",
+        "NE",
+        "E",
+        "SE",
+        "S",
+        "SW",
+        "W",
+        "NW"
+      ],
+      "cellWidth": 181,
+      "cellHeight": 181,
+      "width": 1086,
+      "height": 1448,
+      "sourceWidth": 1086,
+      "sourceHeight": 1448,
+      "alpha": true,
+      "removedBackgroundPixels": 1015529,
+      "repairedGridLines": {
+        "vertical": [],
+        "horizontal": []
+      }
+    },
+    {
+      "category": "hero",
+      "id": "varka",
+      "action": "move",
+      "file": "hero-varka-move-8dir-6f-atlas.png",
+      "columns": 6,
+      "rows": 8,
+      "framesPerDirection": 6,
+      "directions": [
+        "N",
+        "NE",
+        "E",
+        "SE",
+        "S",
+        "SW",
+        "W",
+        "NW"
+      ],
+      "cellWidth": 222,
+      "cellHeight": 148,
+      "width": 1332,
+      "height": 1184,
+      "sourceWidth": 1330,
+      "sourceHeight": 1182,
+      "alpha": true,
+      "removedBackgroundPixels": 1206951,
+      "repairedGridLines": {
+        "vertical": [],
+        "horizontal": []
+      }
+    }
+  ]
+}

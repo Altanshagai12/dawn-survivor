@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+    <meta name="theme-color" content="#09080d" />
+    <title>Dawn Survivor</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="https://usions.com/usion-sdk.js"></script>
+    <script src="https://usions.com/vendor/phaser/4.2.1/phaser.min.js"></script>
+  </head>
+  <body>
+    <main id="app">
+      <div id="game" aria-label="Dawn Survivor game canvas"></div>
+      <div class="vignette" aria-hidden="true"></div>
+
+      <section id="boot" class="screen screen--center">
+        <div class="loader"></div>
+        <p data-i18n="loading">Preparing the night…</p>
+      </section>
+
+      <section id="menu" class="screen hidden" aria-labelledby="game-title">
+        <header class="menu__hero">
+          <p class="eyebrow">10:00 SURVIVAL</p>
+          <h1 id="game-title">DAWN<br />SURVIVOR</h1>
+          <p data-i18n="tagline">Aim. Build. Survive until dawn.</p>
+        </header>
+        <div class="selection">
+          <div class="selection__group">
+            <div class="section-title"><span data-i18n="hunter">Hunter</span><strong id="hero-stat"></strong></div>
+            <div id="hero-list" class="card-strip"></div>
+          </div>
+          <div class="selection__group">
+            <div class="section-title"><span data-i18n="weapon">Weapon</span><strong id="weapon-stat"></strong></div>
+            <div id="weapon-list" class="card-strip card-strip--weapons"></div>
+          </div>
+        </div>
+        <button id="start-button" class="primary" data-i18n="begin">ENTER THE NIGHT</button>
+        <p class="controls-copy" data-i18n="controls">WASD + mouse · dual touch sticks</p>
+      </section>
+
+      <section id="hud" class="hud hidden" aria-live="polite">
+        <div class="hud__top">
+          <div id="hearts" class="hearts"></div>
+          <div class="timer-wrap"><span id="timer">10:00</span><small data-i18n="untilDawn">UNTIL DAWN</small></div>
+          <button id="pause-button" class="icon-button" aria-label="Pause">Ⅱ</button>
+        </div>
+        <div class="boss-bar hidden" id="boss-bar"><span id="boss-name"></span><i><b id="boss-fill"></b></i></div>
+        <div class="hud__bottom">
+          <div class="xp"><i><b id="xp-fill"></b></i><span id="level">LV 1</span></div>
+          <div class="ammo"><span id="ammo">6 / 6</span><small id="reload-state"></small></div>
+        </div>
+      </section>
+
+      <section id="choice-modal" class="modal hidden" aria-labelledby="choice-title">
+        <div class="modal__panel">
+          <p class="eyebrow" id="choice-kicker">LEVEL UP</p>
+          <h2 id="choice-title" data-i18n="chooseUpgrade">Choose an upgrade</h2>
+          <div id="choice-list" class="choice-list"></div>
+          <button id="reroll-button" class="secondary hidden" data-i18n="reroll">REROLL</button>
+        </div>
+      </section>
+
+      <section id="pause-modal" class="modal hidden">
+        <div class="modal__panel modal__panel--small">
+          <p class="eyebrow">NIGHT PAUSED</p>
+          <h2 data-i18n="paused">Paused</h2>
+          <button id="resume-button" class="primary" data-i18n="resume">RESUME</button>
+          <button id="quit-button" class="secondary" data-i18n="endRun">END RUN</button>
+        </div>
+      </section>
+
+      <section id="result-modal" class="modal hidden" aria-labelledby="result-title">
+        <div class="modal__panel result-panel">
+          <p class="eyebrow" id="result-kicker"></p>
+          <h2 id="result-title"></h2>
+          <div class="result-stats">
+            <div><strong id="result-score">0</strong><span data-i18n="score">SCORE</span></div>
+            <div><strong id="result-kills">0</strong><span data-i18n="kills">KILLS</span></div>
+            <div><strong id="result-level">1</strong><span data-i18n="level">LEVEL</span></div>
+          </div>
+          <div id="friends-board" class="friends-board"></div>
+          <button id="again-button" class="primary" data-i18n="again">PLAY AGAIN</button>
+          <button id="menu-button" class="secondary" data-i18n="loadout">CHANGE LOADOUT</button>
+        </div>
+      </section>
+
+      <div id="touch-controls" class="touch-controls hidden" aria-hidden="true">
+        <div id="move-stick" class="stick"><i></i></div>
+        <div id="aim-stick" class="stick stick--aim"><i></i></div>
+      </div>
+      <div id="toast" class="toast hidden"></div>
+    </main>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
