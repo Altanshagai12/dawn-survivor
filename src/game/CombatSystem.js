@@ -1,7 +1,5 @@
 import { clamp } from './simulation.js';
-export function upgradedProjectileCount(base, added = 0, fusillade = false) {
-  return Math.min(18, Math.max(1, Math.round((base + added) * (fusillade ? 2 : 1))));
-}
+import { shouldConsumeAmmo, upgradedProjectileCount } from './WeaponMechanics.js';
 
 export class CombatSystem {
   constructor(scene) {
@@ -68,8 +66,10 @@ export class CombatSystem {
       });
     }
     state.shots += 1;
-    state.ammo -= options.free ? 0 : 1;
-    if (!options.free && state.ammo === 0 && state.flags.fanFire) this.fanFire(shotSpec);
+    const moving = Math.hypot(this.scene.lastInput?.moveX || 0, this.scene.lastInput?.moveY || 0) > .2;
+    const consumedAmmo = shouldConsumeAmmo({ free: options.free, siege: state.flags.siege, moving });
+    state.ammo -= consumedAmmo ? 1 : 0;
+    if (consumedAmmo && state.ammo === 0 && state.flags.fanFire) this.fanFire(shotSpec);
     if (state.freshShots > 0) state.freshShots -= 1;
     this.nextShotAt = this.scene.time.now + state.fireDelayMs;
     this.scene.onShot(baseAngle);
@@ -129,7 +129,7 @@ export class CombatSystem {
   fanFire(spec) {
     for (let index = 0; index < 10; index += 1) {
       this.spawnBullet(this.scene.player.x, this.scene.player.y, index / 10 * Math.PI * 2, {
-        ...spec, damage: spec.damage * .25, speed: spec.speed * .82,
+        ...spec, damage: spec.damage * .15, speed: spec.speed * .82,
         life: Math.min(.8, spec.life), pierce: 0, size: Math.max(5, spec.size * .72),
       });
     }

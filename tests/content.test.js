@@ -12,7 +12,7 @@ test('ships a full ten-minute content set', () => {
   assert.equal(Object.keys(WEAPONS).length, 4);
   assert.equal(Object.keys(ENEMIES).length, 8);
   assert.equal(Object.keys(BOSSES).length, 3);
-  assert.equal(UPGRADES.length, 52);
+  assert.equal(UPGRADES.length, 56);
 });
 
 test('boss encounters land at minutes two, five, and nine', () => {
@@ -21,13 +21,27 @@ test('boss encounters land at minutes two, five, and nine', () => {
 
 test('upgrade trees unlock one tier at a time', () => {
   const initial = eligibleUpgrades(new Set());
-  assert.equal(initial.length, 13);
+  assert.equal(initial.length, 14);
   assert.ok(initial.every(({ tier }) => tier === 1));
 
   const owned = new Set(['power-1']);
   const next = eligibleUpgrades(owned);
   assert.ok(next.some(({ id }) => id === 'power-2'));
   assert.ok(!next.some(({ id }) => id === 'power-3'));
+});
+
+test('multi-shot and ricochet trees follow the original branching order', () => {
+  const multiTier2 = eligibleUpgrades(new Set(['double-1']));
+  assert.ok(multiTier2.some(({ id }) => id === 'double-2'));
+  assert.ok(multiTier2.some(({ id }) => id === 'double-3'));
+  assert.ok(!multiTier2.some(({ id }) => id === 'double-4'));
+  assert.ok(eligibleUpgrades(new Set(['double-1', 'double-2', 'double-3']))
+    .some(({ id }) => id === 'double-4'));
+
+  const rapidTier2 = eligibleUpgrades(new Set(['rapid-1']));
+  assert.ok(rapidTier2.some(({ id }) => id === 'rapid-2'));
+  assert.ok(rapidTier2.some(({ id }) => id === 'rapid-3'));
+  assert.ok(!rapidTier2.some(({ id }) => id === 'rapid-4'));
 });
 
 test('enemy roster grows throughout the run', () => {

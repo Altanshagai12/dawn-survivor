@@ -119,6 +119,23 @@ export function createGameTextures(scene) {
     context.strokeStyle = 'rgba(101,230,255,.5)'; context.lineWidth = 1;
     context.beginPath(); context.arc(40, 40, 23, 0, Math.PI * 2); context.stroke();
   });
+  radialTexture(scene, 'wingling-glow', 96, [
+    [0, 'rgba(65,238,255,.62)'],
+    [.3, 'rgba(51,170,255,.32)'],
+    [.62, 'rgba(135,74,255,.18)'],
+    [1, 'rgba(70,32,150,0)'],
+  ]);
+  canvasTexture(scene, 'wingling-trail', 80, 28, (context) => {
+    const gradient = context.createLinearGradient(0, 0, 80, 0);
+    gradient.addColorStop(0, 'rgba(111,65,238,0)');
+    gradient.addColorStop(.36, 'rgba(111,65,238,.15)');
+    gradient.addColorStop(.78, 'rgba(69,211,255,.42)');
+    gradient.addColorStop(1, 'rgba(69,236,255,0)');
+    context.fillStyle = gradient;
+    context.beginPath();
+    context.ellipse(40, 14, 39, 9, 0, 0, Math.PI * 2);
+    context.fill();
+  });
   canvasTexture(scene, 'reload-ring', 72, 72, (context) => {
     context.strokeStyle = 'rgba(101,230,255,.72)'; context.lineWidth = 3;
     context.setLineDash([12, 8]); context.beginPath(); context.arc(36, 36, 29, 0, Math.PI * 2); context.stroke();
@@ -181,11 +198,11 @@ export function spawnRunDust(scene, player, moveX, moveY) {
 export function showSpawnWarning(scene, x, y, duration = 650) {
   const warning = scene.add.image(x, y, 'warning-ring')
     .setDepth(18).setScale(.55).setAlpha(.35).setBlendMode(Phaser.BlendModes.ADD);
-  scene.tweens.add({
+  warning.pulseTween = scene.tweens.add({
     targets: warning, alpha: .95, scale: 1.05, angle: 55,
-    duration: Math.max(180, duration * .42), yoyo: true, repeat: 1,
+    duration: Math.max(180, duration * .42), yoyo: true, repeat: -1,
   });
-  scene.time.delayedCall(duration, () => warning?.active && warning.destroy());
+  warning.once('destroy', () => warning.pulseTween?.stop());
   return warning;
 }
 

@@ -3,6 +3,7 @@ import { BOSSES, MAX_LIVE_ENEMIES, availableEnemies } from '../data/enemies.js';
 import { enemyHealthScale, spawnInterval, weightedPick } from './simulation.js';
 import { playDirectional } from './animations.js';
 import { attachGroundShadow, showSpawnWarning } from './VisualEffects.js';
+import { attachWinglingFeedback } from './WinglingFeedback.js';
 
 export function edgeSpawnOffsets(halfWidth, halfHeight, angle, distanceBoost = 0) {
   const cos = Math.cos(angle);
@@ -80,7 +81,7 @@ export class Spawner {
     sprite.nextAttack = this.scene.time.now + 900 + Math.random() * 1200;
     sprite.status = { burnUntil: 0, burnTick: 0, freezeUntil: 0 };
     if (definition.id === 'wingling') {
-      const warningDuration = 720;
+      const warningDuration = 900;
       sprite.spawnReadyAt = this.scene.time.now + warningDuration;
       sprite.spawnWarning = showSpawnWarning(
         this.scene,
@@ -88,7 +89,7 @@ export class Spawner {
         spawn.warningY ?? spawn.y,
         warningDuration,
       );
-      sprite.once('destroy', () => sprite.spawnWarning?.active && sprite.spawnWarning.destroy());
+      attachWinglingFeedback(this.scene, sprite);
     }
     sprite.body.setSize(definition.radius * 2 / scale, definition.radius * 2 / scale, true);
     playDirectional(sprite, atlas.key, 0, 1, true);

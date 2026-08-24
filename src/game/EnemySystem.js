@@ -2,6 +2,7 @@ import { BOSS_ATLASES, ENEMY_ATLASES } from '../config/assets.js';
 import { ENEMIES } from '../data/enemies.js';
 import { playDirectional } from './animations.js';
 import { syncGroundShadow } from './VisualEffects.js';
+import { syncWinglingFeedback, syncWinglingWarning } from './WinglingFeedback.js';
 
 export const PLAYER_INVULNERABILITY_MS = 1300;
 
@@ -21,8 +22,11 @@ export class EnemySystem {
     const now = this.scene.time.now;
     this.scene.enemies.getChildren().forEach((enemy) => {
       if (!enemy?.active || enemy.dying) return;
+      const wingling = enemy.enemyDef.id === 'wingling';
+      if (wingling) syncWinglingWarning(enemy, this.scene.cameras.main, now);
       if (enemy.spawnReadyAt > now) {
-        enemy.setVelocity(0, 0).setAlpha(.62 + Math.sin(now * .02) * .18);
+        enemy.setVelocity(0, 0).setAlpha(.78 + Math.sin(now * .02) * .12);
+        if (wingling) syncWinglingFeedback(enemy, now);
         syncGroundShadow(enemy);
         return;
       }
@@ -48,7 +52,8 @@ export class EnemySystem {
 
       const atlas = enemy.enemyDef.boss ? BOSS_ATLASES[enemy.enemyDef.id] : ENEMY_ATLASES[enemy.enemyDef.id];
       playDirectional(enemy, atlas.key, enemy.body.velocity.x, enemy.body.velocity.y, true);
-      enemy.setAlpha(distance > 620 ? .72 : 1);
+      enemy.setAlpha(wingling ? 1 : distance > 620 ? .72 : 1);
+      if (wingling) syncWinglingFeedback(enemy, now);
       syncGroundShadow(enemy);
       if (distance > 1900 && !enemy.enemyDef.boss) enemy.destroy();
     });

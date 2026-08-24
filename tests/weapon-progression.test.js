@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { WEAPONS } from '../src/data/weapons.js';
 import { UPGRADES } from '../src/data/upgrades.js';
-import { CombatSystem, upgradedProjectileCount } from '../src/game/CombatSystem.js';
+import { CombatSystem } from '../src/game/CombatSystem.js';
+import { shouldConsumeAmmo, upgradedProjectileCount } from '../src/game/WeaponMechanics.js';
 import { nextWeaponCharge } from '../src/game/PlayerFeedback.js';
 import { RunState } from '../src/game/RunState.js';
 import { HEROES } from '../src/data/heroes.js';
@@ -33,7 +34,14 @@ test('projectile upgrades wire ricochet, rear fire, fan fire, and fusillade', ()
   assert.equal(byName['Split Fire'].set.backShot, true);
   assert.equal(byName['Fan Fire'].set.fanFire, true);
   assert.equal(byName.Fusillade.set.fusillade, true);
-  assert.equal(upgradedProjectileCount(4, 1, true), 10);
+  assert.equal(upgradedProjectileCount(4, 2, true), 10);
+});
+
+test('siege preserves ammo only while standing still', () => {
+  assert.equal(shouldConsumeAmmo({ siege: true, moving: false, roll: .39 }), false);
+  assert.equal(shouldConsumeAmmo({ siege: true, moving: false, roll: .4 }), true);
+  assert.equal(shouldConsumeAmmo({ siege: true, moving: true, roll: 0 }), true);
+  assert.equal(shouldConsumeAmmo({ free: true }), false);
 });
 
 test('a final upgraded shot fires forward, backward, and around the player', () => {
@@ -41,7 +49,7 @@ test('a final upgraded shot fires forward, backward, and around the player', () 
   globalThis.Phaser = { Math: { DegToRad: (degrees) => degrees * Math.PI / 180 } };
   try {
     const state = new RunState(HEROES.nyra, WEAPONS.crossbow);
-    state.mods.projectilesAdd = 1;
+    state.mods.projectilesAdd = 2;
     Object.assign(state.flags, { fusillade: true, backShot: true, fanFire: true });
     const spawned = [];
     const scene = {

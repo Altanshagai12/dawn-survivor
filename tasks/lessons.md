@@ -11,3 +11,6 @@
 - Directional character QA must verify every octant after both movement and a single tap-shot; checking continuous aim alone misses facing that snaps back on the next frame.
 - Fast enemies need an on-screen approach telegraph and sufficient contrast before their collision window starts; distant low alpha is not a usable warning on a dark mobile map.
 - A progression upgrade is not complete when only its card exists: its projectile behavior, combat feedback, HUD feedback, and a focused test must all be wired together.
+- An edge-spawn warning must remain until the fast enemy is actually visible; a fixed timer can expire while the enemy is still outside the camera.
+- Dark airborne enemies need persistent colored contrast and a readable travel trail, not just lower opacity or a short spawn pulse.
+- Original-style upgrades need their acquisition branches as well as their mechanics; placing ricochet and back-shot inside unrelated linear trees makes progression feel incorrect.
