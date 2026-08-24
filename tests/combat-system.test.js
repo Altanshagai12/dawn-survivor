@@ -88,6 +88,8 @@ test('a surviving enemy receives knockback and a piercing bullet remains active'
   let appliedKnockback = null;
   enemy.body.velocity.add = (velocity) => { appliedKnockback = velocity; };
   const knockback = {
+    x: 9,
+    y: -7,
     normalize() { return this; },
     scale(amount) { this.amount = amount; return this; },
   };
@@ -108,6 +110,8 @@ test('a surviving enemy receives knockback and a piercing bullet remains active'
   assert.equal(enemy.active, true);
   assert.equal(appliedKnockback, knockback);
   assert.equal(appliedKnockback.amount, 12);
+  assert.equal(enemy.knockbackVelocity, knockback);
+  assert.equal(enemy.knockbackUntil, 1115);
   assert.equal(bullet.active, true);
   assert.equal(bullet.pierce, 0);
 });

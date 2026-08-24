@@ -128,7 +128,10 @@ export class CombatSystem {
     if (Math.random() < (this.scene.state.flags.explosionChanceAdd || 0)) this.explode(impactX, impactY, bullet.damage * .55);
     if (enemy.active && enemy.body?.velocity && bullet.active && bullet.body?.velocity && bullet.knockback) {
       const velocity = bullet.body.velocity.clone().normalize().scale(bullet.knockback);
+      enemy.knockbackVelocity = velocity;
+      enemy.knockbackUntil = this.scene.time.now + clamp(100 + bullet.knockback * .55, 115, 180);
       enemy.body.velocity.add(velocity);
+      this.scene.flashEffect(impactX, impactY, 1, .28);
     }
     this.finishBulletHit(bullet);
   }

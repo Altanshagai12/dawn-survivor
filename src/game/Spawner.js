@@ -2,6 +2,7 @@ import { BOSS_ATLASES, ENEMY_ATLASES } from '../config/assets.js';
 import { BOSSES, MAX_LIVE_ENEMIES, availableEnemies } from '../data/enemies.js';
 import { enemyHealthScale, spawnInterval, weightedPick } from './simulation.js';
 import { playDirectional } from './animations.js';
+import { attachGroundShadow } from './VisualEffects.js';
 
 export class Spawner {
   constructor(scene) {
@@ -45,6 +46,11 @@ export class Spawner {
     if (!sprite) return null;
     const scale = definition.size / atlas.frameHeight;
     sprite.setScale(scale).setDepth(20).setDataEnabled();
+    attachGroundShadow(this.scene, sprite, {
+      width: sprite.displayWidth * .64,
+      offsetY: sprite.displayHeight * .3,
+      depth: 19,
+    });
     sprite.spawnId = this.nextId++;
     sprite.enemyDef = definition;
     sprite.maxHp = definition.hp * enemyHealthScale(this.scene.state.elapsed);
@@ -67,6 +73,13 @@ export class Spawner {
     }
     const scale = definition.size / atlas.frameHeight;
     sprite.setScale(scale).setDepth(24).setDataEnabled();
+    attachGroundShadow(this.scene, sprite, {
+      width: sprite.displayWidth * .68,
+      height: Math.max(12, sprite.displayWidth * .18),
+      offsetY: sprite.displayHeight * .31,
+      depth: 23,
+      alpha: .42,
+    });
     sprite.spawnId = this.nextId++;
     sprite.enemyDef = { ...definition, boss: true, xp: 0 };
     sprite.maxHp = definition.hp;

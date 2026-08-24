@@ -4,6 +4,7 @@ import { HEROES } from '../src/data/heroes.js';
 import { WEAPONS } from '../src/data/weapons.js';
 import { BOSSES, ENEMIES, RUN_SECONDS, availableEnemies } from '../src/data/enemies.js';
 import { UPGRADES, eligibleUpgrades } from '../src/data/upgrades.js';
+import { ENEMY_ATLASES } from '../src/config/assets.js';
 
 test('ships a full ten-minute content set', () => {
   assert.equal(RUN_SECONDS, 600);
@@ -33,4 +34,18 @@ test('enemy roster grows throughout the run', () => {
   assert.deepEqual(availableEnemies(0).map(({ id }) => id), ['creeper']);
   assert.equal(availableEnemies(180).length, 5);
   assert.equal(availableEnemies(600).length, 8);
+});
+
+test('every upgrade choice includes a visual icon', () => {
+  assert.ok(UPGRADES.every(({ icon }) => typeof icon === 'string' && icon.length > 0));
+  assert.ok(Object.values(HEROES).flatMap(({ chest }) => chest)
+    .every(({ icon }) => typeof icon === 'string' && icon.length > 0));
+});
+
+test('keeps the two approved base enemies untouched and cleans later atlases', () => {
+  assert.ok(!ENEMY_ATLASES.creeper.file.includes('-clean'));
+  assert.ok(!ENEMY_ATLASES.crawler.file.includes('-clean'));
+  assert.ok(Object.entries(ENEMY_ATLASES)
+    .filter(([id]) => !['creeper', 'crawler'].includes(id))
+    .every(([, atlas]) => atlas.file.includes('-clean.webp')));
 });

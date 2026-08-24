@@ -70,10 +70,11 @@ h2 { margin: 2px 0 18px; font-size: clamp(28px, 8vw, 44px); line-height: 1; }
 .modal__panel--small { max-width: 360px; text-align: center; }
 .modal__panel button + button { margin-top: 8px; }
 .choice-list { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 12px; }
-.choice-card { min-height: 118px; padding: 13px; text-align: left; border: 1px solid var(--line); border-radius: 12px; background: linear-gradient(145deg, rgba(168,129,255,.12), rgba(255,255,255,.025)); }
+.choice-card { min-height: 118px; padding: 13px; text-align: left; border: 1px solid var(--line); border-radius: 12px; background: linear-gradient(145deg, rgba(168,129,255,.12), rgba(255,255,255,.025)); display: grid; grid-template-columns: 38px 1fr; grid-template-rows: auto auto 1fr; column-gap: 10px; align-items: start; }
 .choice-card strong { display: block; margin-bottom: 7px; font-size: 14px; }
-.choice-card span { color: var(--muted); font-size: 11px; line-height: 1.35; }
+.choice-card .choice-card__desc { color: var(--muted); font-size: 11px; line-height: 1.35; }
 .choice-card em { display: block; color: var(--cyan); font-size: 9px; font-style: normal; letter-spacing: .12em; margin-bottom: 5px; }
+.choice-card__icon { grid-row: 1 / 4; display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid rgba(101,230,255,.28); border-radius: 10px; background: radial-gradient(circle, rgba(101,230,255,.18), rgba(168,129,255,.08)); color: var(--cyan); font-size: 23px; line-height: 1; text-shadow: 0 0 12px rgba(101,230,255,.7); }
 
 .result-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 0 18px; }
 .result-stats div { padding: 12px 7px; text-align: center; border: 1px solid var(--line); border-radius: 10px; }

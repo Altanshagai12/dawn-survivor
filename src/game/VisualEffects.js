@@ -60,6 +60,16 @@ export function createGameTextures(scene) {
     [.34, 'rgba(255,211,145,.20)'],
     [1, 'rgba(235,170,95,0)'],
   ]);
+  canvasTexture(scene, 'ground-shadow', 80, 36, (context) => {
+    context.translate(40, 18);
+    context.scale(1, .42);
+    const gradient = context.createRadialGradient(0, 0, 2, 0, 0, 34);
+    gradient.addColorStop(0, 'rgba(0,0,0,.72)');
+    gradient.addColorStop(.48, 'rgba(0,0,0,.38)');
+    gradient.addColorStop(1, 'rgba(0,0,0,0)');
+    context.fillStyle = gradient;
+    context.fillRect(-40, -44, 80, 88);
+  });
 
   if (!scene.textures.exists('ember')) {
     const graphics = scene.make.graphics({ add: false });
@@ -86,4 +96,26 @@ export function createPlayerLights(scene, player) {
 
 export function syncPlayerLights(lights, player) {
   lights?.forEach((light) => light.setPosition(player.x, player.y));
+}
+
+export function attachGroundShadow(scene, entity, options = {}) {
+  const width = options.width || Math.max(24, entity.displayWidth * .62);
+  const height = options.height || Math.max(8, width * .28);
+  const shadow = scene.add.image(entity.x, entity.y, 'ground-shadow')
+    .setDepth(options.depth ?? entity.depth - 1)
+    .setDisplaySize(width, height)
+    .setAlpha(options.alpha ?? .36);
+  entity.groundShadow = shadow;
+  entity.groundShadowOffsetY = options.offsetY ?? entity.displayHeight * .3;
+  entity.groundShadowAlpha = shadow.alpha;
+  entity.once('destroy', () => shadow.destroy());
+  syncGroundShadow(entity);
+  return shadow;
+}
+
+export function syncGroundShadow(entity) {
+  if (!entity?.groundShadow?.active) return;
+  entity.groundShadow
+    .setPosition(entity.x, entity.y + entity.groundShadowOffsetY)
+    .setAlpha(entity.groundShadowAlpha * entity.alpha);
 }

@@ -1,6 +1,9 @@
 import { BOSS_ATLASES, ENEMY_ATLASES } from '../config/assets.js';
 import { ENEMIES } from '../data/enemies.js';
 import { playDirectional } from './animations.js';
+import { syncGroundShadow } from './VisualEffects.js';
+
+export const PLAYER_INVULNERABILITY_MS = 1300;
 
 export class EnemySystem {
   constructor(scene) {
@@ -32,13 +35,16 @@ export class EnemySystem {
       const ny = dy / distance;
       const frozen = enemy.status.freezeUntil > now;
       const speed = enemy.speed * (frozen ? .22 : 1);
-      if (enemy.enemyDef.boss) this.updateBoss(enemy, nx, ny, distance, speed, now);
+      if (enemy.knockbackVelocity && enemy.knockbackUntil > now) {
+        enemy.setVelocity(enemy.knockbackVelocity.x, enemy.knockbackVelocity.y);
+      } else if (enemy.enemyDef.boss) this.updateBoss(enemy, nx, ny, distance, speed, now);
       else this.updateRegular(enemy, nx, ny, distance, speed, now);
       if (!enemy.active) return;
 
       const atlas = enemy.enemyDef.boss ? BOSS_ATLASES[enemy.enemyDef.id] : ENEMY_ATLASES[enemy.enemyDef.id];
       playDirectional(enemy, atlas.key, enemy.body.velocity.x, enemy.body.velocity.y, true);
       enemy.setAlpha(distance > 520 ? .38 : 1);
+      syncGroundShadow(enemy);
       if (distance > 1900 && !enemy.enemyDef.boss) enemy.destroy();
     });
     this.scene.enemyBullets.getChildren().forEach((bullet) => {
@@ -130,16 +136,25 @@ export class EnemySystem {
 
   damagePlayer(amount) {
     const now = this.scene.time.now;
-    if (now < this.playerInvulnerableUntil || this.scene.ended) return;
+    if (now < this.playerInvulnerableUntil || this.scene.ended) return false;
     const moving = Math.hypot(this.scene.lastInput?.moveX || 0, this.scene.lastInput?.moveY || 0) > .2;
     const dodge = (this.scene.state.flags.dodgeAdd || 0)
       + (moving ? this.scene.state.flags.dodgeChance || 0 : 0);
     if (Math.random() < dodge) {
       this.scene.ui.toast('DODGE');
-      return;
+      return false;
     }
     const result = this.scene.state.takeDamage(amount);
-    this.playerInvulnerableUntil = now + 900;
+    this.playerInvulnerableUntil = now + PLAYER_INVULNERABILITY_MS;
+    this.invulnerabilityTween?.stop();
+    this.invulnerabilityTween = this.scene.tweens.add({
+      targets: this.scene.player,
+      alpha: .32,
+      duration: 110,
+      yoyo: true,
+      repeat: 5,
+      onComplete: () => this.scene.player?.active && this.scene.player.setAlpha(1),
+    });
     this.scene.player
       .setTint(result.blocked ? 0x65e6ff : 0xffffff)
       .setTintMode(Phaser.TintModes.FILL);
@@ -147,5 +162,6 @@ export class EnemySystem {
     this.scene.cameras.main.shake(180, result.blocked ? .003 : .009);
     if (result.blocked && this.scene.state.flags.shieldBurst) this.scene.combat.explode(this.scene.player.x, this.scene.player.y, 40, 115);
     if (result.dead) this.scene.endRun(false);
+    return true;
   }
 }

@@ -1,7 +1,12 @@
+const TREE_ICONS = {
+  power: '✹', rapid: '»', reload: '↻', aim: '◉', haste: '➜', vitality: '♥',
+  magnet: '◆', fire: '♨', frost: '❄', storm: 'ϟ', shield: '⬡', summon: '☾', blast: '✸',
+};
+
 function makeTree(id, label, labelMn, rows) {
   return rows.map(([name, nameMn, desc, descMn, mods = {}, set = {}], index) => ({
     id: `${id}-${index + 1}`, tree: id, treeLabel: label, treeLabelMn: labelMn,
-    tier: index + 1, name, nameMn, desc, descMn, mods, set,
+    tier: index + 1, icon: TREE_ICONS[id], name, nameMn, desc, descMn, mods, set,
     requires: index === 0 ? [] : [`${id}-${index}`],
   }));
 }

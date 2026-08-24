@@ -10,12 +10,12 @@ export const HERO_ATLASES = {
 export const ENEMY_ATLASES = {
   creeper: { key: 'enemy-creeper', file: `${base}/sprites/enemies/enemy-creeper-move-8dir-6f-atlas.webp`, frameWidth: 181, frameHeight: 181 },
   crawler: { key: 'enemy-crawler', file: `${base}/sprites/enemies/enemy-crawler-move-8dir-6f-atlas.webp`, frameWidth: 181, frameHeight: 181 },
-  spitter: { key: 'enemy-spitter', file: `${base}/sprites/enemies/enemy-spitter-move-8dir-6f-atlas.webp`, frameWidth: 181, frameHeight: 182 },
-  bomber: { key: 'enemy-bomber', file: `${base}/sprites/enemies/enemy-bomber-move-8dir-6f-atlas.webp`, frameWidth: 181, frameHeight: 181 },
-  charger: { key: 'enemy-charger', file: `${base}/sprites/enemies/enemy-charger-move-8dir-6f-atlas.webp`, frameWidth: 181, frameHeight: 181 },
-  brute: { key: 'enemy-brute', file: `${base}/sprites/enemies/enemy-brute-move-8dir-6f-atlas.webp`, frameWidth: 181, frameHeight: 181 },
+  spitter: { key: 'enemy-spitter', file: `${base}/sprites/enemies/enemy-spitter-move-8dir-6f-atlas-clean.webp`, frameWidth: 181, frameHeight: 182 },
+  bomber: { key: 'enemy-bomber', file: `${base}/sprites/enemies/enemy-bomber-move-8dir-6f-atlas-clean.webp`, frameWidth: 181, frameHeight: 181 },
+  charger: { key: 'enemy-charger', file: `${base}/sprites/enemies/enemy-charger-move-8dir-6f-atlas-clean.webp`, frameWidth: 181, frameHeight: 181 },
+  brute: { key: 'enemy-brute', file: `${base}/sprites/enemies/enemy-brute-move-8dir-6f-atlas-clean.webp`, frameWidth: 181, frameHeight: 181 },
   wingling: { key: 'enemy-wingling', file: `${base}/sprites/enemies/enemy-wingling-move-8dir-6f-atlas-clean.webp`, frameWidth: 181, frameHeight: 181 },
-  splitter: { key: 'enemy-splitter', file: `${base}/sprites/enemies/enemy-splitter-move-8dir-6f-atlas.webp`, frameWidth: 181, frameHeight: 181 },
+  splitter: { key: 'enemy-splitter', file: `${base}/sprites/enemies/enemy-splitter-move-8dir-6f-atlas-clean.webp`, frameWidth: 181, frameHeight: 181 },
 };
 
 export const BOSS_ATLASES = {

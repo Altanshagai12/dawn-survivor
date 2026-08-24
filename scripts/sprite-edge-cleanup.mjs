@@ -51,6 +51,36 @@ export function stripPaleOutline(data, width, height) {
   return removed;
 }
 
+export function erodeExteriorPixels(data, width, height, passes = 1) {
+  let removed = 0;
+  for (let pass = 0; pass < passes; pass += 1) {
+    const source = Buffer.from(data);
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        const pixel = (y * width + x) * 4;
+        if (source[pixel + 3] < TRANSPARENT_ALPHA) continue;
+        let exterior = false;
+        for (let oy = -1; oy <= 1 && !exterior; oy += 1) {
+          for (let ox = -1; ox <= 1; ox += 1) {
+            if (!ox && !oy) continue;
+            const nx = x + ox;
+            const ny = y + oy;
+            if (nx < 0 || nx >= width || ny < 0 || ny >= height
+              || source[(ny * width + nx) * 4 + 3] < TRANSPARENT_ALPHA) {
+              exterior = true;
+              break;
+            }
+          }
+        }
+        if (!exterior) continue;
+        data.fill(0, pixel, pixel + 4);
+        removed += 1;
+      }
+    }
+  }
+  return removed;
+}
+
 export async function writeSpriteWebp(data, width, height, outputFile) {
   await mkdir(dirname(outputFile), { recursive: true });
   await sharp(data, { raw: { width, height, channels: 4 } })
@@ -60,7 +90,8 @@ export async function writeSpriteWebp(data, width, height, outputFile) {
 
 export async function cleanSimpleAtlas(sourceFile, outputFile) {
   const { data, info } = await sharp(sourceFile).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-  const removed = stripPaleOutline(data, info.width, info.height);
+  const palePixels = stripPaleOutline(data, info.width, info.height);
+  const edgePixels = erodeExteriorPixels(data, info.width, info.height);
   await writeSpriteWebp(data, info.width, info.height, outputFile);
-  return removed;
+  return { palePixels, edgePixels };
 }

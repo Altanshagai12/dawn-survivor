@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import sharp from 'sharp';
 import { BOSS_ATLASES, ENEMY_ATLASES, HERO_ATLASES } from '../src/config/assets.js';
-import { cleanSimpleAtlas, stripPaleOutline, writeSpriteWebp } from './sprite-edge-cleanup.mjs';
+import { cleanSimpleAtlas, erodeExteriorPixels, stripPaleOutline, writeSpriteWebp } from './sprite-edge-cleanup.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const shouldWrite = process.argv.includes('--write');
@@ -212,9 +212,10 @@ async function repairAtlas(atlas) {
   }
 
   const outputFile = resolve(root, atlas.file.replace(/^\.\//, ''));
-  const removed = stripPaleOutline(output, outputWidth, outputHeight);
+  const palePixels = stripPaleOutline(output, outputWidth, outputHeight);
+  const edgePixels = erodeExteriorPixels(output, outputWidth, outputHeight);
   await writeSpriteWebp(output, outputWidth, outputHeight, outputFile);
-  console.log(`Repaired ${atlas.key}: ${sourceRows} source rows -> 8 rows, removed ${removed} pale edge pixels, shared scale ${scale.toFixed(3)}`);
+  console.log(`Repaired ${atlas.key}: ${sourceRows} source rows -> 8 rows, removed ${palePixels} pale and ${edgePixels} exterior pixels, shared scale ${scale.toFixed(3)}`);
 }
 
 async function checkAtlas(atlas) {
@@ -241,11 +242,14 @@ async function checkAtlas(atlas) {
 const atlases = [...Object.values(HERO_ATLASES), ...Object.values(BOSS_ATLASES)];
 if (shouldWrite) {
   for (const atlas of atlases) await repairAtlas(atlas);
-  const wingling = ENEMY_ATLASES.wingling;
-  const source = resolve(root, wingling.file.replace('-clean.webp', '.png').replace(/^\.\//, ''));
-  const output = resolve(root, wingling.file.replace(/^\.\//, ''));
-  const removed = await cleanSimpleAtlas(source, output);
-  console.log(`Repaired ${wingling.key}: removed ${removed} pale edge pixels.`);
+  const cleanEnemies = Object.values(ENEMY_ATLASES)
+    .filter((atlas) => !['enemy-creeper', 'enemy-crawler'].includes(atlas.key));
+  for (const atlas of cleanEnemies) {
+    const source = resolve(root, atlas.file.replace('-clean.webp', '.png').replace(/^\.\//, ''));
+    const output = resolve(root, atlas.file.replace(/^\.\//, ''));
+    const removed = await cleanSimpleAtlas(source, output);
+    console.log(`Repaired ${atlas.key}: removed ${removed.palePixels} pale and ${removed.edgePixels} exterior pixels.`);
+  }
 }
 if (shouldCheck) {
   for (const atlas of atlases) await checkAtlas(atlas);

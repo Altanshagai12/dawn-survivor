@@ -6,3 +6,5 @@
 - Sprite-atlas QA must render every hero and boss frame inside Phaser; file dimensions and contact-sheet inspection alone do not catch runtime frame artifacts or overlapping visual effects.
 - Transparent sprite repair must validate edge colors against the in-game background; isolated frames can be geometrically correct while pale RGB/alpha fringe still creates a white halo.
 - Mobile combat input must assign each pointer to exactly one role (move stick, aim stick, or world tap) and test quick taps inside the real Usion iframe offset.
+- Sprite cleanup is incomplete until every non-exempt runtime atlas is processed and its ground contact is checked in motion; fixing only the reported hero/boss examples leaves the same source-art defect in later enemy families.
+- Damage immunity must be long enough to prevent stacked contact/projectile hits and must provide visible feedback for the entire immunity window, not only a short hit flash.

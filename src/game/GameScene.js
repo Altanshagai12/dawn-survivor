@@ -11,7 +11,9 @@ import { RunState } from './RunState.js';
 import { Spawner } from './Spawner.js';
 import { facingVector, playDirectional } from './animations.js';
 import { sampleWithoutReplacement, scoreForRun } from './simulation.js';
-import { createGameTextures, createPlayerLights, syncPlayerLights } from './VisualEffects.js';
+import {
+  attachGroundShadow, createGameTextures, createPlayerLights, syncGroundShadow, syncPlayerLights,
+} from './VisualEffects.js';
 
 export class GameScene extends Phaser.Scene {
   constructor() { super('game'); }
@@ -72,6 +74,13 @@ export class GameScene extends Phaser.Scene {
     this.player.setScale(scale);
     this.player.body.setSize(this.state.hero.size / scale, this.state.hero.size / scale, true);
     this.player.body.setMaxVelocity(500, 500);
+    attachGroundShadow(this, this.player, {
+      width: this.player.displayWidth * .48,
+      height: 11,
+      offsetY: this.player.displayHeight * .34,
+      depth: 24,
+      alpha: .44,
+    });
     this.cameras.main.startFollow(this.player, true, .11, .11);
     this.cameras.main.setZoom(matchMedia('(max-width: 520px)').matches ? .94 : 1.05);
     this.playerLights = createPlayerLights(this, this.player);
@@ -94,6 +103,7 @@ export class GameScene extends Phaser.Scene {
     this.player.setVelocity(input.moveX * this.state.moveSpeed * firingPenalty, input.moveY * this.state.moveSpeed * firingPenalty);
     const facing = facingVector(input);
     playDirectional(this.player, HERO_ATLASES[this.state.hero.id].key, facing.x, facing.y, Math.hypot(input.moveX, input.moveY) > .08);
+    syncGroundShadow(this.player);
     syncPlayerLights(this.playerLights, this.player);
     this.updateDynamicBonuses(deltaSeconds, input);
     this.combat.update(deltaMs, input);

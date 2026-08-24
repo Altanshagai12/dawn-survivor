@@ -112,7 +112,8 @@ export class UIController {
       button.className = 'choice-card';
       const name = this.i18n.lang === 'mn' && card.nameMn ? card.nameMn : card.name;
       const desc = this.i18n.lang === 'mn' && card.descMn ? card.descMn : card.desc;
-      button.innerHTML = `<em>${card.treeLabel || (chest ? 'HUNTER GIFT' : '')}</em><strong>${name}</strong><span>${desc}</span>`;
+      const treeLabel = this.i18n.lang === 'mn' && card.treeLabelMn ? card.treeLabelMn : card.treeLabel;
+      button.innerHTML = `<b class="choice-card__icon" aria-hidden="true">${card.icon || '✦'}</b><em>${treeLabel || (chest ? 'HUNTER GIFT' : '')}</em><strong>${name}</strong><span class="choice-card__desc">${desc}</span>`;
       return button;
     }));
     this.el['choice-modal'].classList.remove('hidden');
