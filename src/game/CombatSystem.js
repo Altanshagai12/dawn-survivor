@@ -116,17 +116,27 @@ export class CombatSystem {
   hitEnemy(bullet, enemy) {
     if (!bullet.active || !enemy.active || bullet.hitTargets.has(enemy.spawnId)) return;
     bullet.hitTargets.add(enemy.spawnId);
+    const impactX = enemy.x;
+    const impactY = enemy.y;
     let damage = bullet.damage;
     if (Math.random() < (this.scene.state.mods.critChanceAdd || 0)) damage *= 2;
     if (this.scene.state.flags.execute && enemy.hp / enemy.maxHp <= this.scene.state.flags.execute) damage = enemy.hp + 1;
     this.damageEnemy(enemy, damage, { bullet });
-    if (bullet.burnChance && Math.random() < bullet.burnChance) this.applyBurn(enemy);
-    if (Math.random() < (this.scene.state.flags.freezeChanceAdd || 0)) this.applyFreeze(enemy);
-    if (Math.random() < (this.scene.state.flags.lightningChanceAdd || 0)) this.lightning(enemy);
-    if (Math.random() < (this.scene.state.flags.explosionChanceAdd || 0)) this.explode(enemy.x, enemy.y, bullet.damage * .55);
-    const velocity = bullet.body.velocity.clone().normalize().scale(bullet.knockback || 0);
-    enemy.body.velocity.add(velocity);
-    if (bullet.pierce <= 0) bullet.destroy(); else bullet.pierce -= 1;
+    if (enemy.active && bullet.burnChance && Math.random() < bullet.burnChance) this.applyBurn(enemy);
+    if (enemy.active && Math.random() < (this.scene.state.flags.freezeChanceAdd || 0)) this.applyFreeze(enemy);
+    if (enemy.active && Math.random() < (this.scene.state.flags.lightningChanceAdd || 0)) this.lightning(enemy);
+    if (Math.random() < (this.scene.state.flags.explosionChanceAdd || 0)) this.explode(impactX, impactY, bullet.damage * .55);
+    if (enemy.active && enemy.body?.velocity && bullet.active && bullet.body?.velocity && bullet.knockback) {
+      const velocity = bullet.body.velocity.clone().normalize().scale(bullet.knockback);
+      enemy.body.velocity.add(velocity);
+    }
+    this.finishBulletHit(bullet);
+  }
+
+  finishBulletHit(bullet) {
+    if (!bullet?.active) return;
+    if (bullet.pierce > 0) bullet.pierce -= 1;
+    else bullet.destroy();
   }
 
   damageEnemy(enemy, amount, source = {}) {
@@ -152,15 +162,21 @@ export class CombatSystem {
   }
 
   lightning(enemy) {
+    if (!enemy?.active) return;
     const damage = 14 * this.scene.state.multiplierStats.lightningDamage;
+    let x = enemy.x;
+    let y = enemy.y;
     this.damageEnemy(enemy, damage, { lightning: true });
-    this.scene.flashEffect(enemy.x, enemy.y, 4);
-    let current = enemy;
+    this.scene.flashEffect(x, y, 4);
+    let previous = enemy;
     const chains = 1 + (this.scene.state.flags.lightningChainsAdd || 0);
     for (let index = 0; index < chains; index += 1) {
-      current = this.scene.nearestEnemy(current.x, current.y, 150, current);
+      const current = this.scene.nearestEnemy(x, y, 150, previous);
       if (!current) break;
+      x = current.x;
+      y = current.y;
       this.damageEnemy(current, damage * .7, { lightning: true });
+      previous = current;
     }
   }
 
