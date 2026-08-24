@@ -110,9 +110,13 @@ export class EnemySystem {
   fireProjectile(x, y, nx, ny, speed, damage) {
     const bullet = this.scene.enemyBullets.create(x, y, 'enemy-bullet');
     if (!bullet) return;
-    bullet.setDepth(28).setData('damage', damage);
+    const angle = Math.atan2(ny, nx);
+    bullet.setDepth(28)
+      .setRotation(angle)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setData('damage', damage);
     bullet.expiresAt = this.scene.time.now + 5200;
-    bullet.body.setCircle(6);
+    bullet.body.setCircle(5, 11, 5);
     bullet.setVelocity(nx * speed, ny * speed);
   }
 

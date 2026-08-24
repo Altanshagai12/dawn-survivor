@@ -1,8 +1,8 @@
-import { mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import sharp from 'sharp';
-import { BOSS_ATLASES, HERO_ATLASES } from '../src/config/assets.js';
+import { BOSS_ATLASES, ENEMY_ATLASES, HERO_ATLASES } from '../src/config/assets.js';
+import { cleanSimpleAtlas, stripPaleOutline, writeSpriteWebp } from './sprite-edge-cleanup.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const shouldWrite = process.argv.includes('--write');
@@ -212,11 +212,9 @@ async function repairAtlas(atlas) {
   }
 
   const outputFile = resolve(root, atlas.file.replace(/^\.\//, ''));
-  await mkdir(dirname(outputFile), { recursive: true });
-  await sharp(output, { raw: { width: outputWidth, height: outputHeight, channels: 4 } })
-    .webp({ quality: 92, alphaQuality: 100, smartSubsample: true })
-    .toFile(outputFile);
-  console.log(`Repaired ${atlas.key}: ${sourceRows} source rows -> 8 rows, shared scale ${scale.toFixed(3)}`);
+  const removed = stripPaleOutline(output, outputWidth, outputHeight);
+  await writeSpriteWebp(output, outputWidth, outputHeight, outputFile);
+  console.log(`Repaired ${atlas.key}: ${sourceRows} source rows -> 8 rows, removed ${removed} pale edge pixels, shared scale ${scale.toFixed(3)}`);
 }
 
 async function checkAtlas(atlas) {
@@ -243,6 +241,11 @@ async function checkAtlas(atlas) {
 const atlases = [...Object.values(HERO_ATLASES), ...Object.values(BOSS_ATLASES)];
 if (shouldWrite) {
   for (const atlas of atlases) await repairAtlas(atlas);
+  const wingling = ENEMY_ATLASES.wingling;
+  const source = resolve(root, wingling.file.replace('-clean.webp', '.png').replace(/^\.\//, ''));
+  const output = resolve(root, wingling.file.replace(/^\.\//, ''));
+  const removed = await cleanSimpleAtlas(source, output);
+  console.log(`Repaired ${wingling.key}: removed ${removed} pale edge pixels.`);
 }
 if (shouldCheck) {
   for (const atlas of atlases) await checkAtlas(atlas);

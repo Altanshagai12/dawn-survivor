@@ -1,8 +1,12 @@
-export function aimFromPointer(pointer, camera, player, fallback = { x: 1, y: 0 }) {
-  if (!pointer || !camera || !player) return { ...fallback };
-  pointer.updateWorldPoint?.(camera);
-  const x = pointer.worldX - player.x;
-  const y = pointer.worldY - player.y;
+export function aimFromClientPoint(point, surface, camera, player, fallback = { x: 1, y: 0 }) {
+  if (!point || !surface || !camera || !player) return { ...fallback };
+  const rect = surface.getBoundingClientRect();
+  if (!rect.width || !rect.height) return { ...fallback };
+  const screenX = (point.clientX - rect.left) * (surface.width / rect.width);
+  const screenY = (point.clientY - rect.top) * (surface.height / rect.height);
+  const world = camera.getWorldPoint(screenX, screenY);
+  const x = world.x - player.x;
+  const y = world.y - player.y;
   const length = Math.hypot(x, y);
   if (!Number.isFinite(length) || length < .001) return { ...fallback };
   return { x: x / length, y: y / length };
@@ -12,14 +16,25 @@ export class PointerFireLatch {
   constructor() {
     this.down = false;
     this.queued = false;
+    this.pointerId = null;
   }
 
-  press() {
+  press(pointerId = 0) {
+    if (this.pointerId !== null && this.pointerId !== pointerId) return false;
+    this.pointerId = pointerId;
     this.down = true;
     this.queued = true;
+    return true;
   }
 
-  release() { this.down = false; }
+  owns(pointerId) { return this.pointerId === pointerId; }
+
+  release(pointerId = this.pointerId) {
+    if (!this.owns(pointerId)) return false;
+    this.down = false;
+    this.pointerId = null;
+    return true;
+  }
 
   consume() {
     const firing = this.down || this.queued;
@@ -39,20 +54,41 @@ export class InputController {
     this.bindStick('move-stick', this.move, false);
     this.bindStick('aim-stick', this.aim, true);
     this.pointerFire = new PointerFireLatch();
-    this.onPointerDown = (pointer) => {
-      pointer.updateWorldPoint?.(scene.cameras.main);
-      this.pointerFire.press();
+    this.pointerPoint = null;
+    this.canvas = scene.game.canvas;
+    this.onPointerDown = (event) => {
+      if (!this.pointerFire.press(event.pointerId)) return;
+      this.pointerPoint = { clientX: event.clientX, clientY: event.clientY };
+      try { this.canvas.setPointerCapture?.(event.pointerId); } catch { /* Window fallback handles release. */ }
+      event.preventDefault();
     };
-    this.onPointerUp = () => this.pointerFire.release();
-    scene.input.on('pointerdown', this.onPointerDown);
-    scene.input.on('pointerup', this.onPointerUp);
+    this.onPointerMove = (event) => {
+      if (event.pointerType !== 'mouse' && !this.pointerFire.owns(event.pointerId)) return;
+      this.pointerPoint = { clientX: event.clientX, clientY: event.clientY };
+    };
+    this.onPointerUp = (event) => {
+      if (!this.pointerFire.owns(event.pointerId)) return;
+      this.pointerPoint = { clientX: event.clientX, clientY: event.clientY };
+      this.pointerFire.release(event.pointerId);
+      try {
+        if (this.canvas.hasPointerCapture?.(event.pointerId)) this.canvas.releasePointerCapture(event.pointerId);
+      } catch { /* The pointer may already be released by the WebView. */ }
+      event.preventDefault();
+    };
+    this.onPointerCancel = (event) => this.pointerFire.release(event.pointerId);
+    this.canvas.addEventListener('pointerdown', this.onPointerDown);
+    this.canvas.addEventListener('pointermove', this.onPointerMove);
+    window.addEventListener('pointerup', this.onPointerUp, true);
+    window.addEventListener('pointercancel', this.onPointerCancel, true);
+    this.canvas.addEventListener('lostpointercapture', this.onPointerCancel);
   }
 
   bindStick(id, target, isAim) {
     const element = document.getElementById(id);
     const knob = element.querySelector('i');
     let pointerId = null;
-    const reset = () => {
+    const reset = (event) => {
+      if (event && pointerId !== event.pointerId) return;
       pointerId = null;
       target.x = 0;
       target.y = 0;
@@ -75,6 +111,7 @@ export class InputController {
       pointerId = event.pointerId;
       element.setPointerCapture(pointerId);
       update(event);
+      event.stopPropagation();
       event.preventDefault();
     };
     element.addEventListener('pointerdown', down);
@@ -102,9 +139,10 @@ export class InputController {
 
     let aimX = this.aim.x;
     let aimY = this.aim.y;
-    if (!this.touchAimActive && this.scene.input.activePointer) {
-      const aim = aimFromPointer(
-        this.scene.input.activePointer,
+    if (!this.touchAimActive && this.pointerPoint) {
+      const aim = aimFromClientPoint(
+        this.pointerPoint,
+        this.canvas,
         this.scene.cameras.main,
         player,
         this.aim,
@@ -120,8 +158,11 @@ export class InputController {
   }
 
   destroy() {
-    this.scene.input.off('pointerdown', this.onPointerDown);
-    this.scene.input.off('pointerup', this.onPointerUp);
+    this.canvas.removeEventListener('pointerdown', this.onPointerDown);
+    this.canvas.removeEventListener('pointermove', this.onPointerMove);
+    window.removeEventListener('pointerup', this.onPointerUp, true);
+    window.removeEventListener('pointercancel', this.onPointerCancel, true);
+    this.canvas.removeEventListener('lostpointercapture', this.onPointerCancel);
     this.cleanups.forEach((cleanup) => cleanup());
     this.cleanups = [];
   }

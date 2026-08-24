@@ -14,6 +14,13 @@ export function createDirectionalAnimations(scene, atlas, frameRate = 10) {
   });
 }
 
+export function facingVector(input) {
+  if (input.firing && Math.hypot(input.aimX, input.aimY) > .001) {
+    return { x: input.aimX, y: input.aimY };
+  }
+  return { x: input.moveX, y: input.moveY };
+}
+
 export function playDirectional(sprite, key, x, y, moving = true) {
   const row = directionRowFromVector(x, y);
   const direction = DIRECTION_ROWS[row];

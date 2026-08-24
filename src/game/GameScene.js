@@ -9,8 +9,9 @@ import { InputController } from './InputController.js';
 import { LootSystem } from './LootSystem.js';
 import { RunState } from './RunState.js';
 import { Spawner } from './Spawner.js';
-import { playDirectional } from './animations.js';
+import { facingVector, playDirectional } from './animations.js';
 import { sampleWithoutReplacement, scoreForRun } from './simulation.js';
+import { createGameTextures, createPlayerLights, syncPlayerLights } from './VisualEffects.js';
 
 export class GameScene extends Phaser.Scene {
   constructor() { super('game'); }
@@ -34,7 +35,7 @@ export class GameScene extends Phaser.Scene {
     this.enemyDefinitions = ENEMIES;
     this.state = new RunState(HEROES[this.selection.heroId], WEAPONS[this.selection.weaponId]);
     this.createWorld();
-    this.createTextures();
+    createGameTextures(this);
     this.createGroups();
     this.createPlayer();
     this.inputController = new InputController(this);
@@ -50,33 +51,9 @@ export class GameScene extends Phaser.Scene {
   createWorld() {
     this.physics.world.setBounds(-100000, -100000, 200000, 200000);
     this.background = this.add.tileSprite(0, 0, this.scale.width, this.scale.height, 'ashen-map')
-      .setOrigin(0).setScrollFactor(0).setDepth(0).setAlpha(.42).setTint(0x6c647c);
+      .setOrigin(0).setScrollFactor(0).setDepth(0).setAlpha(.68).setTint(0x98a6bb);
     this.onResize = (size) => this.background?.setSize(size.width, size.height);
     this.scale.on('resize', this.onResize);
-  }
-
-  createTextures() {
-    const circle = (key, color, radius) => {
-      if (this.textures.exists(key)) return;
-      const graphics = this.make.graphics({ add: false });
-      graphics.fillStyle(color, 1).fillCircle(radius, radius, radius);
-      graphics.generateTexture(key, radius * 2, radius * 2).destroy();
-    };
-    circle('bullet', 0x9cf4ff, 4);
-    circle('enemy-bullet', 0xb75cff, 6);
-    circle('wisp', 0x87ecff, 8);
-    if (!this.textures.exists('ember')) {
-      const g = this.make.graphics({ add: false });
-      g.fillStyle(0x71efff).fillTriangle(6, 0, 12, 6, 6, 13).fillTriangle(6, 0, 0, 6, 6, 13);
-      g.generateTexture('ember', 12, 13).destroy();
-    }
-    if (!this.textures.exists('chest')) {
-      const g = this.make.graphics({ add: false });
-      g.fillStyle(0x17121f).fillRoundedRect(0, 7, 38, 28, 5);
-      g.lineStyle(3, 0xb89053).strokeRoundedRect(1, 8, 36, 26, 5);
-      g.fillStyle(0x65e6ff).fillRect(16, 17, 6, 8);
-      g.generateTexture('chest', 38, 38).destroy();
-    }
   }
 
   createGroups() {
@@ -97,6 +74,7 @@ export class GameScene extends Phaser.Scene {
     this.player.body.setMaxVelocity(500, 500);
     this.cameras.main.startFollow(this.player, true, .11, .11);
     this.cameras.main.setZoom(matchMedia('(max-width: 520px)').matches ? .94 : 1.05);
+    this.playerLights = createPlayerLights(this, this.player);
   }
 
   bindUi() {
@@ -114,7 +92,9 @@ export class GameScene extends Phaser.Scene {
     this.lastInput = input;
     const firingPenalty = input.firing && !this.state.flags.runGun ? .78 : 1;
     this.player.setVelocity(input.moveX * this.state.moveSpeed * firingPenalty, input.moveY * this.state.moveSpeed * firingPenalty);
-    playDirectional(this.player, HERO_ATLASES[this.state.hero.id].key, input.moveX, input.moveY, Math.hypot(input.moveX, input.moveY) > .08);
+    const facing = facingVector(input);
+    playDirectional(this.player, HERO_ATLASES[this.state.hero.id].key, facing.x, facing.y, Math.hypot(input.moveX, input.moveY) > .08);
+    syncPlayerLights(this.playerLights, this.player);
     this.updateDynamicBonuses(deltaSeconds, input);
     this.combat.update(deltaMs, input);
     this.spawner.update(deltaSeconds);

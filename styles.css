@@ -17,7 +17,7 @@ body { background: var(--night); color: var(--ink); touch-action: none; user-sel
 button { font: inherit; color: inherit; }
 .hidden { display: none !important; }
 #game canvas { display: block; }
-.vignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(circle at center, transparent 25%, rgba(0,0,0,.18) 54%, rgba(0,0,0,.76) 100%); z-index: 3; }
+.vignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(circle at center, transparent 32%, rgba(0,0,0,.12) 60%, rgba(0,0,0,.58) 100%); z-index: 3; }
 
 .screen { position: fixed; inset: 0; z-index: 8; padding: max(22px, env(safe-area-inset-top)) 20px max(22px, env(safe-area-inset-bottom)); background: radial-gradient(circle at 50% 25%, rgba(46,32,72,.42), rgba(9,8,13,.97) 58%); }
 .screen--center { display: grid; place-content: center; justify-items: center; gap: 14px; }

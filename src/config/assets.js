@@ -14,7 +14,7 @@ export const ENEMY_ATLASES = {
   bomber: { key: 'enemy-bomber', file: `${base}/sprites/enemies/enemy-bomber-move-8dir-6f-atlas.webp`, frameWidth: 181, frameHeight: 181 },
   charger: { key: 'enemy-charger', file: `${base}/sprites/enemies/enemy-charger-move-8dir-6f-atlas.webp`, frameWidth: 181, frameHeight: 181 },
   brute: { key: 'enemy-brute', file: `${base}/sprites/enemies/enemy-brute-move-8dir-6f-atlas.webp`, frameWidth: 181, frameHeight: 181 },
-  wingling: { key: 'enemy-wingling', file: `${base}/sprites/enemies/enemy-wingling-move-8dir-6f-atlas.webp`, frameWidth: 181, frameHeight: 181 },
+  wingling: { key: 'enemy-wingling', file: `${base}/sprites/enemies/enemy-wingling-move-8dir-6f-atlas-clean.webp`, frameWidth: 181, frameHeight: 181 },
   splitter: { key: 'enemy-splitter', file: `${base}/sprites/enemies/enemy-splitter-move-8dir-6f-atlas.webp`, frameWidth: 181, frameHeight: 181 },
 };
 
