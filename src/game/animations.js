@@ -14,11 +14,12 @@ export function createDirectionalAnimations(scene, atlas, frameRate = 10) {
   });
 }
 
-export function facingVector(input) {
-  if (input.firing && Math.hypot(input.aimX, input.aimY) > .001) {
+export function facingVector(input, fallback = { x: 0, y: 1 }, holdAim = false) {
+  if ((input.firing || holdAim) && Math.hypot(input.aimX, input.aimY) > .001) {
     return { x: input.aimX, y: input.aimY };
   }
-  return { x: input.moveX, y: input.moveY };
+  if (Math.hypot(input.moveX, input.moveY) > .001) return { x: input.moveX, y: input.moveY };
+  return { ...fallback };
 }
 
 export function playDirectional(sprite, key, x, y, moving = true) {

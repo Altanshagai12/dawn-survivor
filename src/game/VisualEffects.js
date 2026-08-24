@@ -24,7 +24,43 @@ function radialTexture(scene, key, size, stops) {
 
 export function createGameTextures(scene) {
   circleTexture(scene, 'bullet', 0x9cf4ff, 4);
-  circleTexture(scene, 'wisp', 0x87ecff, 8);
+  canvasTexture(scene, 'bullet-revolver', 24, 10, (context) => {
+    const trail = context.createLinearGradient(0, 0, 24, 0);
+    trail.addColorStop(0, 'rgba(70,190,230,0)');
+    trail.addColorStop(.62, 'rgba(105,230,255,.48)');
+    trail.addColorStop(1, 'rgba(245,255,255,1)');
+    context.fillStyle = trail;
+    context.beginPath();
+    context.moveTo(0, 5); context.lineTo(20, 2); context.lineTo(24, 5); context.lineTo(20, 8);
+    context.closePath(); context.fill();
+  });
+  canvasTexture(scene, 'bullet-pellet', 12, 8, (context) => {
+    context.fillStyle = '#d9fbff';
+    context.beginPath(); context.ellipse(7, 4, 5, 2.5, 0, 0, Math.PI * 2); context.fill();
+  });
+  canvasTexture(scene, 'bullet-bolt', 32, 10, (context) => {
+    context.fillStyle = '#8aeaff'; context.fillRect(3, 4, 25, 2);
+    context.fillStyle = '#efffff';
+    context.beginPath(); context.moveTo(32, 5); context.lineTo(24, 1); context.lineTo(24, 9); context.closePath(); context.fill();
+    context.fillStyle = '#6386b8';
+    context.beginPath(); context.moveTo(5, 5); context.lineTo(0, 0); context.lineTo(2, 5); context.lineTo(0, 10); context.closePath(); context.fill();
+  });
+  canvasTexture(scene, 'bullet-flame', 42, 22, (context) => {
+    const glow = context.createLinearGradient(0, 0, 42, 0);
+    glow.addColorStop(0, 'rgba(255,64,15,0)'); glow.addColorStop(.45, 'rgba(255,80,20,.7)');
+    glow.addColorStop(.82, 'rgba(255,186,48,.96)'); glow.addColorStop(1, '#fff3aa');
+    context.fillStyle = glow;
+    context.beginPath(); context.moveTo(1, 11); context.quadraticCurveTo(17, 0, 39, 8);
+    context.quadraticCurveTo(44, 11, 39, 14); context.quadraticCurveTo(17, 22, 1, 11); context.fill();
+  });
+  canvasTexture(scene, 'bullet-spirit', 28, 14, (context) => {
+    const glow = context.createRadialGradient(20, 7, 1, 20, 7, 9);
+    glow.addColorStop(0, '#ecffff'); glow.addColorStop(.3, '#68eaff');
+    glow.addColorStop(.7, 'rgba(115,83,255,.55)'); glow.addColorStop(1, 'rgba(80,45,180,0)');
+    context.fillStyle = glow; context.fillRect(7, 0, 21, 14);
+    context.strokeStyle = 'rgba(120,105,255,.7)'; context.lineWidth = 2;
+    context.beginPath(); context.moveTo(0, 10); context.quadraticCurveTo(10, 0, 22, 7); context.stroke();
+  });
 
   canvasTexture(scene, 'enemy-bullet', 32, 20, (context) => {
     const glow = context.createRadialGradient(22, 10, 1, 22, 10, 10);
@@ -70,6 +106,23 @@ export function createGameTextures(scene) {
     context.fillStyle = gradient;
     context.fillRect(-40, -44, 80, 88);
   });
+  canvasTexture(scene, 'dust-puff', 42, 22, (context) => {
+    const gradient = context.createRadialGradient(21, 11, 1, 21, 11, 20);
+    gradient.addColorStop(0, 'rgba(151,139,128,.42)');
+    gradient.addColorStop(.42, 'rgba(105,99,96,.22)');
+    gradient.addColorStop(1, 'rgba(70,65,64,0)');
+    context.fillStyle = gradient; context.fillRect(0, 0, 42, 22);
+  });
+  canvasTexture(scene, 'warning-ring', 80, 80, (context) => {
+    context.strokeStyle = 'rgba(191,113,255,.9)'; context.lineWidth = 3;
+    context.setLineDash([7, 6]); context.beginPath(); context.arc(40, 40, 31, 0, Math.PI * 2); context.stroke();
+    context.strokeStyle = 'rgba(101,230,255,.5)'; context.lineWidth = 1;
+    context.beginPath(); context.arc(40, 40, 23, 0, Math.PI * 2); context.stroke();
+  });
+  canvasTexture(scene, 'reload-ring', 72, 72, (context) => {
+    context.strokeStyle = 'rgba(101,230,255,.72)'; context.lineWidth = 3;
+    context.setLineDash([12, 8]); context.beginPath(); context.arc(36, 36, 29, 0, Math.PI * 2); context.stroke();
+  });
 
   if (!scene.textures.exists('ember')) {
     const graphics = scene.make.graphics({ add: false });
@@ -96,6 +149,44 @@ export function createPlayerLights(scene, player) {
 
 export function syncPlayerLights(lights, player) {
   lights?.forEach((light) => light.setPosition(player.x, player.y));
+}
+
+export function createReloadIndicator(scene, player) {
+  return scene.add.image(player.x, player.y, 'reload-ring')
+    .setDepth(23).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD);
+}
+
+export function syncReloadIndicator(indicator, player, state, deltaSeconds) {
+  if (!indicator?.active) return;
+  indicator.setPosition(player.x, player.y).setVisible(state.reloading);
+  if (!state.reloading) { indicator.setAlpha(0); return; }
+  const progress = Math.min(1, state.reloadProgress / Math.max(1, state.reloadMs));
+  indicator.setAlpha(.22 + progress * .58).setScale(.75 + progress * .2);
+  indicator.rotation += deltaSeconds * 2.8;
+}
+
+export function spawnRunDust(scene, player, moveX, moveY) {
+  const dust = scene.add.image(
+    player.x - moveX * 15 + Phaser.Math.Between(-6, 6),
+    player.y + player.displayHeight * .32 - moveY * 8,
+    'dust-puff',
+  ).setDepth(22).setAlpha(.42).setScale(.45, .3);
+  scene.tweens.add({
+    targets: dust, alpha: 0, scaleX: .9, scaleY: .55,
+    x: dust.x - moveX * 12, y: dust.y - 3,
+    duration: 360, ease: 'Quad.easeOut', onComplete: () => dust.destroy(),
+  });
+}
+
+export function showSpawnWarning(scene, x, y, duration = 650) {
+  const warning = scene.add.image(x, y, 'warning-ring')
+    .setDepth(18).setScale(.55).setAlpha(.35).setBlendMode(Phaser.BlendModes.ADD);
+  scene.tweens.add({
+    targets: warning, alpha: .95, scale: 1.05, angle: 55,
+    duration: Math.max(180, duration * .42), yoyo: true, repeat: 1,
+  });
+  scene.time.delayedCall(duration, () => warning?.active && warning.destroy());
+  return warning;
 }
 
 export function attachGroundShadow(scene, entity, options = {}) {

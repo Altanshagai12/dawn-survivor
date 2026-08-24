@@ -9,10 +9,12 @@ import { InputController } from './InputController.js';
 import { LootSystem } from './LootSystem.js';
 import { RunState } from './RunState.js';
 import { Spawner } from './Spawner.js';
+import { updateMovementFeedback, updateWeaponCharge } from './PlayerFeedback.js';
 import { facingVector, playDirectional } from './animations.js';
 import { sampleWithoutReplacement, scoreForRun } from './simulation.js';
 import {
-  attachGroundShadow, createGameTextures, createPlayerLights, syncGroundShadow, syncPlayerLights,
+  attachGroundShadow, createGameTextures, createPlayerLights, createReloadIndicator,
+  syncGroundShadow, syncPlayerLights, syncReloadIndicator,
 } from './VisualEffects.js';
 
 export class GameScene extends Phaser.Scene {
@@ -28,6 +30,9 @@ export class GameScene extends Phaser.Scene {
     this.regenAccumulator = 0;
     this.magnetAccumulator = 0;
     this.wispAccumulator = 0;
+    this.dustAccumulator = 0;
+    this.facing = { x: 0, y: 1 };
+    this.aimHoldUntil = 0;
   }
 
   create() {
@@ -84,6 +89,7 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.startFollow(this.player, true, .11, .11);
     this.cameras.main.setZoom(matchMedia('(max-width: 520px)').matches ? .94 : 1.05);
     this.playerLights = createPlayerLights(this, this.player);
+    this.reloadIndicator = createReloadIndicator(this, this.player);
   }
 
   bindUi() {
@@ -99,12 +105,17 @@ export class GameScene extends Phaser.Scene {
     if (this.state.elapsed >= RUN_SECONDS) { this.endRun(true); return; }
     const input = this.inputController.snapshot(this.player);
     this.lastInput = input;
+    if (input.firing) this.aimHoldUntil = this.time.now + 850;
     const firingPenalty = input.firing && !this.state.flags.runGun ? .78 : 1;
     this.player.setVelocity(input.moveX * this.state.moveSpeed * firingPenalty, input.moveY * this.state.moveSpeed * firingPenalty);
-    const facing = facingVector(input);
+    const facing = facingVector(input, this.facing, this.time.now < this.aimHoldUntil || this.state.reloading);
+    this.facing = facing;
     playDirectional(this.player, HERO_ATLASES[this.state.hero.id].key, facing.x, facing.y, Math.hypot(input.moveX, input.moveY) > .08);
     syncGroundShadow(this.player);
     syncPlayerLights(this.playerLights, this.player);
+    syncReloadIndicator(this.reloadIndicator, this.player, this.state, deltaSeconds);
+    updateWeaponCharge(this.state, deltaSeconds, input);
+    updateMovementFeedback(this, deltaSeconds, input);
     this.updateDynamicBonuses(deltaSeconds, input);
     this.combat.update(deltaMs, input);
     this.spawner.update(deltaSeconds);
@@ -141,11 +152,16 @@ export class GameScene extends Phaser.Scene {
 
   updateSummons(delta) {
     const desired = this.state.flags.wispsAdd || 0;
-    while (this.wisps.getLength() < desired) this.wisps.add(this.add.sprite(this.player.x, this.player.y, 'wisp').setDepth(29));
+    while (this.wisps.getLength() < desired) {
+      this.wisps.add(this.add.image(this.player.x, this.player.y, 'spirit-raven')
+        .setDepth(29).setScale(.34).setAlpha(.94));
+    }
     const wisps = this.wisps.getChildren();
     wisps.forEach((wisp, index) => {
       const angle = this.state.elapsed * 1.9 + index / Math.max(1, wisps.length) * Math.PI * 2;
-      wisp.setPosition(this.player.x + Math.cos(angle) * 48, this.player.y + Math.sin(angle) * 48);
+      const bob = Math.sin(this.state.elapsed * 5 + index * 2.4) * 3;
+      wisp.setPosition(this.player.x + Math.cos(angle) * 54, this.player.y + Math.sin(angle) * 40 + bob)
+        .setAngle(Math.sin(this.state.elapsed * 3 + index) * 4);
     });
     this.wispAccumulator += delta;
     if (wisps.length && this.wispAccumulator >= 1.15 / this.state.multiplierStats.summonRate) {
@@ -153,8 +169,13 @@ export class GameScene extends Phaser.Scene {
       wisps.forEach((wisp) => {
         const target = this.nearestEnemy(wisp.x, wisp.y, 380);
         if (!target) return;
+        wisp.setFlipX(target.x < wisp.x);
         const angle = Phaser.Math.Angle.Between(wisp.x, wisp.y, target.x, target.y);
-        this.combat.spawnBullet(wisp.x, wisp.y, angle, { damage: 10 * this.state.multiplierStats.summonDamage, speed: 440, life: 1, size: 5 });
+        this.combat.spawnBullet(wisp.x, wisp.y, angle, {
+          damage: 10 * this.state.multiplierStats.summonDamage,
+          speed: 470, life: 1, size: 8, texture: 'bullet-spirit',
+        });
+        this.flashEffect(wisp.x, wisp.y, 7, .22);
       });
     }
   }
@@ -171,9 +192,13 @@ export class GameScene extends Phaser.Scene {
   }
 
   onShot(angle) {
+    this.facing = { x: Math.cos(angle), y: Math.sin(angle) };
+    this.aimHoldUntil = this.time.now + 850;
     const x = this.player.x + Math.cos(angle) * 31;
     const y = this.player.y + Math.sin(angle) * 31;
-    this.flashEffect(x, y, 0, .42);
+    const flame = this.state.weapon.id === 'flame';
+    const scale = this.state.weapon.id === 'shotgun' ? .58 : flame ? .46 : .38;
+    this.flashEffect(x, y, flame ? 2 : 0, scale);
   }
 
   flashEffect(x, y, row, scale = .7) {

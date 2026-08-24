@@ -21,6 +21,11 @@ export class EnemySystem {
     const now = this.scene.time.now;
     this.scene.enemies.getChildren().forEach((enemy) => {
       if (!enemy?.active || enemy.dying) return;
+      if (enemy.spawnReadyAt > now) {
+        enemy.setVelocity(0, 0).setAlpha(.62 + Math.sin(now * .02) * .18);
+        syncGroundShadow(enemy);
+        return;
+      }
       if (enemy.status.burnUntil > now && now >= enemy.status.burnTick) {
         enemy.status.burnTick = now + 500;
         this.scene.combat.damageEnemy(enemy, enemy.status.burnDamage || 2, { burn: true });
@@ -43,7 +48,7 @@ export class EnemySystem {
 
       const atlas = enemy.enemyDef.boss ? BOSS_ATLASES[enemy.enemyDef.id] : ENEMY_ATLASES[enemy.enemyDef.id];
       playDirectional(enemy, atlas.key, enemy.body.velocity.x, enemy.body.velocity.y, true);
-      enemy.setAlpha(distance > 520 ? .38 : 1);
+      enemy.setAlpha(distance > 620 ? .72 : 1);
       syncGroundShadow(enemy);
       if (distance > 1900 && !enemy.enemyDef.boss) enemy.destroy();
     });
@@ -127,7 +132,8 @@ export class EnemySystem {
   }
 
   touchPlayer(enemy) {
-    if (!enemy.active || this.scene.time.now < (enemy.nextContactAt || 0)) return;
+    if (!enemy.active || this.scene.time.now < (enemy.spawnReadyAt || 0)
+      || this.scene.time.now < (enemy.nextContactAt || 0)) return;
     enemy.nextContactAt = this.scene.time.now + 700;
     this.damagePlayer(enemy.enemyDef.damage || 1);
     const angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.scene.player.x, this.scene.player.y);

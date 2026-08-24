@@ -9,6 +9,7 @@ export class BootScene extends Phaser.Scene {
       this.load.spritesheet(atlas.key, atlas.file, { frameWidth: atlas.frameWidth, frameHeight: atlas.frameHeight });
     }
     this.load.image('ashen-map', STATIC_ASSETS.map);
+    this.load.image('spirit-raven', STATIC_ASSETS.spirit);
     this.load.spritesheet('combat-vfx', STATIC_ASSETS.vfx, { frameWidth: 181, frameHeight: 181 });
   }
 

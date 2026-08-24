@@ -2,7 +2,22 @@ import { BOSS_ATLASES, ENEMY_ATLASES } from '../config/assets.js';
 import { BOSSES, MAX_LIVE_ENEMIES, availableEnemies } from '../data/enemies.js';
 import { enemyHealthScale, spawnInterval, weightedPick } from './simulation.js';
 import { playDirectional } from './animations.js';
-import { attachGroundShadow } from './VisualEffects.js';
+import { attachGroundShadow, showSpawnWarning } from './VisualEffects.js';
+
+export function edgeSpawnOffsets(halfWidth, halfHeight, angle, distanceBoost = 0) {
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  const edgeDistance = Math.min(
+    halfWidth / Math.max(.001, Math.abs(cos)),
+    halfHeight / Math.max(.001, Math.abs(sin)),
+  );
+  return {
+    x: cos * (edgeDistance + 115 + distanceBoost),
+    y: sin * (edgeDistance + 115 + distanceBoost),
+    warningX: cos * Math.max(42, edgeDistance - 46),
+    warningY: sin * Math.max(42, edgeDistance - 46),
+  };
+}
 
 export class Spawner {
   constructor(scene) {
@@ -32,17 +47,23 @@ export class Spawner {
 
   spawnPoint(distanceBoost = 0) {
     const camera = this.scene.cameras.main;
-    const radius = Math.max(camera.width, camera.height) * .65 + 130 + distanceBoost;
     const angle = Math.random() * Math.PI * 2;
+    const zoom = camera.zoom || 1;
+    const halfWidth = camera.width / zoom / 2;
+    const halfHeight = camera.height / zoom / 2;
+    const offsets = edgeSpawnOffsets(halfWidth, halfHeight, angle, distanceBoost);
     return {
-      x: this.scene.player.x + Math.cos(angle) * radius,
-      y: this.scene.player.y + Math.sin(angle) * radius,
+      x: this.scene.player.x + offsets.x,
+      y: this.scene.player.y + offsets.y,
+      warningX: this.scene.player.x + offsets.warningX,
+      warningY: this.scene.player.y + offsets.warningY,
     };
   }
 
-  spawnEnemy(definition, point = this.spawnPoint()) {
+  spawnEnemy(definition, point = null) {
+    const spawn = point || this.spawnPoint(definition.id === 'wingling' ? 90 : 0);
     const atlas = ENEMY_ATLASES[definition.id];
-    const sprite = this.scene.enemies.create(point.x, point.y, atlas.key, 24);
+    const sprite = this.scene.enemies.create(spawn.x, spawn.y, atlas.key, 24);
     if (!sprite) return null;
     const scale = definition.size / atlas.frameHeight;
     sprite.setScale(scale).setDepth(20).setDataEnabled();
@@ -58,6 +79,17 @@ export class Spawner {
     sprite.speed = definition.speed * (1 + this.scene.state.elapsed / 1500);
     sprite.nextAttack = this.scene.time.now + 900 + Math.random() * 1200;
     sprite.status = { burnUntil: 0, burnTick: 0, freezeUntil: 0 };
+    if (definition.id === 'wingling') {
+      const warningDuration = 720;
+      sprite.spawnReadyAt = this.scene.time.now + warningDuration;
+      sprite.spawnWarning = showSpawnWarning(
+        this.scene,
+        spawn.warningX ?? spawn.x,
+        spawn.warningY ?? spawn.y,
+        warningDuration,
+      );
+      sprite.once('destroy', () => sprite.spawnWarning?.active && sprite.spawnWarning.destroy());
+    }
     sprite.body.setSize(definition.radius * 2 / scale, definition.radius * 2 / scale, true);
     playDirectional(sprite, atlas.key, 0, 1, true);
     return sprite;

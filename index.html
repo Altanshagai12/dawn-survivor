@@ -33,6 +33,7 @@
           <div class="selection__group">
             <div class="section-title"><span data-i18n="weapon">Weapon</span><strong id="weapon-stat"></strong></div>
             <div id="weapon-list" class="card-strip card-strip--weapons"></div>
+            <p id="weapon-description" class="loadout-detail"></p>
           </div>
         </div>
         <button id="start-button" class="primary" data-i18n="begin">ENTER THE NIGHT</button>
@@ -48,7 +49,11 @@
         <div class="boss-bar hidden" id="boss-bar"><span id="boss-name"></span><i><b id="boss-fill"></b></i></div>
         <div class="hud__bottom">
           <div class="xp"><i><b id="xp-fill"></b></i><span id="level">LV 1</span></div>
-          <div class="ammo"><span id="ammo">6 / 6</span><small id="reload-state"></small></div>
+          <div class="ammo">
+            <span id="ammo">6 / 6</span>
+            <i class="reload-meter"><b id="reload-fill"></b></i>
+            <small id="reload-state"></small>
+          </div>
         </div>
       </section>
 

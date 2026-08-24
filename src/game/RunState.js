@@ -1,7 +1,8 @@
 import { xpRequired } from './simulation.js';
 
 const ADDITIVE_KEYS = new Set([
-  'ammoAdd', 'critChanceAdd', 'maxHpAdd', 'pierceAdd', 'spreadAdd',
+  'ammoAdd', 'bounceAdd', 'critChanceAdd', 'maxHpAdd', 'pierceAdd',
+  'projectilesAdd', 'spreadAdd',
 ]);
 
 export class RunState {
@@ -29,6 +30,7 @@ export class RunState {
     this.reloadProgress = 0;
     this.rerolls = hero.passive === 'reroll' ? 1 : 0;
     this.freshShots = 0;
+    this.weaponCharge = 0;
   }
 
   get multiplierStats() {
@@ -77,7 +79,11 @@ export class RunState {
         this.mods[key] = (this.mods[key] || 0) + value;
       }
     }
-    Object.assign(this.flags, upgrade.set || {});
+    for (const [key, value] of Object.entries(upgrade.set || {})) {
+      if (key.endsWith('Add') && typeof value === 'number') {
+        this.flags[key] = (this.flags[key] || 0) + value;
+      } else this.flags[key] = value;
+    }
     if (upgrade.mods?.maxHpAdd) {
       this.maxHp += upgrade.mods.maxHpAdd;
       this.hp += upgrade.mods.maxHpAdd;

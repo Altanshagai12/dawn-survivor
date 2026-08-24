@@ -8,3 +8,6 @@
 - Mobile combat input must assign each pointer to exactly one role (move stick, aim stick, or world tap) and test quick taps inside the real Usion iframe offset.
 - Sprite cleanup is incomplete until every non-exempt runtime atlas is processed and its ground contact is checked in motion; fixing only the reported hero/boss examples leaves the same source-art defect in later enemy families.
 - Damage immunity must be long enough to prevent stacked contact/projectile hits and must provide visible feedback for the entire immunity window, not only a short hit flash.
+- Directional character QA must verify every octant after both movement and a single tap-shot; checking continuous aim alone misses facing that snaps back on the next frame.
+- Fast enemies need an on-screen approach telegraph and sufficient contrast before their collision window starts; distant low alpha is not a usable warning on a dark mobile map.
+- A progression upgrade is not complete when only its card exists: its projectile behavior, combat feedback, HUD feedback, and a focused test must all be wired together.

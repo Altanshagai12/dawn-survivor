@@ -28,6 +28,7 @@ export const STATIC_ASSETS = {
   map: `${base}/map/ashen-clearing.webp`,
   vfx: `${base}/fx/combat-vfx-atlas.webp`,
   ambient: `${base}/fx/map-ambient-atlas.webp`,
+  spirit: `${base}/sprites/spirit-raven.webp`,
 };
 
 export const DIRECTION_ROWS = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'];

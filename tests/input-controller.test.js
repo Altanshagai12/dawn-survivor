@@ -46,3 +46,10 @@ test('faces toward aim while firing and movement otherwise', () => {
   assert.deepEqual(facingVector(moving), { x: -1, y: 0 });
   assert.deepEqual(facingVector({ ...moving, firing: true }), { x: 0, y: -1 });
 });
+
+test('holds the last shot direction through idle and reload frames', () => {
+  const prior = { x: -1, y: -1 };
+  const idle = { moveX: 0, moveY: 0, aimX: -1, aimY: 0, firing: false };
+  assert.deepEqual(facingVector(idle, prior, true), { x: -1, y: 0 });
+  assert.deepEqual(facingVector({ ...idle, aimX: 1 }, prior, false), prior);
+});

@@ -34,6 +34,7 @@ h2 { margin: 2px 0 18px; font-size: clamp(28px, 8vw, 44px); line-height: 1; }
 .selection__group { min-width: 0; }
 .section-title { display: flex; justify-content: space-between; margin: 0 2px 8px; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .13em; }
 .section-title strong { color: var(--ink); }
+#weapon-stat { max-width: 72%; text-align: right; font-size: 9px; letter-spacing: .04em; }
 .card-strip { display: grid; grid-template-columns: repeat(4, minmax(74px, 1fr)); gap: 8px; }
 .select-card { min-width: 0; height: 102px; padding: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: #14111c; position: relative; }
 .select-card img { width: 100%; height: 100%; object-fit: cover; object-position: center 24%; filter: saturate(.7) brightness(.78); }
@@ -41,6 +42,11 @@ h2 { margin: 2px 0 18px; font-size: clamp(28px, 8vw, 44px); line-height: 1; }
 .select-card.selected { border-color: var(--cyan); box-shadow: 0 0 0 2px rgba(101,230,255,.22); }
 .select-card.selected img { filter: none; }
 .card-strip--weapons .select-card { height: 64px; display: grid; place-content: center; font-size: 25px; }
+.card-strip--weapons .select-card b { color: var(--cyan); text-shadow: 0 0 12px rgba(101,230,255,.5); }
+.card-strip--weapons .select-card b svg { display: block; width: 38px; height: 32px; margin: 0 auto; fill: currentColor; filter: drop-shadow(0 0 5px rgba(101,230,255,.4)); }
+.card-strip--weapons .select-card[data-weapon="flame"] b { color: #ff9b55; text-shadow: 0 0 12px rgba(255,90,30,.7); }
+.card-strip--weapons .select-card[data-weapon="crossbow"] b { transform: rotate(-8deg); }
+.loadout-detail { min-height: 16px; margin: 7px 2px 0; color: var(--muted); font-size: 10px; line-height: 1.4; }
 
 .primary, .secondary { width: 100%; min-height: 52px; border-radius: 12px; font-weight: 900; letter-spacing: .1em; }
 .primary { border: 0; background: var(--ink); color: #0d0b11; }
@@ -64,6 +70,9 @@ h2 { margin: 2px 0 18px; font-size: clamp(28px, 8vw, 44px); line-height: 1; }
 .xp span { font-size: 10px; font-weight: 800; }
 .ammo { min-width: 68px; text-align: right; }
 .ammo span { display: block; font-weight: 900; }
+.reload-meter { display: block; width: 72px; height: 3px; margin: 3px 0 2px auto; overflow: hidden; border-radius: 4px; background: rgba(255,255,255,.12); }
+.reload-meter b { display: block; width: 0; height: 100%; background: linear-gradient(90deg, var(--violet), var(--cyan)); transition: width 45ms linear; }
+.reload-meter b.charged { background: #fff1a3; box-shadow: 0 0 8px #ffd36c; }
 
 .modal { position: fixed; inset: 0; z-index: 12; display: grid; place-items: center; padding: 18px; background: rgba(4,3,8,.76); backdrop-filter: blur(8px); }
 .modal__panel { width: min(560px, 100%); max-height: 92vh; overflow-y: auto; padding: 24px; border: 1px solid var(--line); border-radius: 18px; background: var(--panel); box-shadow: 0 30px 80px rgba(0,0,0,.55); }

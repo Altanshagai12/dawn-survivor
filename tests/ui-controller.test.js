@@ -1,10 +1,24 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { UIController } from '../src/ui/UIController.js';
+import { savedOrDefault, UIController, weaponIconSvg } from '../src/ui/UIController.js';
 
 function classList() {
   return { add() {}, remove() {}, toggle() {} };
 }
+
+test('falls back from a removed saved loadout without blocking boot', () => {
+  const heroes = { nyra: {} };
+  const weapons = { revolver: {} };
+  const profile = { selectedHero: 'missing-hero', selectedWeapon: 'smgs' };
+  assert.equal(savedOrDefault(heroes, profile.selectedHero, 'nyra'), 'nyra');
+  assert.equal(savedOrDefault(weapons, profile.selectedWeapon, 'revolver'), 'revolver');
+});
+
+test('every core weapon has a code-native selection icon', () => {
+  ['revolver', 'shotgun', 'crossbow', 'flame'].forEach((id) => {
+    assert.match(weaponIconSvg(id), /<svg[^>]*>.+<\/svg>/);
+  });
+});
 
 test('upgrade choices render their icon and localized tree label', () => {
   const previousDocument = globalThis.document;

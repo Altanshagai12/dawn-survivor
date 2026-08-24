@@ -1,11 +1,26 @@
+export function savedOrDefault(collection, saved, fallback) {
+  return collection[saved] ? saved : fallback;
+}
+
+const WEAPON_ICONS = {
+  revolver: '<path d="M4 10h18v5H4zm8 5h10l5 4h-9l-1 7h-6z"/>',
+  shotgun: '<path d="M3 8h25v4H3zm1 6h23v4H4zm15 4 7 6h-7l-6-6z"/>',
+  crossbow: '<path d="M4 16h24M16 5v22M7 9q9 13 18 0M7 9q9-7 18 0" fill="none" stroke="currentColor" stroke-width="3"/>',
+  flame: '<path d="M4 12h18v9H4zm18 2h6v5h-6zM8 21h11v5H8zM3 8c3-5 7-3 6 1-2-2-3 1-6-1z"/>',
+};
+
+export function weaponIconSvg(id) {
+  return `<svg viewBox="0 0 32 32" aria-hidden="true">${WEAPON_ICONS[id] || WEAPON_ICONS.revolver}</svg>`;
+}
+
 export class UIController {
   constructor({ heroes, weapons, i18n, profile }) {
     this.heroes = heroes;
     this.weapons = weapons;
     this.i18n = i18n;
     this.profile = profile;
-    this.selectedHero = profile.selectedHero || 'nyra';
-    this.selectedWeapon = profile.selectedWeapon || 'revolver';
+    this.selectedHero = savedOrDefault(heroes, profile.selectedHero, 'nyra');
+    this.selectedWeapon = savedOrDefault(weapons, profile.selectedWeapon, 'revolver');
     this.onStart = null;
     this.onPause = null;
     this.onResume = null;
@@ -18,10 +33,10 @@ export class UIController {
   cacheElements() {
     const ids = [
       'boot','menu','hud','choice-modal','pause-modal','result-modal','touch-controls',
-      'hero-list','weapon-list','hero-stat','weapon-stat','start-button','pause-button',
+      'hero-list','weapon-list','hero-stat','weapon-stat','weapon-description','start-button','pause-button',
       'resume-button','quit-button','again-button','menu-button','choice-list','choice-kicker',
       'choice-title','reroll-button','hearts','timer','boss-bar','boss-name','boss-fill',
-      'xp-fill','level','ammo','reload-state','result-kicker','result-title','result-score',
+      'xp-fill','level','ammo','reload-fill','reload-state','result-kicker','result-title','result-score',
       'result-kills','result-level','friends-board','toast',
     ];
     this.el = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
@@ -54,7 +69,9 @@ export class UIController {
     this.el['weapon-list'].replaceChildren(...Object.values(this.weapons).map((weapon) => {
       const button = document.createElement('button');
       button.className = `select-card${weapon.id === this.selectedWeapon ? ' selected' : ''}`;
-      button.innerHTML = `<b>${weapon.icon}</b><span>${this.i18n.lang === 'mn' ? weapon.nameMn : weapon.name}</span>`;
+      button.dataset.weapon = weapon.id;
+      button.title = weapon.description;
+      button.innerHTML = `<b>${weaponIconSvg(weapon.id)}</b><span>${this.i18n.lang === 'mn' ? weapon.nameMn : weapon.name}</span>`;
       button.addEventListener('click', () => {
         this.selectedWeapon = weapon.id;
         this.renderLoadout();
@@ -64,7 +81,9 @@ export class UIController {
     const hero = this.heroes[this.selectedHero];
     const weapon = this.weapons[this.selectedWeapon];
     this.el['hero-stat'].textContent = `♥ ${hero.hp} · SPD ${hero.speed}`;
-    this.el['weapon-stat'].textContent = `DMG ${weapon.damage} · ${weapon.magazine} RDS`;
+    this.el['weapon-stat'].textContent = `DMG ${weapon.damage} · RATE ${weapon.fireRate.toFixed(1)} · ${weapon.projectiles}× · ${weapon.magazine} RDS · ${weapon.reload.toFixed(1)}s`;
+    this.el['weapon-description'].textContent = this.i18n.lang === 'mn'
+      ? weapon.descriptionMn : weapon.description;
   }
 
   hideAll() {
@@ -94,7 +113,15 @@ export class UIController {
     this.el['xp-fill'].style.width = `${Math.min(100, state.xp / state.xpNext * 100)}%`;
     this.el.level.textContent = `LV ${state.level}`;
     this.el.ammo.textContent = `${state.ammo} / ${state.magazine}`;
-    this.el['reload-state'].textContent = state.reloading ? 'RELOADING' : '';
+    const reloadProgress = state.reloading
+      ? Math.min(1, state.reloadProgress / Math.max(1, state.reloadMs)) : 0;
+    const chargeProgress = state.weapon.chargeSeconds ? state.weaponCharge : 0;
+    const meterProgress = state.reloading ? reloadProgress : chargeProgress;
+    this.el['reload-fill'].style.width = `${meterProgress * 100}%`;
+    this.el['reload-fill'].classList.toggle('charged', !state.reloading && chargeProgress >= 1);
+    this.el['reload-state'].textContent = state.reloading
+      ? `RELOADING ${Math.round(reloadProgress * 100)}%`
+      : state.weapon.chargeSeconds ? `AIM CHARGE ${Math.round(chargeProgress * 100)}%` : '';
   }
 
   showBoss(boss) {

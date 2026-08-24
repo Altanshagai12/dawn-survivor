@@ -25,7 +25,7 @@ test('experience can grant multiple queued levels', () => {
 });
 
 test('shield blocks a hit and recharges on the simulation clock', () => {
-  const state = new RunState(HEROES.kage, WEAPONS.smgs);
+  const state = new RunState(HEROES.kage, WEAPONS.crossbow);
   state.applyUpgrade(upgrade('shield-1'));
   assert.deepEqual(state.takeDamage(1), { blocked: true, dead: false });
   assert.equal(state.hp, 3);
@@ -47,4 +47,17 @@ test('Varka gains permanent attack tempo when damaged', () => {
   state.takeDamage(1);
   assert.ok(state.fireDelayMs < before);
   assert.ok(state.reloadMs < WEAPONS.revolver.reload * 1000);
+});
+
+test('additive upgrade flags stack instead of replacing prior tiers', () => {
+  const state = new RunState(HEROES.nyra, WEAPONS.revolver);
+  state.applyUpgrade(upgrade('summon-1'));
+  state.applyUpgrade(upgrade('summon-2'));
+  state.applyUpgrade(upgrade('summon-3'));
+  assert.equal(state.flags.wispsAdd, 2);
+  state.applyUpgrade(upgrade('frost-1'));
+  state.applyUpgrade(upgrade('frost-2'));
+  state.applyUpgrade(upgrade('frost-3'));
+  state.applyUpgrade(upgrade('frost-4'));
+  assert.equal(state.flags.freezeChanceAdd, .4);
 });

@@ -20,20 +20,20 @@ const trees = [
   ]),
   makeTree('rapid', 'RAPID', 'ХУРД', [
     ['Quick Trigger','Хурдан гох','Fire rate +25%.','Галлах хурд +25%.',{fireRateMul:.25}],
-    ['Light Mechanism','Хөнгөн механизм','Fire rate +20%, ammo +2.','Галлах хурд +20%, сум +2.',{fireRateMul:.2,ammoAdd:2}],
-    ['Stand Your Ground','Байрлалаа барь','Standing still raises fire rate up to 35%.','Зогсож байх үед галлах хурд 35% хүртэл өснө.',{}, {standFire:true}],
-    ['Bullet Storm','Сумны шуурга','Fire rate +35%, spread +8°.','Галлах хурд +35%, тархалт +8°.',{fireRateMul:.35,spreadAdd:8}],
+    ['Double Shot','Хос буудалт','One extra projectile; damage -10%, spread +10°.','Нэг нэмэлт сум; гэмтэл -10%, тархалт +10°.',{damageMul:-.1,projectilesAdd:1,spreadAdd:10}],
+    ['Rubber Bullets','Ойдог сум','Bullets ricochet to one more enemy.','Сум нэг нэмэлт дайсан руу ойно.',{bounceAdd:1}],
+    ['Fusillade','Сумны шуурга','Double all projectiles; spread +12°.','Бүх сум хоёр дахин олширно; тархалт +12°.',{spreadAdd:12},{fusillade:true}],
   ]),
   makeTree('reload', 'RELOAD', 'ЦЭНЭГ', [
     ['Quick Hands','Шуурхай гар','Reload speed +25%.','Цэнэглэх хурд +25%.',{reloadMul:.25}],
     ['Deep Pockets','Гүн халаас','Ammo capacity +40%.','Сумны багтаамж +40%.',{ammoMul:.4}],
-    ['Fan the Embers','Цог цацруулах','Reloading releases 8 bullets.','Цэнэглэхэд 8 сум тойргоор гарна.',{}, {reloadBurst:true}],
+    ['Fan Fire','Тойрог гал','The last round releases 10 bullets in a circle.','Сүүлийн сум 10 сумыг тойргоор цацна.',{}, {fanFire:true}],
     ['Fresh Magazine','Шинэ дайз','First 4 shots after reload deal +60% damage.','Цэнэглэсний дараах 4 сум +60% гэмтэлтэй.',{}, {freshClip:true}],
   ]),
   makeTree('aim', 'AIM', 'ОНОЛТ', [
     ['True Aim','Жинхэнэ оноо','Projectile speed +30%, spread -15%.','Сумны хурд +30%, тархалт -15%.',{projectileSpeedMul:.3,spreadMul:-.15}],
     ['Penetrator','Нэвтлэгч','Piercing +1, projectile speed +15%.','Нэвтрэлт +1, сумны хурд +15%.',{pierceAdd:1,projectileSpeedMul:.15}],
-    ['Long Sight','Холын хараа','Damage +15%, projectile speed +25%.','Гэмтэл +15%, сумны хурд +25%.',{damageMul:.15,projectileSpeedMul:.25}],
+    ['Split Fire','Арын буудалт','Every shot fires a second bullet behind you.','Буудалт бүр арагш нэг нэмэлт сум гаргана.',{}, {backShot:true}],
     ['Perfect Line','Төгс шугам','Critical chance +20%.','Critical магадлал +20%.',{critChanceAdd:.2}],
   ]),
   makeTree('haste', 'HASTE', 'ШАЛАМГАЙ', [
