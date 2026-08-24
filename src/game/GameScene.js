@@ -145,7 +145,7 @@ export class GameScene extends Phaser.Scene {
     this.magnetAccumulator += delta;
     if (this.state.flags.magnetPulse && this.magnetAccumulator >= 20) {
       this.magnetAccumulator = 0;
-      this.gems.children.iterate((gem) => gem?.active && this.physics.moveToObject(gem, this.player, 520));
+      this.gems.getChildren().forEach((gem) => gem?.active && this.physics.moveToObject(gem, this.player, 520));
     }
   }
 
@@ -172,7 +172,7 @@ export class GameScene extends Phaser.Scene {
   nearestEnemy(x, y, range, excluded = null) {
     let best = null;
     let bestDistance = range;
-    this.enemies.children.iterate((enemy) => {
+    this.enemies.getChildren().forEach((enemy) => {
       if (!enemy?.active || enemy === excluded) return;
       const distance = Phaser.Math.Distance.Between(x, y, enemy.x, enemy.y);
       if (distance < bestDistance) { best = enemy; bestDistance = distance; }
@@ -231,7 +231,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   repelEnemies() {
-    this.enemies.children.iterate((enemy) => {
+    this.enemies.getChildren().forEach((enemy) => {
       if (!enemy?.active) return;
       const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, enemy.x, enemy.y);
       enemy.x += Math.cos(angle) * 34;

@@ -16,7 +16,7 @@ export class EnemySystem {
 
   update(deltaSeconds) {
     const now = this.scene.time.now;
-    this.scene.enemies.children.iterate((enemy) => {
+    this.scene.enemies.getChildren().forEach((enemy) => {
       if (!enemy?.active || enemy.dying) return;
       if (enemy.status.burnUntil > now && now >= enemy.status.burnTick) {
         enemy.status.burnTick = now + 500;
@@ -41,7 +41,7 @@ export class EnemySystem {
       enemy.setAlpha(distance > 520 ? .38 : 1);
       if (distance > 1900 && !enemy.enemyDef.boss) enemy.destroy();
     });
-    this.scene.enemyBullets.children.iterate((bullet) => {
+    this.scene.enemyBullets.getChildren().forEach((bullet) => {
       if (bullet?.active && now >= bullet.expiresAt) bullet.destroy();
     });
   }

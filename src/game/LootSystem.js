@@ -26,7 +26,7 @@ export class LootSystem {
 
   update() {
     const pickupRange = 92 * this.scene.state.multiplierStats.pickup;
-    this.scene.gems.children.iterate((gem) => {
+    this.scene.gems.getChildren().forEach((gem) => {
       if (!gem?.active) return;
       const distance = Phaser.Math.Distance.Between(gem.x, gem.y, this.scene.player.x, this.scene.player.y);
       if (distance < pickupRange) {

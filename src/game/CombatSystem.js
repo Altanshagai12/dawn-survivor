@@ -18,7 +18,7 @@ export class CombatSystem {
       if (state.ammo > 0) this.fire(input.aimX, input.aimY);
       else this.startReload();
     }
-    this.scene.bullets.children.iterate((bullet) => {
+    this.scene.bullets.getChildren().forEach((bullet) => {
       if (!bullet?.active) return;
       if (bullet.homingTarget?.active) {
         const angle = Phaser.Math.Angle.Between(bullet.x, bullet.y, bullet.homingTarget.x, bullet.homingTarget.y);
@@ -167,7 +167,7 @@ export class CombatSystem {
   explode(x, y, damage, radius = 90) {
     const actualRadius = radius * this.scene.state.multiplierStats.explosionRadius;
     this.scene.flashEffect(x, y, 2, actualRadius / 55);
-    this.scene.enemies.children.iterate((enemy) => {
+    this.scene.enemies.getChildren().forEach((enemy) => {
       if (enemy?.active && Phaser.Math.Distance.Between(x, y, enemy.x, enemy.y) <= actualRadius) {
         this.damageEnemy(enemy, damage * this.scene.state.multiplierStats.explosionDamage, { explosion: true });
       }
