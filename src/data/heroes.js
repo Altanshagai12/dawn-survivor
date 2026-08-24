@@ -1,7 +1,7 @@
 export const HEROES = {
   nyra: {
     id: 'nyra', name: 'Nyra', nameMn: 'Найра', hp: 4, speed: 168, size: 42,
-    portrait: './assets/portraits/nyra-anchor.png',
+    portrait: './assets/portraits/nyra-anchor.webp',
     passive: 'reroll',
     passiveText: 'Reroll upgrade choices once each level.',
     passiveMn: 'Түвшин бүрд upgrade сонголтыг нэг удаа шинэчилнэ.',
@@ -13,7 +13,7 @@ export const HEROES = {
   },
   varka: {
     id: 'varka', name: 'Varka', nameMn: 'Варка', hp: 7, speed: 142, size: 48,
-    portrait: './assets/portraits/varka-anchor.png',
+    portrait: './assets/portraits/varka-anchor.webp',
     passive: 'rage',
     passiveText: 'Taking damage permanently adds fire and reload rate.',
     passiveMn: 'Гэмтэл авах бүрд галлах ба цэнэглэх хурд нэмэгдэнэ.',
@@ -25,7 +25,7 @@ export const HEROES = {
   },
   sola: {
     id: 'sola', name: 'Sola', nameMn: 'Сола', hp: 3, speed: 154, size: 43,
-    portrait: './assets/portraits/sola-anchor.png',
+    portrait: './assets/portraits/sola-anchor.webp',
     passive: 'fireWave',
     passiveText: 'Every third shot releases a burning wave.',
     passiveMn: 'Гурав дахь сум бүр шаталтын долгион гаргана.',
@@ -37,7 +37,7 @@ export const HEROES = {
   },
   kage: {
     id: 'kage', name: 'Kage', nameMn: 'Кагэ', hp: 3, speed: 178, size: 41,
-    portrait: './assets/portraits/kage-anchor.png',
+    portrait: './assets/portraits/kage-anchor.webp',
     passive: 'shadow',
     passiveText: 'Kills can release a homing shadow bolt.',
     passiveMn: 'Устгасан дайснаас чиглэдэг сүүдрийн сум гарч болно.',
