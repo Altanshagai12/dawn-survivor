@@ -2,6 +2,7 @@ import { HEROES } from './data/heroes.js';
 import { WEAPONS } from './data/weapons.js';
 import { BootScene } from './game/BootScene.js';
 import { GameScene } from './game/GameScene.js';
+import { installVisibleResume } from './game/runtimeLifecycle.js';
 import { defaultProfile, initPlatform } from './platform/usion.js';
 import { createI18n } from './ui/i18n.js';
 import { UIController } from './ui/UIController.js';
@@ -23,6 +24,7 @@ async function boot() {
     scene: [BootScene, GameScene],
     fps: { target: 60, forceSetTimeOut: false },
   });
+  installVisibleResume(game);
 
   game.registry.set('platform', platform);
   game.registry.set('profile', profile);

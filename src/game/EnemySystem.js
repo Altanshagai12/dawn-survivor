@@ -136,7 +136,9 @@ export class EnemySystem {
     }
     const result = this.scene.state.takeDamage(amount);
     this.playerInvulnerableUntil = now + 900;
-    this.scene.player.setTintFill(result.blocked ? 0x65e6ff : 0xffffff);
+    this.scene.player
+      .setTint(result.blocked ? 0x65e6ff : 0xffffff)
+      .setTintMode(Phaser.TintModes.FILL);
     this.scene.time.delayedCall(120, () => this.scene.player?.active && this.scene.player.clearTint());
     this.scene.cameras.main.shake(180, result.blocked ? .003 : .009);
     if (result.blocked && this.scene.state.flags.shieldBurst) this.scene.combat.explode(this.scene.player.x, this.scene.player.y, 40, 115);

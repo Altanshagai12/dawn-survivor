@@ -24,5 +24,7 @@ test('runtime uses Phaser 4 group iteration and real Usion SDK calls', async () 
   const gameCode = (await Promise.all(modules.map((file) => readFile(new URL(file, gameDir), 'utf8')))).join('\n');
   const platformCode = await readFile(new URL('../src/platform/usion.js', import.meta.url), 'utf8');
   assert.ok(!gameCode.includes('.children.iterate'));
+  assert.ok(!gameCode.includes('.setTintFill('));
+  assert.ok(gameCode.includes('updateWorldPoint'));
   assert.ok(!/Usion\.(ready|user\.info)|Usion\.game\.emit/.test(platformCode));
 });

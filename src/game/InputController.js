@@ -1,3 +1,33 @@
+export function aimFromPointer(pointer, camera, player, fallback = { x: 1, y: 0 }) {
+  if (!pointer || !camera || !player) return { ...fallback };
+  pointer.updateWorldPoint?.(camera);
+  const x = pointer.worldX - player.x;
+  const y = pointer.worldY - player.y;
+  const length = Math.hypot(x, y);
+  if (!Number.isFinite(length) || length < .001) return { ...fallback };
+  return { x: x / length, y: y / length };
+}
+
+export class PointerFireLatch {
+  constructor() {
+    this.down = false;
+    this.queued = false;
+  }
+
+  press() {
+    this.down = true;
+    this.queued = true;
+  }
+
+  release() { this.down = false; }
+
+  consume() {
+    const firing = this.down || this.queued;
+    this.queued = false;
+    return firing;
+  }
+}
+
 export class InputController {
   constructor(scene) {
     this.scene = scene;
@@ -8,11 +38,12 @@ export class InputController {
     this.cleanups = [];
     this.bindStick('move-stick', this.move, false);
     this.bindStick('aim-stick', this.aim, true);
-    this.pointerDown = false;
+    this.pointerFire = new PointerFireLatch();
     this.onPointerDown = (pointer) => {
-      if (pointer.event?.target?.tagName === 'CANVAS') this.pointerDown = true;
+      pointer.updateWorldPoint?.(scene.cameras.main);
+      this.pointerFire.press();
     };
-    this.onPointerUp = () => { this.pointerDown = false; };
+    this.onPointerUp = () => this.pointerFire.release();
     scene.input.on('pointerdown', this.onPointerDown);
     scene.input.on('pointerup', this.onPointerUp);
   }
@@ -72,16 +103,18 @@ export class InputController {
     let aimX = this.aim.x;
     let aimY = this.aim.y;
     if (!this.touchAimActive && this.scene.input.activePointer) {
-      const pointer = this.scene.input.activePointer;
-      aimX = pointer.worldX - player.x;
-      aimY = pointer.worldY - player.y;
-      const length = Math.hypot(aimX, aimY) || 1;
-      aimX /= length;
-      aimY /= length;
+      const aim = aimFromPointer(
+        this.scene.input.activePointer,
+        this.scene.cameras.main,
+        player,
+        this.aim,
+      );
+      aimX = aim.x;
+      aimY = aim.y;
     }
     return {
       moveX, moveY, aimX, aimY,
-      firing: this.touchAimActive || this.pointerDown,
+      firing: this.touchAimActive || this.pointerFire.consume(),
       reload: Boolean(keys?.R && Phaser.Input.Keyboard.JustDown(keys.R)),
     };
   }
