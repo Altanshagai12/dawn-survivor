@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
     <meta name="theme-color" content="#09080d" />
     <title>Dawn Survivor</title>
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?build=20260825e" />
     <script src="https://usions.com/usion-sdk.js"></script>
     <script src="https://usions.com/vendor/phaser/4.2.1/phaser.min.js"></script>
   </head>
@@ -44,7 +44,10 @@
 
       <section id="hud" class="hud hidden" aria-live="polite">
         <div class="hud__top">
-          <div id="hearts" class="hearts"></div>
+          <div class="health-wrap">
+            <div id="hearts" class="hearts"></div>
+            <small id="damage-source" class="damage-source hidden"></small>
+          </div>
           <div class="timer-wrap"><span id="timer">10:00</span><small data-i18n="untilDawn">UNTIL DAWN</small></div>
           <button id="pause-button" class="icon-button" aria-label="Pause">Ⅱ</button>
         </div>
@@ -81,6 +84,7 @@
         <div class="modal__panel result-panel">
           <p class="eyebrow" id="result-kicker"></p>
           <h2 id="result-title"></h2>
+          <p id="result-cause" class="result-cause hidden"></p>
           <div class="result-stats">
             <div><strong id="result-score">0</strong><span data-i18n="score">SCORE</span></div>
             <div><strong id="result-kills">0</strong><span data-i18n="kills">KILLS</span></div>
@@ -98,6 +102,6 @@
       </div>
       <div id="toast" class="toast hidden"></div>
     </main>
-    <script type="module" src="./src/main.js"></script>
+    <script type="module" src="./src/main.js?build=20260825e"></script>
   </body>
 </html>

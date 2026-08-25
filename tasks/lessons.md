@@ -21,3 +21,5 @@
 - Footstep dust must render above the character's ground shadow and originate at the shared foot point; a low-alpha puff below the shadow exists technically but is visually absent.
 - A passive hazard must also look passive: proximity frame changes, source-origin combat flashes, and forced knockback read as attacks even when no projectile or attack timer exists.
 - Player damage must originate from a visible physics overlap or a readable projectile; center-distance thresholds larger than the combined visible bodies create invisible hits and unexplained deaths.
+- Contact hazards need entry/exit state, not only a global immunity timer; a collider callback repeats while the player keeps pressing into a static body and otherwise becomes periodic passive damage.
+- A production hotfix must version every changed browser module and stylesheet in the import chain; cache-busting only the HTML entry module can still execute stale transitive modules.

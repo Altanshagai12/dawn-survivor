@@ -176,6 +176,7 @@ export class EnemySystem {
     }
     const result = this.scene.state.takeDamage(amount);
     this.lastDamageSource = source;
+    this.scene.ui.showDamageSource?.(source);
     this.playerInvulnerableUntil = now + PLAYER_INVULNERABILITY_MS;
     this.invulnerabilityTween?.stop();
     this.invulnerabilityTween = this.scene.tweens.add({

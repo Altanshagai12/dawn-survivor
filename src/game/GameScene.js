@@ -4,14 +4,14 @@ import { HEROES } from '../data/heroes.js';
 import { eligibleUpgrades } from '../data/upgrades.js';
 import { WEAPONS } from '../data/weapons.js';
 import { CombatSystem } from './CombatSystem.js';
-import { EnemySystem } from './EnemySystem.js';
+import { EnemySystem } from './EnemySystem.js?build=20260825e';
 import { InputController } from './InputController.js';
 import { LootSystem } from './LootSystem.js';
 import { RunState } from './RunState.js';
 import { Spawner } from './Spawner.js';
 import { SummonSystem } from './SummonSystem.js';
 import { UpgradeEffectSystem } from './UpgradeEffectSystem.js';
-import { WorldObstacleSystem } from './WorldObstacleSystem.js';
+import { WorldObstacleSystem } from './WorldObstacleSystem.js?build=20260825e';
 import { gameDeviceProfile } from './deviceProfile.js';
 import { movementMultiplier } from './movement.js';
 import {
@@ -277,7 +277,15 @@ export class GameScene extends Phaser.Scene {
     this.physics.pause();
     this.enemyBullets.clear(true, true);
     const score = scoreForRun({ kills: this.state.kills, bosses: this.state.bosses, level: this.state.level, elapsed: this.state.elapsed, won }) + this.runScore;
-    const result = { won, score, kills: this.state.kills, bosses: this.state.bosses, level: this.state.level, elapsed: this.state.elapsed };
+    const result = {
+      won,
+      score,
+      kills: this.state.kills,
+      bosses: this.state.bosses,
+      level: this.state.level,
+      elapsed: this.state.elapsed,
+      damageSource: won ? null : this.enemySystem.lastDamageSource,
+    };
     this.profile.runs += 1;
     this.profile.wins += won ? 1 : 0;
     this.profile.totalKills += this.state.kills;

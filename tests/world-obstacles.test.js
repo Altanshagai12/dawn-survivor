@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  TREE_ATTACKS, TREE_CONTACT_DAMAGE, TREE_IDLE_FRAME, TREE_ROOT_ORIGIN,
+  TREE_ATTACKS, TREE_CONTACT_DAMAGE, TREE_CONTACT_RELEASE_DISTANCE, TREE_IDLE_FRAME, TREE_ROOT_ORIGIN,
   WorldObstacleSystem, chunkTreePoints,
 } from '../src/game/WorldObstacleSystem.js';
 import { DAMAGE_SOURCE } from '../src/game/EnemySystem.js';
@@ -20,12 +20,13 @@ test('touching a mysterious tree costs one health point', () => {
   assert.ok(TREE_ROOT_ORIGIN > .9);
 });
 
-test('tree contact only requests damage without attack feedback or knockback', () => {
+test('tree contact damages once until the player leaves its root radius', () => {
   let damage = 0;
   let flashes = 0;
   let knockbacks = 0;
   const system = {
     scene: {
+      player: { x: 0, y: 0 },
       enemySystem: {
         damagePlayer(amount, source) {
           damage += amount;
@@ -36,11 +37,27 @@ test('tree contact only requests damage without attack feedback or knockback', (
       flashEffect() { flashes += 1; },
       physics: { velocityFromRotation() { knockbacks += 1; } },
     },
+    loadedChunks: new Set(),
+    chunkRadius: 0,
+    loadChunk() {},
   };
-  WorldObstacleSystem.prototype.touchTree.call(system, { active: true });
+  const tree = {
+    active: true, contactLatched: false, chunkX: 0, chunkY: 0, x: 20, y: 20,
+    setFrame() { return this; },
+    setDepth() { return this; },
+  };
+  system.trees = { getChildren: () => [tree] };
+  WorldObstacleSystem.prototype.touchTree.call(system, tree);
+  WorldObstacleSystem.prototype.touchTree.call(system, tree);
   assert.equal(damage, TREE_CONTACT_DAMAGE);
   assert.equal(flashes, 0);
   assert.equal(knockbacks, 0);
+  system.scene.player.x = tree.x + TREE_CONTACT_RELEASE_DISTANCE + 1;
+  system.scene.player.y = tree.y;
+  WorldObstacleSystem.prototype.update.call(system);
+  assert.equal(tree.contactLatched, false);
+  WorldObstacleSystem.prototype.touchTree.call(system, tree);
+  assert.equal(damage, TREE_CONTACT_DAMAGE * 2);
 });
 
 test('nearby trees remain on their dormant visual frame', () => {

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  heroPassiveCopy, movementCopy, savedOrDefault, UIController,
+  damageSourceLabel, heroPassiveCopy, movementCopy, savedOrDefault, UIController,
   upgradeIconHtml, upgradePathHtml, weaponIconSvg,
 } from '../src/ui/UIController.js';
 
@@ -38,6 +38,12 @@ test('upgrade cards show all four nodes in their progression path', () => {
 test('loadout copy explains personal skills and firing movement speed', () => {
   assert.match(heroPassiveCopy({ passiveMn: 'Онцгой.' }, 'mn'), /ХУВИЙН ЧАДВАР · Онцгой/);
   assert.match(movementCopy('mn'), /Буудаж гүйх 78%/);
+});
+
+test('damage sources have readable English and Mongolian labels', () => {
+  assert.equal(damageSourceLabel('tree-contact', 'en'), 'TREE ROOT');
+  assert.equal(damageSourceLabel('enemy-projectile', 'mn'), 'ДАЙСНЫ СУМ');
+  assert.equal(damageSourceLabel('missing', 'mn'), 'ҮЛ МЭДЭГДЭХ');
 });
 
 test('upgrade choices render their icon and localized tree label', () => {

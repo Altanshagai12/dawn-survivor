@@ -1,5 +1,17 @@
 import { FIRING_MOVE_MULTIPLIER } from '../game/movement.js';
 
+const DAMAGE_SOURCE_LABELS = {
+  'enemy-contact': { en: 'ENEMY CONTACT', mn: 'ДАЙСНЫ МӨРГӨЛТ' },
+  'enemy-projectile': { en: 'ENEMY SHOT', mn: 'ДАЙСНЫ СУМ' },
+  'bomber-contact': { en: 'BOMBER', mn: 'ТЭСРЭГЧ ДАЙСАН' },
+  'tree-contact': { en: 'TREE ROOT', mn: 'МОДНЫ ҮНДЭС' },
+  unknown: { en: 'UNKNOWN', mn: 'ҮЛ МЭДЭГДЭХ' },
+};
+
+export function damageSourceLabel(source, language = 'en') {
+  return (DAMAGE_SOURCE_LABELS[source] || DAMAGE_SOURCE_LABELS.unknown)[language === 'mn' ? 'mn' : 'en'];
+}
+
 export function savedOrDefault(collection, saved, fallback) {
   return collection[saved] ? saved : fallback;
 }
@@ -73,7 +85,7 @@ export class UIController {
       'resume-button','quit-button','again-button','menu-button','choice-list','choice-kicker',
       'choice-title','reroll-button','hearts','timer','boss-bar','boss-name','boss-fill',
       'xp-fill','level','ammo','reload-fill','reload-state','result-kicker','result-title','result-score',
-      'result-kills','result-level','friends-board','toast',
+      'result-kills','result-level','result-cause','friends-board','damage-source','toast',
     ];
     this.el = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
   }
@@ -138,6 +150,7 @@ export class UIController {
   showGame() {
     this.hideAll();
     this.el.hud.classList.remove('hidden');
+    this.el['damage-source'].classList.add('hidden');
     if (matchMedia('(pointer: coarse)').matches) this.el['touch-controls'].classList.remove('hidden');
   }
 
@@ -202,6 +215,14 @@ export class UIController {
   showPause() { this.el['pause-modal'].classList.remove('hidden'); }
   hidePause() { this.el['pause-modal'].classList.add('hidden'); }
 
+  showDamageSource(source) {
+    const prefix = this.i18n.lang === 'mn' ? 'ОНОГДЛОО' : 'HIT';
+    this.el['damage-source'].textContent = `${prefix} · ${damageSourceLabel(source, this.i18n.lang)}`;
+    this.el['damage-source'].classList.remove('hidden');
+    clearTimeout(this.damageSourceTimer);
+    this.damageSourceTimer = setTimeout(() => this.el['damage-source'].classList.add('hidden'), 1100);
+  }
+
   showResult(result, friends = []) {
     this.hideAll();
     this.el['result-modal'].classList.remove('hidden');
@@ -210,6 +231,10 @@ export class UIController {
     this.el['result-score'].textContent = result.score.toLocaleString();
     this.el['result-kills'].textContent = result.kills.toLocaleString();
     this.el['result-level'].textContent = result.level;
+    const causePrefix = this.i18n.lang === 'mn' ? 'ЯЛАГДСАН ШАЛТГААН' : 'DEFEATED BY';
+    this.el['result-cause'].textContent = !result.won && result.damageSource
+      ? `${causePrefix} · ${damageSourceLabel(result.damageSource, this.i18n.lang)}` : '';
+    this.el['result-cause'].classList.toggle('hidden', !this.el['result-cause'].textContent);
     this.el['friends-board'].replaceChildren(...friends.map((entry) => {
       const row = document.createElement('div');
       row.className = 'friend-row';
