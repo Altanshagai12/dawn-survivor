@@ -70,35 +70,41 @@ test('damage grants a visible immunity window that blocks stacked hits', () => {
   }
 });
 
-test('a bomber cannot damage before physical player overlap', () => {
+test('a Boomer arms on contact and only damages when its windup explodes', () => {
   let damageCalls = 0;
   let kills = 0;
+  let armed = 0;
   const enemy = {
-    active: true,
-    enemyDef: { bomber: true, damage: 2 },
+    active: true, x: 0, y: 0,
+    enemyDef: { id: 'boomer', damage: 1 },
     nextContactAt: 0,
-    spawnReadyAt: 0,
     setVelocity() {},
   };
   const system = {
     scene: {
       time: { now: 1000 },
-      player: {},
+      player: { x: 0, y: 0 },
       flashEffect() {},
       combat: { killEnemy() { kills += 1; } },
     },
+    armBoomer() { armed += 1; enemy.boomerExplodesAt = 1700; },
     damagePlayer(amount, source) {
       damageCalls += amount;
-      assert.equal(source, DAMAGE_SOURCE.BOMBER);
+      assert.equal(source, DAMAGE_SOURCE.BOOMER);
       return true;
     },
   };
-
-  EnemySystem.prototype.updateRegular.call(system, enemy, 1, 0, 60, 49, 1000);
+  EnemySystem.prototype.touchPlayer.call(system, enemy);
   assert.equal(damageCalls, 0);
   assert.equal(kills, 0);
-
-  EnemySystem.prototype.touchPlayer.call(system, enemy);
-  assert.equal(damageCalls, 2);
-  assert.equal(kills, 1);
+  assert.equal(armed, 1);
+  const previousPhaser = globalThis.Phaser;
+  globalThis.Phaser = { Math: { Distance: { Between: () => 0 } } };
+  try {
+    EnemySystem.prototype.explodeBoomer.call(system, enemy);
+    assert.equal(damageCalls, 1);
+    assert.equal(kills, 1);
+  } finally {
+    globalThis.Phaser = previousPhaser;
+  }
 });

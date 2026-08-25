@@ -31,7 +31,7 @@ export class UpgradeEffectSystem {
     if (flags.glare) this.updateGlare(delta);
     if (flags.aeroMagic) this.updateGale(delta);
     if (flags.blazingSpeed && Math.hypot(input.moveX, input.moveY) > .25) this.updateBlazing(delta);
-    if (flags.shieldWrath && this.scene.state.shieldReady) this.updateShieldWrath(delta);
+    if (flags.divineWrath && this.scene.state.shieldReady) this.updateShieldWrath(delta);
   }
 
   advance(key, delta, interval) {
@@ -71,7 +71,8 @@ export class UpgradeEffectSystem {
   }
 
   updateBlazing(delta) {
-    if (!this.advance('blazing', delta, .24)) return;
+    const interval = .32 / Math.max(.5, this.scene.state.multiplierStats.moveSpeed);
+    if (!this.advance('blazing', delta, interval)) return;
     const { x, y } = this.scene.player;
     const ember = this.scene.add.sprite(x, y + 25, 'combat-vfx', 12)
       .setDepth(23).setScale(.23).setAlpha(.72).setBlendMode(Phaser.BlendModes.ADD);

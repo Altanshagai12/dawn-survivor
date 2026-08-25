@@ -1,83 +1,71 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { TEN_MINUTES_BALANCE, SPAWN_SESSIONS } from '../src/config/balance.js';
+import { BOSS_ATLASES, ENEMY_ATLASES, STATIC_ASSETS } from '../src/config/assets.js';
+import { BOSSES, ENEMIES, RUN_SECONDS } from '../src/data/enemies.js';
 import { BASE_HERO_SPEED, HEROES } from '../src/data/heroes.js';
-import { WEAPONS } from '../src/data/weapons.js';
-import { BOSSES, ENEMIES, RUN_SECONDS, availableEnemies } from '../src/data/enemies.js';
-import { UPGRADES, UPGRADE_CHOICE_COUNT, UPGRADE_TREES, eligibleUpgrades } from '../src/data/upgrades.js';
-import { ENEMY_ATLASES, STATIC_ASSETS } from '../src/config/assets.js';
+import {
+  ALL_UPGRADES, TOMES, UPGRADES, UPGRADE_CHOICE_COUNT, UPGRADE_TREES,
+  eligibleUpgrades, sampleUpgradeCards,
+} from '../src/data/upgrades.js';
 
-test('ships a full ten-minute content set', () => {
+test('ships the exact original ten-minute roster', () => {
   assert.equal(RUN_SECONDS, 600);
-  assert.equal(Object.keys(HEROES).length, 4);
-  assert.equal(Object.keys(WEAPONS).length, 4);
-  assert.equal(Object.keys(ENEMIES).length, 8);
-  assert.equal(Object.keys(BOSSES).length, 3);
-  assert.equal(UPGRADE_TREES.length, 25);
-  assert.equal(UPGRADES.length, 100);
-  assert.equal(new Set(Object.values(HEROES).map(({ passive }) => passive)).size, 4);
-  assert.ok(Object.values(HEROES).every(({ passiveText, passiveMn }) => passiveText && passiveMn));
-  assert.equal(UPGRADE_CHOICE_COUNT, 5);
-});
-
-test('uses one original-like hero pace and readable enemy speed tiers', () => {
+  assert.deepEqual(Object.keys(HEROES), ['shana', 'diamond', 'scarlett', 'hina']);
+  assert.deepEqual(Object.values(HEROES).map(({ hp }) => hp), [3, 6, 2, 2]);
   assert.ok(Object.values(HEROES).every(({ speed }) => speed === BASE_HERO_SPEED));
-  assert.ok(Object.values(ENEMIES).every(({ speed }) => speed < BASE_HERO_SPEED));
-  assert.ok(ENEMIES.wingling.speed > ENEMIES.crawler.speed);
-  assert.ok(ENEMIES.brute.speed < ENEMIES.creeper.speed);
-  assert.match(STATIC_ASSETS.map, /night-soil-calm-v3-2k\.webp$/);
+  assert.deepEqual(Object.keys(ENEMIES), ['tentacle', 'boomer', 'eye']);
+  assert.deepEqual(Object.keys(BOSSES), ['elder', 'shub']);
+  assert.deepEqual(Object.values(BOSSES).map(({ spawnAt, hp }) => [spawnAt, hp]), [[180, 1000], [300, 2500]]);
 });
 
-test('boss encounters land at minutes two, five, and nine', () => {
-  assert.deepEqual(Object.values(BOSSES).map(({ spawnAt }) => spawnAt), [120, 300, 540]);
-});
-
-test('upgrade trees unlock one tier at a time', () => {
-  const initial = eligibleUpgrades(new Set());
-  assert.equal(initial.length, 25);
-  assert.ok(initial.every(({ tier }) => tier === 1));
-
-  const owned = new Set(['power-1']);
-  const next = eligibleUpgrades(owned);
-  assert.ok(next.some(({ id }) => id === 'power-2'));
-  assert.ok(next.some(({ id }) => id === 'power-3'));
-});
-
-test('multi-shot and ricochet trees follow the original branching order', () => {
-  const multiTier2 = eligibleUpgrades(new Set(['double-1']));
-  assert.ok(multiTier2.some(({ id }) => id === 'double-2'));
-  assert.ok(multiTier2.some(({ id }) => id === 'double-3'));
-  assert.ok(!multiTier2.some(({ id }) => id === 'double-4'));
-  assert.ok(eligibleUpgrades(new Set(['double-1', 'double-2']))
-    .some(({ id }) => id === 'double-4'));
-  assert.ok(eligibleUpgrades(new Set(['double-1', 'double-3']))
-    .some(({ id }) => id === 'double-4'));
-
-  const rapidTier2 = eligibleUpgrades(new Set(['rapid-1']));
-  assert.ok(rapidTier2.some(({ id }) => id === 'rapid-2'));
-  assert.ok(rapidTier2.some(({ id }) => id === 'rapid-3'));
-  assert.ok(!rapidTier2.some(({ id }) => id === 'rapid-4'));
-});
-
-test('enemy roster grows throughout the run', () => {
-  assert.deepEqual(availableEnemies(0).map(({ id }) => id), ['creeper']);
-  assert.equal(availableEnemies(180).length, 5);
-  assert.equal(availableEnemies(600).length, 8);
-});
-
-test('every upgrade owns one unique generated atlas icon', () => {
-  const frames = UPGRADES.map(({ iconFrame }) => iconFrame);
-  assert.deepEqual(frames, Array.from({ length: 100 }, (_, index) => index));
-  assert.equal(new Set(frames).size, 100);
+test('uses the exact 48 normal upgrades and three boss-only Tomes', () => {
+  assert.equal(UPGRADE_CHOICE_COUNT, 5);
+  assert.equal(UPGRADE_TREES.length, 12);
+  assert.equal(UPGRADES.length, 48);
+  assert.equal(TOMES.length, 3);
+  assert.equal(ALL_UPGRADES.length, 51);
   assert.ok(UPGRADE_TREES.every((tree) => tree.length === 4));
   assert.ok(UPGRADE_TREES.every((tree) => tree.map(({ tier }) => tier).join() === '1,2,2,3'));
-  assert.ok(Object.values(HEROES).flatMap(({ chest }) => chest)
-    .every(({ icon }) => typeof icon === 'string' && icon.length > 0));
+  assert.ok(TOMES.every(({ type }) => type === 'tome'));
+  assert.ok(eligibleUpgrades(new Set()).every(({ type }) => type === 'normal'));
 });
 
-test('keeps the two approved base enemies untouched and cleans later atlases', () => {
-  assert.ok(!ENEMY_ATLASES.creeper.file.includes('-clean'));
-  assert.ok(!ENEMY_ATLASES.crawler.file.includes('-clean'));
-  assert.ok(Object.entries(ENEMY_ATLASES)
-    .filter(([id]) => !['creeper', 'crawler'].includes(id))
-    .every(([, atlas]) => atlas.file.includes('-clean.webp')));
+test('upgrade eligibility follows root, either branch, then final tier', () => {
+  const initial = eligibleUpgrades(new Set());
+  assert.equal(initial.length, 12);
+  assert.ok(initial.every(({ tier }) => tier === 1));
+  const afterRoot = eligibleUpgrades(new Set(['double_shot']));
+  assert.ok(afterRoot.some(({ id }) => id === 'fan_fire'));
+  assert.ok(afterRoot.some(({ id }) => id === 'split_fire'));
+  assert.ok(!afterRoot.some(({ id }) => id === 'fusillade'));
+  const afterBranch = eligibleUpgrades(new Set(['double_shot', 'fan_fire']));
+  assert.ok(afterBranch.some(({ id }) => id === 'split_fire'));
+  assert.ok(afterBranch.some(({ id }) => id === 'fusillade'));
+});
+
+test('level choices sample five unique eligible cards without Tome leakage', () => {
+  const cards = sampleUpgradeCards(new Set(), 5, () => .25);
+  assert.equal(cards.length, 5);
+  assert.equal(new Set(cards.map(({ id }) => id)).size, 5);
+  assert.ok(cards.every(({ tier, type }) => tier === 1 && type === 'normal'));
+});
+
+test('spawn sessions preserve the authored ten-minute schedule', () => {
+  assert.equal(SPAWN_SESSIONS.length, 9);
+  assert.deepEqual(SPAWN_SESSIONS[0], {
+    id: 'tentacle-0', enemyId: 'tentacle', from: 0, to: 60, hp: 24,
+    maxAlive: 20, count: 4, interval: 3,
+  });
+  assert.deepEqual(SPAWN_SESSIONS.at(-1), {
+    id: 'tentacle-final', enemyId: 'tentacle', from: 480, to: 600, hp: 100,
+    maxAlive: 600, count: 16, interval: 1,
+  });
+  assert.equal(TEN_MINUTES_BALANCE.enemy.shub.chargeRatio, 2.6);
+});
+
+test('content mappings use only the approved enemies and bosses', () => {
+  assert.deepEqual(Object.keys(ENEMY_ATLASES), Object.keys(ENEMIES));
+  assert.deepEqual(Object.keys(BOSS_ATLASES), Object.keys(BOSSES));
+  assert.match(STATIC_ASSETS.map, /night-soil-calm-v3-2k\.webp$/);
 });

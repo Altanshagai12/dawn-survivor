@@ -10,10 +10,10 @@ function classList() {
 }
 
 test('falls back from a removed saved loadout without blocking boot', () => {
-  const heroes = { nyra: {} };
+  const heroes = { shana: {} };
   const weapons = { revolver: {} };
   const profile = { selectedHero: 'missing-hero', selectedWeapon: 'smgs' };
-  assert.equal(savedOrDefault(heroes, profile.selectedHero, 'nyra'), 'nyra');
+  assert.equal(savedOrDefault(heroes, profile.selectedHero, 'shana'), 'shana');
   assert.equal(savedOrDefault(weapons, profile.selectedWeapon, 'revolver'), 'revolver');
 });
 
@@ -29,7 +29,10 @@ test('generated upgrade frames map to the 10 by 10 atlas', () => {
 });
 
 test('upgrade cards show all four nodes in their progression path', () => {
-  const html = upgradePathHtml({ tree: 'power', iconFrame: 6 }, new Set(['power-1']));
+  const html = upgradePathHtml({
+    id: 'big_shot', tree: 'power', iconFrame: 22,
+    treeNodes: ['power_shot', 'splinter', 'big_shot', 'reaper_rounds'],
+  }, new Set(['power_shot']));
   assert.equal((html.match(/choice-card__path-icon/g) || []).length, 4);
   assert.equal((html.match(/ owned/g) || []).length, 1);
   assert.equal((html.match(/ current/g) || []).length, 1);

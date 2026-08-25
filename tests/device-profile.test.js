@@ -5,14 +5,14 @@ import { FIRING_MOVE_MULTIPLIER, movementMultiplier } from '../src/game/movement
 import { recoilPose } from '../src/game/PlayerFeedback.js';
 import { runDustOrigin, spawnRunDust } from '../src/game/VisualEffects.js';
 
-test('mobile profile bounds expensive entities while preserving desktop quality', () => {
+test('mobile preserves the same enemy difficulty while reducing only visual cost', () => {
   const mobile = gameDeviceProfile({ coarse: true, width: 390, cores: 4, memory: 4 });
   const desktop = gameDeviceProfile({ coarse: false, width: 1440, cores: 12, memory: 16 });
   assert.equal(mobile.mobile, true);
-  assert.ok(mobile.enemyCap < desktop.enemyCap);
+  assert.equal(mobile.enemyCap, desktop.enemyCap);
+  assert.equal(mobile.enemyCap, 620);
   assert.ok(mobile.vfxCap < desktop.vfxCap);
   assert.ok(mobile.cameraZoom < desktop.cameraZoom);
-  assert.equal(desktop.enemyCap, 135);
 });
 
 test('firing movement is slower until Run and Gun removes the penalty', () => {

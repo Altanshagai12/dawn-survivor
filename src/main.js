@@ -1,13 +1,15 @@
-import { HEROES } from './data/heroes.js?build=20260825g';
-import { WEAPONS } from './data/weapons.js';
-import { BootScene } from './game/BootScene.js?build=20260825l';
-import { GameScene } from './game/GameScene.js?build=20260825m';
-import { installVisibleResume } from './game/runtimeLifecycle.js';
-import { defaultProfile, initPlatform } from './platform/usion.js';
-import { createI18n } from './ui/i18n.js';
-import { UIController } from './ui/UIController.js?build=20260825i';
+import { HEROES } from './data/heroes.js?build=20260825r';
+import { WEAPONS } from './data/weapons.js?build=20260825r';
+import { BootScene } from './game/BootScene.js?build=20260825r';
+import { GameScene } from './game/GameScene.js?build=20260825r';
+import { installVisibleResume } from './game/runtimeLifecycle.js?build=20260825r';
+import { defaultProfile, initPlatform } from './platform/usion.js?build=20260825r';
+import { createI18n } from './ui/i18n.js?build=20260825r';
+import { UIController } from './ui/UIController.js?build=20260825r';
+import { installOrientationGate, requestLandscape } from './ui/orientation.js?build=20260825r';
 
 async function boot() {
+  installOrientationGate();
   const platform = await initPlatform();
   const stored = await platform.loadProfile();
   const profile = { ...defaultProfile(), ...(stored || {}) };
@@ -32,6 +34,7 @@ async function boot() {
   game.registry.set('i18n', i18n);
 
   ui.onStart = async (selection) => {
+    await requestLandscape();
     profile.selectedHero = selection.heroId;
     profile.selectedWeapon = selection.weaponId;
     await platform.saveProfile(profile);

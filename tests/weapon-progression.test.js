@@ -38,8 +38,8 @@ test('projectile upgrades wire ricochet, rear fire, fan fire, and fusillade', ()
 });
 
 test('siege preserves ammo only while standing still', () => {
-  assert.equal(shouldConsumeAmmo({ siege: true, moving: false, roll: .39 }), false);
-  assert.equal(shouldConsumeAmmo({ siege: true, moving: false, roll: .4 }), true);
+  assert.equal(shouldConsumeAmmo({ siege: true, moving: false, roll: .32 }), false);
+  assert.equal(shouldConsumeAmmo({ siege: true, moving: false, roll: .33 }), true);
   assert.equal(shouldConsumeAmmo({ siege: true, moving: true, roll: 0 }), true);
   assert.equal(shouldConsumeAmmo({ free: true }), false);
 });
@@ -48,7 +48,7 @@ test('a final upgraded shot fires forward, backward, and around the player', () 
   const previousPhaser = globalThis.Phaser;
   globalThis.Phaser = { Math: { DegToRad: (degrees) => degrees * Math.PI / 180 } };
   try {
-    const state = new RunState(HEROES.nyra, WEAPONS.crossbow);
+    const state = new RunState(HEROES.shana, WEAPONS.crossbow);
     state.mods.projectilesAdd = 2;
     Object.assign(state.flags, { fusillade: true, backShot: true, fanFire: true });
     const spawned = [];
@@ -65,6 +65,27 @@ test('a final upgraded shot fires forward, backward, and around the player', () 
     assert.equal(spawned.length, 15);
     assert.ok(spawned.some(({ angle }) => Math.abs(angle - Math.PI) < .001));
     assert.equal(state.reloading, true);
+  } finally {
+    globalThis.Phaser = previousPhaser;
+  }
+});
+
+test('Scarlett counts fire events and emits exactly two waves across six shots', () => {
+  const previousPhaser = globalThis.Phaser;
+  globalThis.Phaser = { Math: { DegToRad: (degrees) => degrees * Math.PI / 180, FloatBetween: () => 0 } };
+  try {
+    const state = new RunState(HEROES.scarlett, WEAPONS.revolver);
+    const scene = {
+      physics: { add: { overlap() {} } }, bullets: {}, enemies: { getChildren: () => [] },
+      state, player: { x: 0, y: 0 }, time: { now: 1000 }, lastInput: { moveX: 0, moveY: 0 },
+      onShot() {}, flashEffect() {}, nearestEnemy: () => null,
+    };
+    const combat = new CombatSystem(scene);
+    combat.spawnBullet = () => ({});
+    let waves = 0;
+    combat.fireWave = () => { waves += 1; };
+    for (let index = 0; index < 6; index += 1) combat.fire(1, 0);
+    assert.equal(waves, 2);
   } finally {
     globalThis.Phaser = previousPhaser;
   }

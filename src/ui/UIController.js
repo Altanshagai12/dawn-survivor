@@ -1,10 +1,11 @@
-import { FIRING_MOVE_MULTIPLIER } from '../game/movement.js?build=20260825g';
+import { FIRING_MOVE_MULTIPLIER } from '../game/movement.js?build=20260825r';
 
 const DAMAGE_SOURCE_LABELS = {
   'enemy-contact': { en: 'ENEMY CONTACT', mn: 'ДАЙСНЫ МӨРГӨЛТ' },
   'enemy-projectile': { en: 'ENEMY SHOT', mn: 'ДАЙСНЫ СУМ' },
   'bomber-contact': { en: 'BOMBER', mn: 'ТЭСРЭГЧ ДАЙСАН' },
   'tree-contact': { en: 'TREE ROOT', mn: 'МОДНЫ ҮНДЭС' },
+  'barrier-contact': { en: 'ELECTRIC BARRIER', mn: 'ЦАХИЛГААН ХААЛТ' },
   unknown: { en: 'UNKNOWN', mn: 'ҮЛ МЭДЭГДЭХ' },
 };
 
@@ -50,12 +51,14 @@ export function upgradeIconHtml(card) {
 
 export function upgradePathHtml(card, owned = new Set()) {
   if (!Number.isInteger(card.iconFrame) || !card.tree) return '';
-  const firstFrame = Math.floor(card.iconFrame / 4) * 4;
-  const icons = Array.from({ length: 4 }, (_, index) => {
+  const nodeIds = card.treeNodes || [];
+  if (!nodeIds.length) return '';
+  const firstFrame = card.iconFrame - nodeIds.indexOf(card.id);
+  const icons = nodeIds.map((nodeId, index) => {
     const frame = firstFrame + index;
     const x = frame % 10 / 9 * 100;
     const y = Math.floor(frame / 10) / 9 * 100;
-    const status = frame === card.iconFrame ? ' current' : owned.has(`${card.tree}-${index + 1}`) ? ' owned' : '';
+    const status = nodeId === card.id ? ' current' : owned.has(nodeId) ? ' owned' : '';
     return `<i class="choice-card__path-icon${status}" style="background-position:${x}% ${y}%"></i>`;
   }).join('');
   return `<span class="choice-card__path" aria-hidden="true">${icons}</span>`;
@@ -67,7 +70,7 @@ export class UIController {
     this.weapons = weapons;
     this.i18n = i18n;
     this.profile = profile;
-    this.selectedHero = savedOrDefault(heroes, profile.selectedHero, 'nyra');
+    this.selectedHero = savedOrDefault(heroes, profile.selectedHero, 'shana');
     this.selectedWeapon = savedOrDefault(weapons, profile.selectedWeapon, 'revolver');
     this.onStart = null;
     this.onPause = null;
@@ -184,9 +187,12 @@ export class UIController {
     this.el['boss-fill'].style.width = `${Math.max(0, boss.hp / boss.maxHp * 100)}%`;
   }
 
-  choose(cards, { chest = false, canReroll = false, owned = new Set() } = {}) {
-    this.el['choice-kicker'].textContent = chest ? 'BOSS CHEST' : 'LEVEL UP';
-    this.el['choice-title'].textContent = chest ? 'Claim a hunter gift' : this.i18n.t('chooseUpgrade');
+  choose(cards, { rewardType = 'level', canReroll = false, owned = new Set() } = {}) {
+    const chest = rewardType === 'chest';
+    const tome = rewardType === 'tome';
+    this.el['choice-kicker'].textContent = tome ? 'BOSS TOME' : chest ? 'BOSS CHEST' : 'LEVEL UP';
+    this.el['choice-title'].textContent = tome ? 'Choose a forbidden Tome'
+      : chest ? 'Claim one eligible upgrade' : this.i18n.t('chooseUpgrade');
     let selectedIndex = 0;
     const copyFor = (card) => ({
       name: this.i18n.lang === 'mn' && card.nameMn ? card.nameMn : card.name,
@@ -216,7 +222,7 @@ export class UIController {
       const card = cards[index];
       const { name, desc, tree } = copyFor(card);
       this.el['choice-detail-icon'].innerHTML = upgradeIconHtml(card);
-      this.el['choice-detail-tree'].textContent = tree || (chest ? 'HUNTER GIFT' : 'UPGRADE');
+      this.el['choice-detail-tree'].textContent = tree || (tome ? 'TOME' : chest ? 'BOSS REWARD' : 'UPGRADE');
       this.el['choice-detail-name'].textContent = name;
       this.el['choice-detail-description'].textContent = desc;
       this.el['choice-detail-path'].innerHTML = upgradePathHtml(card, owned);
@@ -227,7 +233,8 @@ export class UIController {
     renderSelection(0);
     this.el['choice-modal'].classList.remove('hidden');
     this.el['reroll-button'].classList.toggle('hidden', !canReroll);
-    this.el['choice-confirm'].textContent = chest ? 'CLAIM' : this.i18n.lang === 'mn' ? 'СОНГОХ' : 'CHOOSE';
+    this.el['choice-confirm'].textContent = rewardType === 'level'
+      ? (this.i18n.lang === 'mn' ? 'СОНГОХ' : 'CHOOSE') : 'CLAIM';
     return new Promise((resolve) => {
       this.el['choice-confirm'].onclick = () => {
         this.el['choice-modal'].classList.add('hidden');

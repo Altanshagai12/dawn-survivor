@@ -1,28 +1,30 @@
-import { HERO_ATLASES } from '../config/assets.js?build=20260825g';
-import { ENEMIES, RUN_SECONDS } from '../data/enemies.js?build=20260825g';
-import { HEROES } from '../data/heroes.js?build=20260825g';
-import { UPGRADE_CHOICE_COUNT, eligibleUpgrades } from '../data/upgrades.js?build=20260825g';
-import { WEAPONS } from '../data/weapons.js';
-import { CombatSystem } from './CombatSystem.js';
-import { EnemySystem } from './EnemySystem.js?build=20260825g';
-import { InputController } from './InputController.js';
-import { LootSystem } from './LootSystem.js';
-import { RunState } from './RunState.js';
-import { Spawner } from './Spawner.js?build=20260825g';
-import { SummonSystem } from './SummonSystem.js';
-import { UpgradeEffectSystem } from './UpgradeEffectSystem.js';
-import { WorldObstacleSystem } from './WorldObstacleSystem.js?build=20260825m';
-import { gameDeviceProfile } from './deviceProfile.js';
-import { movementMultiplier } from './movement.js?build=20260825g';
+import { HERO_ATLASES } from '../config/assets.js?build=20260825r';
+import { ENEMIES, RUN_SECONDS } from '../data/enemies.js?build=20260825r';
+import { HEROES } from '../data/heroes.js?build=20260825r';
+import { TOMES, sampleUpgradeCards } from '../data/upgrades.js?build=20260825r';
+import { WEAPONS } from '../data/weapons.js?build=20260825r';
+import { CombatSystem } from './CombatSystem.js?build=20260825r';
+import { BossBarrierSystem } from './BossBarrierSystem.js?build=20260825r';
+import { CharacterAbilitySystem } from './CharacterAbilitySystem.js?build=20260825r';
+import { EnemySystem } from './EnemySystem.js?build=20260825r';
+import { InputController } from './InputController.js?build=20260825r';
+import { LootSystem } from './LootSystem.js?build=20260825r';
+import { RunState } from './RunState.js?build=20260825r';
+import { Spawner } from './Spawner.js?build=20260825r';
+import { SummonSystem } from './SummonSystem.js?build=20260825r';
+import { UpgradeEffectSystem } from './UpgradeEffectSystem.js?build=20260825r';
+import { WorldObstacleSystem } from './WorldObstacleSystem.js?build=20260825r';
+import { gameDeviceProfile } from './deviceProfile.js?build=20260825r';
+import { movementMultiplier } from './movement.js?build=20260825r';
 import {
   triggerShotFeedback, updateMovementFeedback, updateShotFeedback, updateWeaponCharge,
-} from './PlayerFeedback.js';
-import { facingVector, playDirectional } from './animations.js';
-import { sampleWithoutReplacement, scoreForRun } from './simulation.js';
+} from './PlayerFeedback.js?build=20260825r';
+import { facingVector, playDirectional } from './animations.js?build=20260825r';
+import { scoreForRun } from './simulation.js?build=20260825r';
 import {
   attachGroundShadow, createGameTextures, createPlayerLights, createReloadIndicator,
   syncGroundShadow, syncPlayerLights, syncReloadIndicator,
-} from './VisualEffects.js';
+} from './VisualEffects.js?build=20260825r';
 
 export class GameScene extends Phaser.Scene {
   constructor() { super('game'); }
@@ -34,8 +36,6 @@ export class GameScene extends Phaser.Scene {
     this.choiceOpen = false;
     this.runScore = 0;
     this.hudAccumulator = 0;
-    this.regenAccumulator = 0;
-    this.magnetAccumulator = 0;
     this.dustAccumulator = 0;
     this.facing = { x: 0, y: 1 };
     this.aimHoldUntil = 0;
@@ -59,15 +59,18 @@ export class GameScene extends Phaser.Scene {
     this.createGroups();
     this.createPlayer();
     this.inputController = new InputController(this);
+    this.barrier = new BossBarrierSystem(this);
     this.spawner = new Spawner(this);
     this.combat = new CombatSystem(this);
     this.loot = new LootSystem(this);
     this.enemySystem = new EnemySystem(this);
     this.obstacles = new WorldObstacleSystem(this);
+    this.characterAbility = new CharacterAbilitySystem(this);
     this.summons = new SummonSystem(this);
     this.upgradeEffects = new UpgradeEffectSystem(this);
     this.bindUi();
     this.ui.showGame();
+    document.getElementById('ability-button')?.classList.toggle('hidden', this.state.hero.id !== 'hina');
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.cleanup());
   }
 
@@ -122,8 +125,12 @@ export class GameScene extends Phaser.Scene {
     const input = this.inputController.snapshot(this.player);
     this.lastInput = input;
     if (input.firing) this.aimHoldUntil = this.time.now + 850;
-    const firingPenalty = movementMultiplier(input.firing, this.state.flags.runGun);
-    this.player.setVelocity(input.moveX * this.state.moveSpeed * firingPenalty, input.moveY * this.state.moveSpeed * firingPenalty);
+    const dashing = this.characterAbility.update(input);
+    const firingPenalty = movementMultiplier(input.firing, (this.state.mods.walkSpeedMul || 0) >= 1);
+    if (!dashing) this.player.setVelocity(
+      input.moveX * this.state.moveSpeed * firingPenalty,
+      input.moveY * this.state.moveSpeed * firingPenalty,
+    );
     const facing = facingVector(input, this.facing, this.time.now < this.aimHoldUntil || this.state.reloading);
     this.facing = facing;
     playDirectional(this.player, HERO_ATLASES[this.state.hero.id].key, facing.x, facing.y, Math.hypot(input.moveX, input.moveY) > .08);
@@ -133,12 +140,12 @@ export class GameScene extends Phaser.Scene {
     syncReloadIndicator(this.reloadIndicator, this.player, this.state, deltaSeconds);
     updateWeaponCharge(this.state, deltaSeconds, input);
     updateMovementFeedback(this, deltaSeconds, input);
-    this.updateDynamicBonuses(deltaSeconds, input);
     this.combat.update(deltaMs, input);
     this.spawner.update(deltaSeconds);
     this.enemySystem.update(deltaSeconds);
     this.loot.update();
     this.obstacles.update();
+    this.barrier.update();
     this.summons.update(deltaSeconds);
     this.upgradeEffects.update(deltaSeconds, input);
     this.background.tilePositionX = this.cameras.main.scrollX;
@@ -148,24 +155,6 @@ export class GameScene extends Phaser.Scene {
       this.hudAccumulator = 0;
       this.ui.updateHud(this.state, RUN_SECONDS - this.state.elapsed);
       this.ui.showBoss(this.activeBoss?.active ? this.activeBoss : null);
-    }
-  }
-
-  updateDynamicBonuses(delta, input) {
-    const moving = Math.hypot(input.moveX, input.moveY) > .3;
-    this.movingTime = moving ? Math.min(5, (this.movingTime || 0) + delta) : 0;
-    this.stillTime = !moving ? Math.min(4, (this.stillTime || 0) + delta) : 0;
-    this.state.dynamicDamageMul = (this.state.flags.levelDamage ? this.state.level * .02 : 0)
-      + (this.state.flags.momentumDamage ? this.movingTime / 5 * .3 : 0);
-    this.state.dynamicFireRateMul = (this.state.flags.standFire ? this.stillTime / 4 * .35 : 0)
-      + (this.state.flags.shieldFire && this.state.shieldReady ? .3 : 0);
-    this.regenAccumulator += delta;
-    const regen = this.state.flags.regenSeconds;
-    if (regen && this.regenAccumulator >= regen) { this.regenAccumulator = 0; this.state.heal(1); }
-    this.magnetAccumulator += delta;
-    if (this.state.flags.magnetPulse && this.magnetAccumulator >= 20) {
-      this.magnetAccumulator = 0;
-      this.gems.getChildren().forEach((gem) => gem?.active && this.physics.moveToObject(gem, this.player, 520));
     }
   }
 
@@ -207,8 +196,8 @@ export class GameScene extends Phaser.Scene {
     this.processChoiceQueue();
   }
 
-  openChest(perks) {
-    this.choiceQueue.unshift({ type: 'chest', perks });
+  openBossReward(type) {
+    this.choiceQueue.unshift({ type });
     this.processChoiceQueue();
   }
 
@@ -218,17 +207,17 @@ export class GameScene extends Phaser.Scene {
     this.physics.pause();
     this.time.paused = true;
     const item = this.choiceQueue.shift();
-    let cards = item.type === 'chest'
-      ? item.perks.filter((perk) => !this.state.owned.has(perk.id))
-      : sampleWithoutReplacement(eligibleUpgrades(this.state.owned), UPGRADE_CHOICE_COUNT);
+    let cards = item.type === 'tome'
+      ? TOMES.filter((tome) => !this.state.owned.has(tome.id))
+      : sampleUpgradeCards(this.state, item.type === 'chest' ? 1 : undefined);
     let rerolls = item.type === 'level' && this.state.hero.passive === 'reroll' ? 1 : 0;
     while (cards.length) {
       const choice = await this.ui.choose(cards, {
-        chest: item.type === 'chest', canReroll: rerolls > 0, owned: this.state.owned,
+        rewardType: item.type, canReroll: rerolls > 0, owned: this.state.owned,
       });
       if (choice.reroll) {
         rerolls -= 1;
-        cards = sampleWithoutReplacement(eligibleUpgrades(this.state.owned), UPGRADE_CHOICE_COUNT);
+        cards = sampleUpgradeCards(this.state);
         continue;
       }
       this.state.applyUpgrade(choice.card);
@@ -254,7 +243,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   applyPlayerSize() {
-    const multiplier = 1 + (this.state.mods.sizeMul || 0);
+    const multiplier = 1 + (this.state.mods.playerSizeMul || 0);
     const scale = this.playerBaseScale * multiplier;
     this.player.setScale(scale);
     this.player.body.setSize(this.state.hero.size / scale, this.state.hero.size / scale, true);
@@ -301,6 +290,8 @@ export class GameScene extends Phaser.Scene {
   cleanup() {
     this.scale.off('resize', this.onResize);
     this.inputController?.destroy();
+    this.characterAbility?.destroy();
+    this.summons?.destroy();
     this.time.paused = false;
     this.ui.hidePause();
   }

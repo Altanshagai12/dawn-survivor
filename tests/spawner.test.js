@@ -1,30 +1,53 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { edgeSpawnOffsets, enemyMoveSpeed } from '../src/game/Spawner.js';
-import { edgeWarningPosition, isInsideView } from '../src/game/WinglingFeedback.js';
+import { Spawner, followedCameraView, rectangularEdgeSpawn } from '../src/game/Spawner.js';
 
-test('fast enemies spawn outside the view while their warning stays inside', () => {
-  const horizontal = edgeSpawnOffsets(600, 400, 0, 90);
-  assert.equal(horizontal.x, 805);
-  assert.equal(horizontal.warningX, 554);
-  assert.ok(Math.abs(horizontal.warningY) < .001);
+const view = { x: 100, y: 200, right: 900, bottom: 650, width: 800, height: 450 };
 
-  const vertical = edgeSpawnOffsets(195, 422, Math.PI / 2, 90);
-  assert.ok(vertical.y > 422);
-  assert.ok(vertical.warningY < 422);
+test('spawns outside one of the rectangular camera edges', () => {
+  const top = rectangularEdgeSpawn(view, (() => { const values = [0, 0, .5]; return () => values.shift(); })(), 36, 108);
+  assert.equal(top.x, 500);
+  assert.equal(top.y, 164);
+  const right = rectangularEdgeSpawn(view, (() => { const values = [0, .3, .25]; return () => values.shift(); })(), 36, 108);
+  assert.equal(right.x, 936);
+  assert.equal(right.y, 312.5);
 });
 
-test('wingling warning is pinned inside the camera until the enemy appears', () => {
-  const view = { left: 0, right: 390, top: 0, bottom: 844, width: 390, height: 844, centerX: 195, centerY: 422 };
-  const side = edgeWarningPosition(view, 520, 300);
-  const top = edgeWarningPosition(view, 240, -180);
-  assert.ok(side.x <= 342 && side.x >= 48);
-  assert.ok(top.y >= 48 && top.y <= 796);
-  assert.equal(isInsideView(view, 195, 422), true);
-  assert.equal(isInsideView(view, 520, 300), false);
+test('every side remains strictly outside the visible rectangle', () => {
+  for (const sideRoll of [.01, .26, .51, .76]) {
+    const point = rectangularEdgeSpawn(view, (() => {
+      const values = [.4, sideRoll, .5];
+      return () => values.shift();
+    })());
+    const inside = point.x >= view.x && point.x <= view.right && point.y >= view.y && point.y <= view.bottom;
+    assert.equal(inside, false);
+  }
 });
 
-test('enemy movement speed stays fixed instead of silently accelerating over time', () => {
-  assert.equal(enemyMoveSpeed({ speed: 48 }), 48);
-  assert.equal(enemyMoveSpeed({ speed: 92 }), 92);
+test('first-frame spawn view follows the player before camera smoothing settles', () => {
+  const followed = followedCameraView({ x: 0, y: 0 }, { width: 1280, height: 720, zoom: 1.05 });
+  assert.ok(followed.x < -600 && followed.right > 600);
+  assert.ok(followed.y < -340 && followed.bottom > 340);
+});
+
+test('encounter scheduler reaches Elder, Shub, and the final 16-enemy wave', () => {
+  const scene = {
+    state: { elapsed: 180 },
+    performance: { enemyCap: 620 },
+    enemyDefinitions: {},
+    enemies: { getChildren: () => [], countActive: () => 0 },
+  };
+  const spawner = new Spawner(scene);
+  const bosses = [];
+  const waves = [];
+  spawner.spawnBoss = (boss) => bosses.push(boss.id);
+  spawner.spawnEnemy = (_enemy, _point, session) => waves.push(session.id);
+  spawner.update(0);
+  assert.deepEqual(bosses, ['elder']);
+  scene.state.elapsed = 300;
+  spawner.update(0);
+  assert.deepEqual(bosses, ['elder', 'shub']);
+  scene.state.elapsed = 480;
+  spawner.update(0);
+  assert.equal(waves.filter((id) => id === 'tentacle-final').length, 16);
 });

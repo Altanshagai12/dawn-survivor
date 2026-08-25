@@ -5,5 +5,5 @@ export function upgradedProjectileCount(base, added = 0, fusillade = false) {
 
 export function shouldConsumeAmmo({ free = false, siege = false, moving = false, roll = Math.random() } = {}) {
   if (free) return false;
-  return !(siege && !moving && roll < .4);
+  return !(siege && !moving && roll < .33);
 }

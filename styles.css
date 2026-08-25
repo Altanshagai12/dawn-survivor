@@ -18,6 +18,11 @@ button { font: inherit; color: inherit; }
 .hidden { display: none !important; }
 #game canvas { display: block; }
 .vignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(circle at center, transparent 32%, rgba(0,0,0,.12) 60%, rgba(0,0,0,.58) 100%); z-index: 3; }
+.orientation-gate { position: fixed; inset: 0; z-index: 100; display: grid; place-content: center; justify-items: center; gap: 10px; padding: 28px; text-align: center; background: #09080d; }
+.orientation-gate span { font-size: 64px; color: var(--cyan); animation: rotate-hint 1.6s ease-in-out infinite; }
+.orientation-gate strong { letter-spacing: .14em; }
+.orientation-gate small { color: var(--muted); }
+@keyframes rotate-hint { 50% { transform: rotate(90deg); } }
 
 .screen { position: fixed; inset: 0; z-index: 8; padding: max(22px, env(safe-area-inset-top)) 20px max(22px, env(safe-area-inset-bottom)); background: radial-gradient(circle at 50% 25%, rgba(46,32,72,.42), rgba(9,8,13,.97) 58%); }
 .screen--center { display: grid; place-content: center; justify-items: center; gap: 14px; }
@@ -102,14 +107,14 @@ h2 { margin: 2px 0 18px; font-size: clamp(28px, 8vw, 44px); line-height: 1; }
 .choice-actions .primary { background: #ff596f; color: #211824; }
 .choice-actions .secondary { min-width: 130px; }
 .choice-card__icon { grid-row: 1 / 5; display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid rgba(101,230,255,.28); border-radius: 10px; background: radial-gradient(circle, rgba(101,230,255,.18), rgba(168,129,255,.08)); color: var(--cyan); font-size: 23px; line-height: 1; text-shadow: 0 0 12px rgba(101,230,255,.7); }
-.choice-card__icon--atlas { width: 48px; height: 48px; margin-left: -5px; border: 0; border-radius: 7px; background-image: url('./assets/ui/upgrade-icons.webp?build=20260825l'); background-size: 1000% 1000%; background-repeat: no-repeat; image-rendering: pixelated; box-shadow: 0 0 15px rgba(101,230,255,.13); }
+.choice-card__icon--atlas { width: 48px; height: 48px; margin-left: -5px; border: 0; border-radius: 7px; background-image: url('./assets/ui/upgrade-icons.webp?build=20260825r'); background-size: 1000% 1000%; background-repeat: no-repeat; image-rendering: pixelated; box-shadow: 0 0 15px rgba(101,230,255,.13); }
 .choice-tab .choice-card__icon { grid-row: auto; }
 .choice-tab .choice-card__icon--atlas { width: min(64px, 72%); height: auto; aspect-ratio: 1; margin: 0; border: 2px solid transparent; box-shadow: none; }
 .choice-tab.selected .choice-card__icon--atlas { border-color: #87aa9d; box-shadow: inset 0 0 0 2px rgba(101,230,255,.2), inset 0 0 13px rgba(101,230,255,.18); filter: brightness(1.12); }
 .choice-detail__icon .choice-card__icon { grid-row: auto; width: 58px; height: 58px; }
 .choice-detail__icon .choice-card__icon--atlas { margin: 0; border-radius: 9px; }
 .choice-card__path { display: flex; gap: 6px; }
-.choice-card__path-icon { width: 22px; height: 22px; border-radius: 4px; opacity: .22; background: url('./assets/ui/upgrade-icons.webp?build=20260825l') no-repeat; background-size: 1000% 1000%; image-rendering: pixelated; filter: grayscale(1); }
+.choice-card__path-icon { width: 22px; height: 22px; border-radius: 4px; opacity: .22; background: url('./assets/ui/upgrade-icons.webp?build=20260825r') no-repeat; background-size: 1000% 1000%; image-rendering: pixelated; filter: grayscale(1); }
 .choice-card__path-icon.owned { opacity: .72; filter: none; }
 .choice-card__path-icon.current { opacity: 1; filter: none; outline: 1px solid var(--cyan); box-shadow: 0 0 8px rgba(101,230,255,.45); }
 
@@ -127,6 +132,7 @@ h2 { margin: 2px 0 18px; font-size: clamp(28px, 8vw, 44px); line-height: 1; }
 .stick--aim { left: auto; right: max(30px, env(safe-area-inset-right)); border-color: rgba(101,230,255,.28); }
 .stick i { position: absolute; width: 50px; height: 50px; left: 33px; top: 33px; border-radius: 50%; background: rgba(255,255,255,.24); box-shadow: 0 5px 18px rgba(0,0,0,.28); }
 .stick--aim i { background: rgba(101,230,255,.28); }
+.ability-button { position: absolute; right: max(132px, calc(env(safe-area-inset-right) + 132px)); bottom: max(62px, calc(env(safe-area-inset-bottom) + 30px)); width: 68px; height: 68px; border: 1px solid rgba(168,129,255,.65); border-radius: 50%; background: rgba(65,38,94,.72); color: #eadcff; font-size: 10px; font-weight: 900; pointer-events: auto; box-shadow: 0 0 22px rgba(168,129,255,.28); }
 .toast { position: fixed; z-index: 20; left: 50%; top: 17%; transform: translateX(-50%); padding: 10px 14px; border: 1px solid var(--line); border-radius: 9px; background: rgba(8,7,12,.9); font-size: 12px; }
 
 @media (min-width: 720px) {
@@ -137,6 +143,28 @@ h2 { margin: 2px 0 18px; font-size: clamp(28px, 8vw, 44px); line-height: 1; }
 }
 
 @media (pointer: fine) { .touch-controls { display: none !important; } }
+@media (pointer: coarse) and (orientation: landscape) and (max-height: 600px) {
+  .stick { width: 96px; height: 96px; bottom: max(35px, env(safe-area-inset-bottom)); }
+  .stick i { width: 42px; height: 42px; left: 26px; top: 26px; }
+  .ability-button { right: max(116px, calc(env(safe-area-inset-right) + 116px)); bottom: max(28px, env(safe-area-inset-bottom)); width: 58px; height: 58px; }
+  .modal { padding: 8px max(12px, env(safe-area-inset-left)); }
+  .choice-panel { max-height: 98vh; padding: 10px 16px; }
+  .choice-panel > .eyebrow { margin-bottom: 2px; }
+  .choice-panel > h2 { margin-bottom: 5px; font-size: 27px; }
+  .choice-tabs { width: min(490px, 68vw); margin-bottom: 5px; gap: 5px; }
+  .choice-tab { max-height: 64px; padding: 2px; }
+  .choice-tab span { display: none; }
+  .choice-tab .choice-card__icon--atlas { width: 58px; }
+  .choice-detail { min-height: 92px; padding: 8px 12px; grid-template-columns: 58px minmax(0, 1fr); gap: 10px; }
+  .choice-detail__icon { width: 58px; height: 58px; }
+  .choice-detail__icon .choice-card__icon { width: 46px; height: 46px; }
+  .choice-detail__copy h3 { margin-bottom: 4px; font-size: 22px; }
+  .choice-detail__copy p { min-height: 0; font-size: 11px; line-height: 1.25; }
+  .choice-detail__path { margin-top: 5px; }
+  .choice-actions { margin-top: 6px; }
+  .choice-actions button { min-height: 38px; }
+}
+@media (pointer: coarse) and (orientation: portrait) { .orientation-gate:not(.hidden) { display: grid !important; } }
 @media (max-height: 680px) { .menu__hero { padding-top: 0; } h1 { font-size: 44px; } .select-card { height: 82px; } }
 @media (max-width: 440px) {
   .modal { padding: 12px; }

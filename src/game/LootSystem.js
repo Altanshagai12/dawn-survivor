@@ -23,10 +23,10 @@ export class LootSystem {
     this.scene.time.delayedCall(180, () => gem.active && gem.setVelocity(0, 0));
   }
 
-  dropChest(x, y, perks) {
+  dropBossReward(x, y, rewardType = 'chest') {
     const chest = this.scene.chests.create(x, y, 'chest');
     if (!chest) return;
-    chest.setDepth(15).setScale(1.1).setData('perks', perks);
+    chest.setDepth(15).setScale(1.1).setData('rewardType', rewardType);
     chest.body.setCircle(18);
     this.scene.tweens.add({ targets: chest, y: y - 8, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
   }
@@ -58,8 +58,8 @@ export class LootSystem {
 
   collectChest(chest) {
     if (!chest.active) return;
-    const perks = chest.getData('perks') || [];
+    const rewardType = chest.getData('rewardType') || 'chest';
     chest.destroy();
-    this.scene.openChest(perks);
+    this.scene.openBossReward(rewardType);
   }
 }

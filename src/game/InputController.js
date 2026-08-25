@@ -76,7 +76,8 @@ export class InputController {
     this.aim = { x: 1, y: 0 };
     this.touchAimActive = false;
     this.touchAimFiring = false;
-    this.keys = scene.input.keyboard?.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,R');
+    this.keys = scene.input.keyboard?.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,R,SPACE');
+    this.abilityQueued = false;
     this.cleanups = [];
     this.bindStick('move-stick', this.moveRaw, false);
     this.bindStick('aim-stick', this.aimRaw, true);
@@ -84,6 +85,12 @@ export class InputController {
     this.pointerPoint = null;
     this.canvas = scene.game.canvas;
     this.onPointerDown = (event) => {
+      if (event.button === 2) {
+        this.abilityQueued = true;
+        this.pointerPoint = { clientX: event.clientX, clientY: event.clientY };
+        event.preventDefault();
+        return;
+      }
       if (!this.pointerFire.press(event.pointerId)) return;
       this.pointerPoint = { clientX: event.clientX, clientY: event.clientY };
       try { this.canvas.setPointerCapture?.(event.pointerId); } catch { /* Window fallback handles release. */ }
@@ -108,6 +115,21 @@ export class InputController {
     window.addEventListener('pointerup', this.onPointerUp, true);
     window.addEventListener('pointercancel', this.onPointerCancel, true);
     this.canvas.addEventListener('lostpointercapture', this.onPointerCancel);
+    this.onContextMenu = (event) => event.preventDefault();
+    this.canvas.addEventListener('contextmenu', this.onContextMenu);
+    this.bindAbilityButton();
+  }
+
+  bindAbilityButton() {
+    const button = document.getElementById('ability-button');
+    if (!button) return;
+    const trigger = (event) => {
+      this.abilityQueued = true;
+      event.stopPropagation();
+      event.preventDefault();
+    };
+    button.addEventListener('pointerdown', trigger);
+    this.cleanups.push(() => button.removeEventListener('pointerdown', trigger));
   }
 
   bindStick(id, target, isAim) {
@@ -196,10 +218,13 @@ export class InputController {
       aimX = this.aim.x;
       aimY = this.aim.y;
     }
+    const ability = this.abilityQueued || Boolean(keys?.SPACE && Phaser.Input.Keyboard.JustDown(keys.SPACE));
+    this.abilityQueued = false;
     return {
       moveX, moveY, aimX, aimY,
       firing: this.touchAimFiring || this.pointerFire.consume(),
       reload: Boolean(keys?.R && Phaser.Input.Keyboard.JustDown(keys.R)),
+      ability,
     };
   }
 
@@ -209,6 +234,7 @@ export class InputController {
     window.removeEventListener('pointerup', this.onPointerUp, true);
     window.removeEventListener('pointercancel', this.onPointerCancel, true);
     this.canvas.removeEventListener('lostpointercapture', this.onPointerCancel);
+    this.canvas.removeEventListener('contextmenu', this.onContextMenu);
     this.cleanups.forEach((cleanup) => cleanup());
     this.cleanups = [];
   }

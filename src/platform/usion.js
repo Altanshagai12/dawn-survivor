@@ -49,7 +49,7 @@ export async function initPlatform() {
 
 export function defaultProfile() {
   return {
-    selectedHero: 'nyra', selectedWeapon: 'revolver', best: 0,
+    selectedHero: 'shana', selectedWeapon: 'revolver', best: 0,
     runs: 0, wins: 0, totalKills: 0,
   };
 }

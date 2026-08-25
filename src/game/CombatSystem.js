@@ -1,7 +1,7 @@
-import { clamp } from './simulation.js';
-import { CombatEffects } from './CombatEffects.js';
-import { handleSpecialKill } from './KillProgression.js';
-import { shouldConsumeAmmo, upgradedProjectileCount } from './WeaponMechanics.js';
+import { clamp } from './simulation.js?build=20260825r';
+import { CombatEffects } from './CombatEffects.js?build=20260825r';
+import { handleSpecialKill } from './KillProgression.js?build=20260825r';
+import { shouldConsumeAmmo, upgradedProjectileCount } from './WeaponMechanics.js?build=20260825r';
 
 export class CombatSystem {
   constructor(scene) {
@@ -43,7 +43,7 @@ export class CombatSystem {
     );
     const spreadMultiplier = 1 + (state.mods.spreadMul || 0);
     const spread = Math.max(0, weapon.spread * spreadMultiplier + (state.mods.spreadAdd || 0));
-    const freshBoost = state.elapsed < state.freshUntil ? 1.5 : 1;
+    const freshBoost = state.elapsed < state.freshUntil ? 1.3 : 1;
     const chargeBoost = 1 + (weapon.chargeDamageMax || 0) * state.weaponCharge;
     const dragonBoost = state.flags.dragonBond ? (state.dragonDamage || 0) * .1 : 0;
     const shotSpec = {
@@ -68,7 +68,7 @@ export class CombatSystem {
     }
     if (state.flags.backShot) {
       this.spawnBullet(this.scene.player.x - aimX * 22, this.scene.player.y - aimY * 22, baseAngle + Math.PI, {
-        ...shotSpec, damage: shotSpec.damage * .65,
+        ...shotSpec,
       });
     }
     state.shots += 1;
@@ -83,22 +83,7 @@ export class CombatSystem {
       if (target) this.effects.lightning(target);
     }
     if (state.flags.fireballCadence && state.shots % state.flags.fireballCadence === 0) this.effects.fireball(baseAngle);
-    if (state.hero.passive === 'fireWave') {
-      const cadence = state.flags.rapidFireWave ? 2 : 3;
-      if (state.shots % cadence === 0) this.fireWave(baseAngle);
-    }
-    if (state.hero.passive === 'reroll' && state.flags.nyraEcho && state.shots % 3 === 0) {
-      [-.16, .16].forEach((offset) => this.spawnBullet(this.scene.player.x, this.scene.player.y, baseAngle + offset, {
-        damage: weapon.damage * state.multiplierStats.damage * .8,
-        speed: weapon.projectileSpeed * state.multiplierStats.projectileSpeed,
-        life: weapon.projectileLife, pierce: 0, knockback: weapon.knockback,
-        size: weapon.bulletSize, texture: weapon.projectileTexture,
-      }));
-    }
-    if (state.flags.guaranteedLightning && state.shots % state.flags.guaranteedLightning === 0) {
-      const target = this.scene.nearestEnemy(this.scene.player.x, this.scene.player.y, 520);
-      if (target) this.effects.lightning(target);
-    }
+    if (state.hero.passive === 'fireWave' && state.shots % 3 === 0) this.fireWave(baseAngle);
     if (consumedAmmo && state.ammo === 0 && state.flags.iceShard) this.effects.iceShards(baseAngle);
     if (consumedAmmo && state.ammo === 0 && state.flags.smite) this.effects.smite();
     if (state.ammo <= 0) this.startReload();
@@ -118,6 +103,7 @@ export class CombatSystem {
     bullet.freezeChance = spec.freezeChance || 0;
     bullet.curseChance = spec.curseChance || 0;
     bullet.explosionDamage = spec.explosionDamage || 0;
+    bullet.fireball = Boolean(spec.fireball);
     bullet.summon = Boolean(spec.summon);
     bullet.speed = speed;
     bullet.expiresAt = this.scene.time.now + (spec.life || 1) * 1000;
@@ -165,15 +151,14 @@ export class CombatSystem {
       && Math.random() < this.scene.state.flags.summonExecute) damage = enemy.hp + 1;
     if (this.scene.state.flags.execute && enemy.hp / enemy.maxHp <= this.scene.state.flags.execute) damage = enemy.hp + 1;
     const source = { bullet, summon: bullet.summon };
-    if (enemy.status.curseUntil > this.scene.time.now && this.scene.state.flags.wither) damage *= 1.3;
     this.damageEnemy(enemy, damage, source);
     if (enemy.active && bullet.burnChance && Math.random() < bullet.burnChance) this.effects.applyBurn(enemy, bullet.burnDps);
     if (enemy.active && bullet.freezeChance && Math.random() < bullet.freezeChance) this.effects.applyFreeze(enemy);
-    if (enemy.active && bullet.curseChance && Math.random() < bullet.curseChance) this.effects.applyCurse(enemy, bullet.damage);
     if (enemy.active && bullet.summon && Math.random() < (this.scene.state.flags.summonLightning || 0)) {
       this.effects.lightning(enemy, { summon: true });
     }
     if (bullet.explosionDamage) this.effects.explode(impactX, impactY, bullet.explosionDamage, 90, source);
+    if (bullet.fireball) this.effects.burnArea(impactX, impactY, 90, enemy);
     if (enemy.active && enemy.body?.velocity && bullet.active && bullet.body?.velocity && bullet.knockback) {
       const velocity = bullet.body.velocity.clone().normalize().scale(bullet.knockback);
       enemy.knockbackVelocity = velocity;
@@ -245,7 +230,8 @@ export class CombatSystem {
     const definition = enemy.enemyDef;
     if (definition.boss) {
       this.scene.state.bosses += 1;
-      this.scene.loot.dropChest(enemy.x, enemy.y, this.scene.state.hero.chest);
+      this.scene.loot.dropBossReward(enemy.x, enemy.y, definition.rewardType);
+      if (definition.id === 'shub') this.scene.barrier?.deactivate();
       if (this.scene.activeBoss === enemy) this.scene.activeBoss = null;
     } else {
       this.scene.state.kills += 1;
@@ -253,35 +239,18 @@ export class CombatSystem {
       handleSpecialKill(this.scene, definition, source);
     }
     this.scene.runScore += definition.score || 0;
-    if (definition.splits) {
-      for (let index = 0; index < 2; index += 1) {
-        const point = { x: enemy.x + Phaser.Math.Between(-24, 24), y: enemy.y + Phaser.Math.Between(-24, 24) };
-        this.scene.spawner.spawnEnemy(this.scene.enemyDefinitions.creeper, point);
-      }
-    }
     if (this.scene.state.flags.splinter && !definition.boss) {
       for (let index = 0; index < 3; index += 1) this.spawnBullet(enemy.x, enemy.y, Math.random() * Math.PI * 2, {
-        damage: this.scene.state.weapon.damage * .1, speed: 430, life: .55,
+        damage: this.scene.state.weapon.damage * .15, speed: 430, life: .55,
         size: 5, texture: this.scene.state.weapon.projectileTexture,
       });
     }
-    if (source.bullet && this.scene.state.hero.passive === 'shadow') {
-      const chance = this.scene.state.flags.shadowChance || .18;
-      if (Math.random() < chance) {
-        const target = this.scene.nearestEnemy(enemy.x, enemy.y, 480, enemy);
-        if (target) {
-          const bolt = this.spawnBullet(enemy.x, enemy.y, 0, {
-            damage: 18 * this.scene.state.multiplierStats.damage,
-            speed: 420, life: 1.4, pierce: 1, size: 8, texture: 'bullet-spirit',
-          });
-          if (bolt) bolt.homingTarget = target;
-        }
-      }
-    }
     if (enemy.status.freezeUntil > this.scene.time.now && this.scene.state.flags.shatter) {
-      this.effects.explode(enemy.x, enemy.y, enemy.maxHp * .07, 85);
+      this.effects.explode(enemy.x, enemy.y, enemy.maxHp * .25, 85);
     }
     this.scene.flashEffect(enemy.x, enemy.y, 1, definition.boss ? 1.8 : .65);
-    enemy.destroy();
+    enemy.boomerTell?.destroy();
+    if (this.scene.spawner?.releaseEnemy) this.scene.spawner.releaseEnemy(enemy);
+    else enemy.destroy();
   }
 }

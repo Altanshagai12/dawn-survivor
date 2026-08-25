@@ -30,3 +30,16 @@ test('runtime uses Phaser 4 group iteration and real Usion SDK calls', async () 
   assert.ok(!gameCode.includes('input.activePointer'));
   assert.ok(!/Usion\.(ready|user\.info)|Usion\.game\.emit/.test(platformCode));
 });
+
+test('mobile boots with a landscape gate and dedicated Hina ability input', async () => {
+  const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  const main = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
+  const input = await readFile(new URL('../src/game/InputController.js', import.meta.url), 'utf8');
+  const css = await readFile(new URL('../styles.css', import.meta.url), 'utf8');
+  assert.match(html, /id="orientation-gate"/);
+  assert.match(html, /id="ability-button"/);
+  assert.match(main, /requestLandscape\(\)/);
+  assert.match(input, /event\.button === 2/);
+  assert.match(css, /orientation:\s*landscape/);
+  assert.match(css, /max-height:\s*600px/);
+});

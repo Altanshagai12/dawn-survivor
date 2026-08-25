@@ -1,23 +1,18 @@
-import { attachGroundShadow, syncGroundShadow } from './VisualEffects.js';
-import { DAMAGE_SOURCE } from './EnemySystem.js?build=20260825g';
+import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260825r';
+import { attachGroundShadow, syncGroundShadow } from './VisualEffects.js?build=20260825r';
+import { DAMAGE_SOURCE } from './EnemySystem.js?build=20260825r';
 
+const environment = TEN_MINUTES_BALANCE.environment;
 export const TREE_CONTACT_DAMAGE = 1;
 export const TREE_ATTACKS = false;
 export const TREE_IDLE_FRAME = 0;
 export const TREE_ROOT_ORIGIN = .925;
 export const TREE_CONTACT_EXIT_GRACE_MS = 120;
-export const TREE_COLLIDER = Object.freeze({ width: 48, height: 20 });
-export const TREE_CHUNK_SIZE = 680;
-export const TREE_SAFE_START_RADIUS = 420;
-export const TREE_MIN_SPACING = 360;
-const TREE_MARGIN = 190;
-
-export function treeRootBodyOffset(tree, collider = TREE_COLLIDER) {
-  return {
-    x: tree.displayWidth * tree.originX - collider.width / 2,
-    y: tree.displayHeight * tree.originY - collider.height / 2,
-  };
-}
+export const TREE_CHUNK_SIZE = environment.chunkSize;
+export const TREE_SAFE_START_RADIUS = environment.playerSafeRadius;
+export const TREE_MIN_SPACING = environment.minTreeSeparation;
+export const TREE_COLLIDER_RADIUS = environment.treeColliderRadius;
+const TREE_MARGIN = TREE_MIN_SPACING / 2;
 
 function hash(value) {
   let result = value | 0;
@@ -26,17 +21,33 @@ function hash(value) {
   return (result ^ result >>> 16) >>> 0;
 }
 
+function seededRandom(seed) {
+  let value = seed || 1;
+  return () => {
+    value ^= value << 13;
+    value ^= value >>> 17;
+    value ^= value << 5;
+    return (value >>> 0) / 4294967296;
+  };
+}
+
 export function chunkTreePoints(chunkX, chunkY) {
   const seed = hash(chunkX * 73856093 ^ chunkY * 19349663);
-  if (seed % 100 >= 84) return [];
-  const xHash = hash(seed ^ 0x68bc21eb);
-  const yHash = hash(seed ^ 0x02e5be93);
-  const localSpan = TREE_CHUNK_SIZE - TREE_MARGIN * 2;
-  const point = {
-    x: chunkX * TREE_CHUNK_SIZE + TREE_MARGIN + xHash % (localSpan + 1),
-    y: chunkY * TREE_CHUNK_SIZE + TREE_MARGIN + yHash % (localSpan + 1),
-  };
-  return Math.hypot(point.x, point.y) > TREE_SAFE_START_RADIUS ? [point] : [];
+  const random = seededRandom(seed);
+  const target = environment.minTreesPerChunk
+    + seed % (environment.maxTreesPerChunk - environment.minTreesPerChunk + 1);
+  const span = TREE_CHUNK_SIZE - TREE_MARGIN * 2;
+  const points = [];
+  for (let attempt = 0; attempt < 96 && points.length < target; attempt += 1) {
+    const point = {
+      x: chunkX * TREE_CHUNK_SIZE + TREE_MARGIN + random() * span,
+      y: chunkY * TREE_CHUNK_SIZE + TREE_MARGIN + random() * span,
+    };
+    if (Math.hypot(point.x, point.y) <= TREE_SAFE_START_RADIUS) continue;
+    if (points.some((other) => Math.hypot(point.x - other.x, point.y - other.y) < TREE_MIN_SPACING)) continue;
+    points.push(point);
+  }
+  return points;
 }
 
 export class WorldObstacleSystem {
@@ -44,7 +55,7 @@ export class WorldObstacleSystem {
     this.scene = scene;
     this.loadedChunks = new Set();
     this.chunkRadius = scene.performance?.treeChunkRadius || 2;
-    this.treeCap = scene.performance?.treeCap || 145;
+    this.treeCap = scene.performance?.treeCap || 180;
     this.trees = scene.physics.add.staticGroup({ maxSize: this.treeCap + 4 });
     scene.trees = this.trees;
     scene.physics.add.collider(scene.player, this.trees, (_player, tree) => this.touchTree(tree));
@@ -65,12 +76,8 @@ export class WorldObstacleSystem {
         tree.destroy();
         return;
       }
-      tree.setFrame(TREE_IDLE_FRAME);
-      tree.setDepth(tree.y > this.scene.player.y ? 27 : 17);
-      if (tree.contactLatched
-        && this.scene.time.now - tree.lastContactAt > TREE_CONTACT_EXIT_GRACE_MS) {
-        tree.contactLatched = false;
-      }
+      tree.setFrame(TREE_IDLE_FRAME).setDepth(tree.y > this.scene.player.y ? 27 : 17);
+      if (tree.contactLatched && this.scene.time.now - tree.lastContactAt > TREE_CONTACT_EXIT_GRACE_MS) tree.contactLatched = false;
       syncGroundShadow(tree);
     });
   }
@@ -79,7 +86,9 @@ export class WorldObstacleSystem {
     const key = `${chunkX}:${chunkY}`;
     if (this.loadedChunks.has(key) || this.trees.countActive() >= this.treeCap) return;
     this.loadedChunks.add(key);
-    chunkTreePoints(chunkX, chunkY).forEach(({ x, y }) => this.spawnTree(x, y, chunkX, chunkY));
+    chunkTreePoints(chunkX, chunkY).forEach(({ x, y }) => {
+      if (this.trees.countActive() < this.treeCap) this.spawnTree(x, y, chunkX, chunkY);
+    });
   }
 
   spawnTree(x, y, chunkX, chunkY) {
@@ -87,18 +96,38 @@ export class WorldObstacleSystem {
     if (!tree) return;
     tree.setOrigin(.5, TREE_ROOT_ORIGIN).setScale(.43).setDepth(17);
     tree.refreshBody();
-    const bodyOffset = treeRootBodyOffset(tree);
-    tree.body
-      .setSize(TREE_COLLIDER.width, TREE_COLLIDER.height, false)
-      .setOffset(bodyOffset.x, bodyOffset.y);
-    tree.hp = 45000;
+    tree.body.setCircle(TREE_COLLIDER_RADIUS, tree.displayWidth * .5 - TREE_COLLIDER_RADIUS,
+      tree.displayHeight * TREE_ROOT_ORIGIN - TREE_COLLIDER_RADIUS);
+    tree.hp = environment.treeHp;
     tree.chunkX = chunkX;
     tree.chunkY = chunkY;
     tree.contactLatched = false;
     tree.lastContactAt = Number.NEGATIVE_INFINITY;
-    attachGroundShadow(this.scene, tree, {
-      width: 58, height: 10, offsetY: 0, depth: 16, alpha: .32,
+    attachGroundShadow(this.scene, tree, { width: 58, height: 10, offsetY: 0, depth: 16, alpha: .32 });
+  }
+
+  isSpawnClear(point, margin = 0) {
+    const radius = TREE_COLLIDER_RADIUS + margin;
+    return !this.trees.getChildren().some((tree) => tree?.active
+      && Math.hypot(point.x - tree.x, point.y - tree.y) < radius);
+  }
+
+  avoidanceAt(x, y, padding = 34) {
+    let steerX = 0;
+    let steerY = 0;
+    const radius = TREE_COLLIDER_RADIUS + padding;
+    this.trees.getChildren().forEach((tree) => {
+      if (!tree?.active) return;
+      const dx = x - tree.x;
+      const dy = y - tree.y;
+      const distance = Math.hypot(dx, dy) || 1;
+      if (distance < radius) {
+        const strength = (radius - distance) / radius;
+        steerX += dx / distance * strength;
+        steerY += dy / distance * strength;
+      }
     });
+    return { x: steerX, y: steerY };
   }
 
   touchTree(tree) {

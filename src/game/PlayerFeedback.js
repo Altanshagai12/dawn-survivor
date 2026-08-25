@@ -42,7 +42,7 @@ export function triggerShotFeedback(scene, angle) {
 
 export function updateShotFeedback(scene, delta) {
   const recoil = scene.shotRecoil;
-  const baseScale = scene.playerBaseScale * (1 + (scene.state.mods.sizeMul || 0));
+  const baseScale = scene.playerBaseScale * (1 + (scene.state.mods.playerSizeMul || 0));
   if (!recoil?.strength) {
     scene.player.setAngle(0).setScale(baseScale);
     return;

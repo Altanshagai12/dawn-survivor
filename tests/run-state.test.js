@@ -2,66 +2,73 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { HEROES } from '../src/data/heroes.js';
 import { WEAPONS } from '../src/data/weapons.js';
-import { UPGRADES } from '../src/data/upgrades.js';
+import { ALL_UPGRADES } from '../src/data/upgrades.js';
 import { RunState } from '../src/game/RunState.js';
 
-const upgrade = (id) => UPGRADES.find((item) => item.id === id);
+const upgrade = (id) => ALL_UPGRADES.find((item) => item.id === id);
 
-test('applies upgrades once and preserves health bounds', () => {
-  const state = new RunState(HEROES.nyra, WEAPONS.revolver);
-  assert.equal(state.applyUpgrade(upgrade('health-1')), true);
-  assert.equal(state.maxHp, 5);
-  assert.equal(state.hp, 5);
-  assert.equal(state.applyUpgrade(upgrade('health-1')), false);
+test('Vitality applies once and preserves health bounds', () => {
+  const state = new RunState(HEROES.shana, WEAPONS.revolver);
+  assert.equal(state.applyUpgrade(upgrade('vitality')), true);
+  assert.equal(state.maxHp, 4);
+  assert.equal(state.hp, 4);
+  assert.equal(state.applyUpgrade(upgrade('vitality')), false);
   state.heal(100);
-  assert.equal(state.hp, 5);
+  assert.equal(state.hp, 4);
 });
 
-test('experience can grant multiple queued levels', () => {
-  const state = new RunState(HEROES.sola, WEAPONS.flame);
-  assert.equal(state.gainXp(20), 2);
-  assert.equal(state.level, 3);
-  assert.equal(state.xp, 0);
+test('Tome of Rage triples base ammo rather than a modified fixed value', () => {
+  const state = new RunState(HEROES.diamond, WEAPONS.revolver);
+  state.applyUpgrade(upgrade('light_bullets'));
+  state.applyUpgrade(upgrade('armed_and_ready'));
+  state.applyUpgrade(upgrade('tome_of_rage'));
+  assert.equal(state.magazine, WEAPONS.revolver.magazine * 3 + 3);
 });
 
-test('shield blocks a hit and recharges on the simulation clock', () => {
-  const state = new RunState(HEROES.kage, WEAPONS.crossbow);
-  state.applyUpgrade(upgrade('shield-1'));
+test('Tome of Power reduces Max HP and clamps current HP', () => {
+  const state = new RunState(HEROES.shana, WEAPONS.crossbow);
+  state.applyUpgrade(upgrade('tome_of_power'));
+  assert.equal(state.maxHp, 2);
+  assert.equal(state.hp, 2);
+});
+
+test('Holy Shield blocks one hit and follows 120/60 second recharge rules', () => {
+  const state = new RunState(HEROES.hina, WEAPONS.crossbow);
+  state.applyUpgrade(upgrade('holy_shield'));
   assert.deepEqual(state.takeDamage(1), { blocked: true, dead: false });
-  assert.equal(state.hp, 3);
-  state.tick(120);
+  assert.equal(state.hp, 2);
+  state.tick(119.9);
+  assert.equal(state.shieldReady, false);
+  state.tick(.1);
+  assert.equal(state.shieldReady, true);
+  state.applyUpgrade(upgrade('stalwart_shield'));
+  state.takeDamage(1);
+  state.tick(60);
   assert.equal(state.shieldReady, true);
 });
 
-test('last breath triggers only once', () => {
-  const state = new RunState(HEROES.nyra, WEAPONS.shotgun);
-  state.flags.lastBreath = true;
-  assert.equal(state.takeDamage(9).dead, false);
-  assert.equal(state.hp, 2);
-  assert.equal(state.takeDamage(9).dead, true);
-});
-
-test('Varka gains permanent attack tempo when damaged', () => {
-  const state = new RunState(HEROES.varka, WEAPONS.revolver);
-  const before = state.fireDelayMs;
+test('Anger Point is a temporary 15-second fire-rate buff', () => {
+  const state = new RunState(HEROES.shana, WEAPONS.revolver);
+  state.applyUpgrade(upgrade('anger_point'));
+  const baseDelay = state.fireDelayMs;
   state.takeDamage(1);
-  assert.ok(state.fireDelayMs < before);
-  assert.ok(state.reloadMs < WEAPONS.revolver.reload * 1000);
+  assert.ok(state.fireDelayMs < baseDelay);
+  state.tick(15);
+  assert.equal(state.fireDelayMs, baseDelay);
 });
 
-test('additive dodge tiers stack instead of replacing prior values', () => {
-  const state = new RunState(HEROES.nyra, WEAPONS.revolver);
-  state.applyUpgrade(upgrade('dodge-1'));
-  state.applyUpgrade(upgrade('dodge-2'));
-  state.applyUpgrade(upgrade('dodge-3'));
-  assert.ok(Math.abs(state.flags.dodgeAdd - .35) < Number.EPSILON * 4);
-  assert.equal(state.mods.sizeMul, -.25);
+test('Regeneration heals one HP every 90 simulation seconds', () => {
+  const state = new RunState(HEROES.diamond, WEAPONS.revolver);
+  state.applyUpgrade(upgrade('regeneration'));
+  state.hp = 3;
+  state.tick(89.9);
+  assert.equal(state.hp, 3);
+  state.tick(.1);
+  assert.equal(state.hp, 4);
 });
 
-test('soul hearts absorb damage before regular health', () => {
-  const state = new RunState(HEROES.nyra, WEAPONS.revolver);
-  state.applyUpgrade(upgrade('soul-1'));
-  assert.equal(state.soulHearts, 1);
-  assert.deepEqual(state.takeDamage(1), { blocked: true, soul: true, dead: false });
-  assert.equal(state.hp, state.maxHp);
+test('experience can grant multiple queued levels', () => {
+  const state = new RunState(HEROES.scarlett, WEAPONS.flame);
+  assert.equal(state.gainXp(20), 2);
+  assert.equal(state.level, 3);
 });

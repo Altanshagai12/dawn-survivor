@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
     <meta name="theme-color" content="#09080d" />
     <title>Dawn Survivor</title>
-    <link rel="stylesheet" href="./styles.css?build=20260825l" />
+    <link rel="stylesheet" href="./styles.css?build=20260825r" />
     <script src="https://usions.com/usion-sdk.js"></script>
     <script src="https://usions.com/vendor/phaser/4.2.1/phaser.min.js"></script>
   </head>
@@ -13,6 +13,11 @@
     <main id="app">
       <div id="game" aria-label="Dawn Survivor game canvas"></div>
       <div class="vignette" aria-hidden="true"></div>
+      <aside id="orientation-gate" class="orientation-gate hidden" aria-live="polite">
+        <span aria-hidden="true">↻</span>
+        <strong>ROTATE TO LANDSCAPE</strong>
+        <small>Тоглохын тулд утсаа хэвтээгээр эргүүлнэ үү.</small>
+      </aside>
 
       <section id="boot" class="screen screen--center">
         <div class="loader"></div>
@@ -110,10 +115,11 @@
 
       <div id="touch-controls" class="touch-controls hidden" aria-hidden="true">
         <div id="move-stick" class="stick"><i></i></div>
+        <button id="ability-button" class="ability-button hidden" type="button">DASH</button>
         <div id="aim-stick" class="stick stick--aim"><i></i></div>
       </div>
       <div id="toast" class="toast hidden"></div>
     </main>
-    <script type="module" src="./src/main.js?build=20260825m"></script>
+    <script type="module" src="./src/main.js?build=20260825r"></script>
   </body>
 </html>

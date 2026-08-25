@@ -5,7 +5,7 @@ export class CombatEffects {
   }
 
   applyBurn(enemy, burnDps = 3) {
-    enemy.status.burnUntil = Math.max(enemy.status.burnUntil, this.scene.time.now + 3200);
+    enemy.status.burnUntil = Math.max(enemy.status.burnUntil, this.scene.time.now + 4000);
     enemy.status.burnDamage = burnDps * .5 * this.scene.state.multiplierStats.burnDamage;
     this.scene.flashEffect(enemy.x, enemy.y, 2, .26);
     if (this.scene.state.flags.burnHealChance && Math.random() < this.scene.state.flags.burnHealChance) {
@@ -15,11 +15,11 @@ export class CombatEffects {
   }
 
   applyFreeze(enemy) {
-    const duration = enemy.enemyDef.boss ? 300 : 1500;
+    const duration = enemy.enemyDef.boss ? 300 : 3000;
     const newlyFrozen = enemy.status.freezeUntil < this.scene.time.now;
     enemy.status.freezeUntil = this.scene.time.now + duration;
     if (newlyFrozen && this.scene.state.flags.frostbite) {
-      const ratio = enemy.enemyDef.boss ? .01 : this.scene.state.flags.frostbite;
+      const ratio = enemy.enemyDef.boss ? .01 : .25;
       this.combat.damageEnemy(enemy, enemy.maxHp * ratio, { frostbite: true });
       if (!enemy.active) return;
     }
@@ -39,8 +39,8 @@ export class CombatEffects {
   lightning(enemy, source = {}) {
     if (!enemy?.active) return;
     const state = this.scene.state;
-    const damage = (22 + (state.flags.lightningFlatAdd || 0)) * state.multiplierStats.lightningDamage;
-    const radius = 52 * (1 + (state.flags.lightningAreaMul || 0));
+    const damage = 22 + (state.mods.lightningDamageAdd || 0);
+    const radius = 52 * state.multiplierStats.lightningArea;
     this.combat.damageEnemy(enemy, damage, { ...source, lightning: true });
     this.scene.flashEffect(enemy.x, enemy.y, 4, .72 + radius / 180);
     this.scene.enemies.getChildren().forEach((nearby) => {
@@ -59,6 +59,13 @@ export class CombatEffects {
       if (enemy?.active && Phaser.Math.Distance.Between(x, y, enemy.x, enemy.y) <= actualRadius) {
         this.combat.damageEnemy(enemy, damage * this.scene.state.multiplierStats.explosionDamage, source);
       }
+    });
+  }
+
+  burnArea(x, y, radius, excluded = null) {
+    this.scene.enemies.getChildren().forEach((enemy) => {
+      if (!enemy?.active || enemy === excluded) return;
+      if (Phaser.Math.Distance.Between(x, y, enemy.x, enemy.y) <= radius) this.applyBurn(enemy, 3);
     });
   }
 
@@ -86,7 +93,7 @@ export class CombatEffects {
   fireball(angle) {
     this.combat.spawnBullet(this.scene.player.x, this.scene.player.y, angle, {
       damage: 40, speed: 380, life: 1.25, size: 18, burnChance: 1, burnDps: 3,
-      explosionDamage: 22, texture: 'bullet-flame',
+      fireball: true, texture: 'bullet-flame',
     });
     this.scene.flashEffect(this.scene.player.x, this.scene.player.y, 2, .75);
   }
