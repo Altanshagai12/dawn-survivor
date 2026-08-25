@@ -196,11 +196,14 @@ export class UIController {
     const tabs = cards.map((card, index) => {
       const button = document.createElement('button');
       const { name, desc } = copyFor(card);
+      button.type = 'button';
       button.className = `choice-tab${index === 0 ? ' selected' : ''}`;
       button.innerHTML = `${upgradeIconHtml(card)}<span>${name}</span>`;
       button.setAttribute('aria-label', `${name}. ${desc}`);
       button.setAttribute('role', 'tab');
       button.setAttribute('aria-selected', index === 0 ? 'true' : 'false');
+      button.setAttribute('aria-posinset', String(index + 1));
+      button.setAttribute('aria-setsize', String(cards.length));
       return button;
     });
     const renderSelection = (index) => {
@@ -219,6 +222,7 @@ export class UIController {
       this.el['choice-detail-path'].innerHTML = upgradePathHtml(card, owned);
     };
     tabs.forEach((tab, index) => tab.addEventListener('click', () => renderSelection(index)));
+    this.el['choice-list'].style?.setProperty('--choice-count', String(Math.max(1, Math.min(5, cards.length))));
     this.el['choice-list'].replaceChildren(...tabs);
     renderSelection(0);
     this.el['choice-modal'].classList.remove('hidden');

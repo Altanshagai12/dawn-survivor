@@ -60,6 +60,7 @@ test('upgrade choices use icon tabs, a localized detail panel, and explicit conf
   try {
     const list = {
       children: [],
+      style: { values: {}, setProperty(name, value) { this.values[name] = value; } },
       replaceChildren(...children) { this.children = children; },
     };
     const controller = Object.create(UIController.prototype);
@@ -93,6 +94,9 @@ test('upgrade choices use icon tabs, a localized detail panel, and explicit conf
     const result = controller.choose(cards);
 
     assert.match(list.children[0].innerHTML, /choice-card__icon[^>]*>✹</);
+    assert.equal(list.style.values['--choice-count'], '2');
+    assert.equal(list.children[1].attributes['aria-posinset'], '2');
+    assert.equal(list.children[1].attributes['aria-setsize'], '2');
     assert.equal(controller.el['choice-detail-tree'].textContent, 'ХҮЧ');
     assert.equal(controller.el['choice-detail-name'].textContent, 'Хүчтэй сум');
     list.children[1].listeners.click();

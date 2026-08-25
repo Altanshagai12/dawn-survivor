@@ -5,7 +5,7 @@ import { GameScene } from './game/GameScene.js?build=20260825g';
 import { installVisibleResume } from './game/runtimeLifecycle.js';
 import { defaultProfile, initPlatform } from './platform/usion.js';
 import { createI18n } from './ui/i18n.js';
-import { UIController } from './ui/UIController.js?build=20260825g';
+import { UIController } from './ui/UIController.js?build=20260825i';
 
 async function boot() {
   const platform = await initPlatform();

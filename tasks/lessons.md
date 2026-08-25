@@ -27,3 +27,4 @@
 - Phaser StaticBody offsets are world-pixel offsets from the Game Object's x/y, not source-atlas coordinates; centering a compact body on a root-anchored sprite avoids an invisible collider far below and beside the tree.
 - Matching an original survival map requires treating ground palette, obstacle density, start safety, and movement ratios as one balance pass; changing only the texture leaves pacing and spatial readability mismatched.
 - A ground texture can match the target palette yet still cause fatigue when high-contrast rings and veins cover the viewport; map QA must measure quiet-area ratio, motif repetition, and long-play silhouette contrast.
+- Never apply generic adjacent-button margins to a modal that also contains horizontal button grids; scope vertical spacing to the exact action stack and assert every upgrade tab has zero margin.
