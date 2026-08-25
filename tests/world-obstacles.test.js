@@ -4,6 +4,7 @@ import {
   TREE_ATTACKS, TREE_CONTACT_DAMAGE, TREE_IDLE_FRAME, TREE_ROOT_ORIGIN,
   WorldObstacleSystem, chunkTreePoints,
 } from '../src/game/WorldObstacleSystem.js';
+import { DAMAGE_SOURCE } from '../src/game/EnemySystem.js';
 
 test('mysterious trees have deterministic sparse world placement', () => {
   assert.deepEqual(chunkTreePoints(4, -3), chunkTreePoints(4, -3));
@@ -25,7 +26,13 @@ test('tree contact only requests damage without attack feedback or knockback', (
   let knockbacks = 0;
   const system = {
     scene: {
-      enemySystem: { damagePlayer(amount) { damage += amount; return true; } },
+      enemySystem: {
+        damagePlayer(amount, source) {
+          damage += amount;
+          assert.equal(source, DAMAGE_SOURCE.TREE);
+          return true;
+        },
+      },
       flashEffect() { flashes += 1; },
       physics: { velocityFromRotation() { knockbacks += 1; } },
     },

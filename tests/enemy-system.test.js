@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { EnemySystem, PLAYER_INVULNERABILITY_MS } from '../src/game/EnemySystem.js';
+import {
+  DAMAGE_SOURCE, EnemySystem, PLAYER_INVULNERABILITY_MS,
+} from '../src/game/EnemySystem.js';
 
 function makeScene() {
   let damageCalls = 0;
@@ -49,8 +51,9 @@ test('damage grants a visible immunity window that blocks stacked hits', () => {
     const scene = makeScene();
     const system = new EnemySystem(scene);
 
-    assert.equal(system.damagePlayer(1), true);
+    assert.equal(system.damagePlayer(1, DAMAGE_SOURCE.PROJECTILE), true);
     assert.equal(system.playerInvulnerableUntil, 1000 + PLAYER_INVULNERABILITY_MS);
+    assert.equal(system.lastDamageSource, DAMAGE_SOURCE.PROJECTILE);
     assert.equal(scene.damageCalls, 1);
     assert.ok((scene.tweenConfig.repeat + 1) * scene.tweenConfig.duration * 2
       >= PLAYER_INVULNERABILITY_MS);
@@ -65,4 +68,37 @@ test('damage grants a visible immunity window that blocks stacked hits', () => {
   } finally {
     globalThis.Phaser = previousPhaser;
   }
+});
+
+test('a bomber cannot damage before physical player overlap', () => {
+  let damageCalls = 0;
+  let kills = 0;
+  const enemy = {
+    active: true,
+    enemyDef: { bomber: true, damage: 2 },
+    nextContactAt: 0,
+    spawnReadyAt: 0,
+    setVelocity() {},
+  };
+  const system = {
+    scene: {
+      time: { now: 1000 },
+      player: {},
+      flashEffect() {},
+      combat: { killEnemy() { kills += 1; } },
+    },
+    damagePlayer(amount, source) {
+      damageCalls += amount;
+      assert.equal(source, DAMAGE_SOURCE.BOMBER);
+      return true;
+    },
+  };
+
+  EnemySystem.prototype.updateRegular.call(system, enemy, 1, 0, 60, 49, 1000);
+  assert.equal(damageCalls, 0);
+  assert.equal(kills, 0);
+
+  EnemySystem.prototype.touchPlayer.call(system, enemy);
+  assert.equal(damageCalls, 2);
+  assert.equal(kills, 1);
 });

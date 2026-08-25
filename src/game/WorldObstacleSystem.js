@@ -1,4 +1,5 @@
 import { attachGroundShadow, syncGroundShadow } from './VisualEffects.js';
+import { DAMAGE_SOURCE } from './EnemySystem.js';
 
 export const TREE_CONTACT_DAMAGE = 1;
 export const TREE_ATTACKS = false;
@@ -80,7 +81,7 @@ export class WorldObstacleSystem {
 
   touchTree(tree) {
     if (!tree?.active) return;
-    this.scene.enemySystem.damagePlayer(TREE_CONTACT_DAMAGE);
+    this.scene.enemySystem.damagePlayer(TREE_CONTACT_DAMAGE, DAMAGE_SOURCE.TREE);
   }
 
   hitTree(bullet, tree) {

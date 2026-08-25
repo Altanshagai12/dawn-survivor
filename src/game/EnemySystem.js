@@ -5,6 +5,13 @@ import { syncGroundShadow } from './VisualEffects.js';
 import { syncWinglingFeedback, syncWinglingWarning } from './WinglingFeedback.js';
 
 export const PLAYER_INVULNERABILITY_MS = 1300;
+export const DAMAGE_SOURCE = Object.freeze({
+  BOMBER: 'bomber-contact',
+  ENEMY: 'enemy-contact',
+  PROJECTILE: 'enemy-projectile',
+  TREE: 'tree-contact',
+  UNKNOWN: 'unknown',
+});
 
 export class EnemySystem {
   constructor(scene) {
@@ -14,7 +21,7 @@ export class EnemySystem {
     scene.physics.add.overlap(scene.player, scene.enemyBullets, (_player, bullet) => {
       if (!bullet.active) return;
       bullet.destroy();
-      this.damagePlayer(1);
+      this.damagePlayer(bullet.getData?.('damage') || 1, DAMAGE_SOURCE.PROJECTILE);
     });
   }
 
@@ -72,12 +79,6 @@ export class EnemySystem {
 
   updateRegular(enemy, nx, ny, distance, speed, now) {
     const def = enemy.enemyDef;
-    if (def.bomber && distance < 68) {
-      this.scene.flashEffect(enemy.x, enemy.y, 2, 1.25);
-      this.damagePlayer(def.damage);
-      this.scene.combat.killEnemy(enemy, { explosion: true });
-      return;
-    }
     if (def.ranged && distance < 480 && now >= enemy.nextAttack) {
       enemy.nextAttack = now + 2100;
       this.fireProjectile(enemy.x, enemy.y, nx, ny, 185, 1);
@@ -148,12 +149,21 @@ export class EnemySystem {
     if (!enemy.active || this.scene.time.now < (enemy.spawnReadyAt || 0)
       || this.scene.time.now < (enemy.nextContactAt || 0)) return;
     enemy.nextContactAt = this.scene.time.now + 700;
-    this.damagePlayer(enemy.enemyDef.damage || 1);
+    const bomber = enemy.enemyDef.bomber;
+    this.damagePlayer(
+      enemy.enemyDef.damage || 1,
+      bomber ? DAMAGE_SOURCE.BOMBER : DAMAGE_SOURCE.ENEMY,
+    );
+    if (bomber) {
+      this.scene.flashEffect(enemy.x, enemy.y, 2, 1.25);
+      this.scene.combat.killEnemy(enemy, { explosion: true });
+      return;
+    }
     const angle = Phaser.Math.Angle.Between(enemy.x, enemy.y, this.scene.player.x, this.scene.player.y);
     this.scene.physics.velocityFromRotation(angle, 190, this.scene.player.body.velocity);
   }
 
-  damagePlayer(amount) {
+  damagePlayer(amount, source = DAMAGE_SOURCE.UNKNOWN) {
     const now = this.scene.time.now;
     if (now < this.playerInvulnerableUntil || this.scene.ended) return false;
     const moving = Math.hypot(this.scene.lastInput?.moveX || 0, this.scene.lastInput?.moveY || 0) > .2;
@@ -165,6 +175,7 @@ export class EnemySystem {
       return false;
     }
     const result = this.scene.state.takeDamage(amount);
+    this.lastDamageSource = source;
     this.playerInvulnerableUntil = now + PLAYER_INVULNERABILITY_MS;
     this.invulnerabilityTween?.stop();
     this.invulnerabilityTween = this.scene.tweens.add({
