@@ -19,3 +19,4 @@
 - Grounding an obstacle requires its sprite origin, root collider, dirt contact patch, shadow, and depth comparison to share the same foot-point; adding a shadow beneath a center-anchored sprite can still make it float.
 - Mobile twin-stick feel needs separate raw and smoothed vectors plus a stable aim latch; binding fire directly to noisy pointer magnitude causes intermittent aim and weak recoil feedback.
 - Footstep dust must render above the character's ground shadow and originate at the shared foot point; a low-alpha puff below the shadow exists technically but is visually absent.
+- A passive hazard must also look passive: proximity frame changes, source-origin combat flashes, and forced knockback read as attacks even when no projectile or attack timer exists.

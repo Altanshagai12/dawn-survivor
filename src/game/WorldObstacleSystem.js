@@ -2,6 +2,7 @@ import { attachGroundShadow, syncGroundShadow } from './VisualEffects.js';
 
 export const TREE_CONTACT_DAMAGE = 1;
 export const TREE_ATTACKS = false;
+export const TREE_IDLE_FRAME = 0;
 export const TREE_ROOT_ORIGIN = .925;
 const CHUNK_SIZE = 620;
 
@@ -50,9 +51,7 @@ export class WorldObstacleSystem {
         tree.destroy();
         return;
       }
-      const distance = Phaser.Math.Distance.Between(tree.x, tree.y, this.scene.player.x, this.scene.player.y);
-      if (tree.hitUntil > this.scene.time.now) tree.setFrame(2);
-      else tree.setFrame(distance < 230 ? 1 : 0);
+      tree.setFrame(TREE_IDLE_FRAME);
       tree.setDepth(tree.y > this.scene.player.y ? 27 : 17);
       syncGroundShadow(tree);
     });
@@ -66,13 +65,12 @@ export class WorldObstacleSystem {
   }
 
   spawnTree(x, y, chunkX, chunkY) {
-    const tree = this.trees.create(x, y, 'mysterious-tree', 0);
+    const tree = this.trees.create(x, y, 'mysterious-tree', TREE_IDLE_FRAME);
     if (!tree) return;
     tree.setOrigin(.5, TREE_ROOT_ORIGIN).setScale(.43).setDepth(17);
     tree.refreshBody();
     tree.body.setSize(128, 72).setOffset(72, 278);
     tree.hp = 45000;
-    tree.hitUntil = 0;
     tree.chunkX = chunkX;
     tree.chunkY = chunkY;
     attachGroundShadow(this.scene, tree, {
@@ -82,17 +80,12 @@ export class WorldObstacleSystem {
 
   touchTree(tree) {
     if (!tree?.active) return;
-    if (!this.scene.enemySystem.damagePlayer(TREE_CONTACT_DAMAGE)) return;
-    tree.hitUntil = this.scene.time.now + 220;
-    const angle = Phaser.Math.Angle.Between(tree.x, tree.y, this.scene.player.x, this.scene.player.y);
-    this.scene.physics.velocityFromRotation(angle, 240, this.scene.player.body.velocity);
-    this.scene.flashEffect(tree.x, tree.y - 7, 1, .55);
+    this.scene.enemySystem.damagePlayer(TREE_CONTACT_DAMAGE);
   }
 
   hitTree(bullet, tree) {
     if (!bullet?.active || !tree?.active) return;
     tree.hp -= bullet.damage || 1;
-    tree.hitUntil = this.scene.time.now + 120;
     this.scene.flashEffect(bullet.x, bullet.y, 1, .2);
     bullet.destroy();
     if (tree.hp <= 0) tree.destroy();
