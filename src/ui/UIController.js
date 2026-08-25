@@ -1,5 +1,19 @@
+import { FIRING_MOVE_MULTIPLIER } from '../game/movement.js';
+
 export function savedOrDefault(collection, saved, fallback) {
   return collection[saved] ? saved : fallback;
+}
+
+export function heroPassiveCopy(hero, language = 'en') {
+  const passive = language === 'mn' ? hero.passiveMn : hero.passiveText;
+  return `${language === 'mn' ? 'ХУВИЙН ЧАДВАР' : 'PERSONAL SKILL'} · ${passive}`;
+}
+
+export function movementCopy(language = 'en') {
+  const firingPercent = Math.round(FIRING_MOVE_MULTIPLIER * 100);
+  return language === 'mn'
+    ? `ХӨДӨЛГӨӨН · Энгийн гүйлт 100% · Буудаж гүйх ${firingPercent}% · Run and Gun авбал 100%`
+    : `MOVEMENT · Running 100% · Running while firing ${firingPercent}% · Run and Gun restores 100%`;
 }
 
 const WEAPON_ICONS = {
@@ -55,7 +69,7 @@ export class UIController {
   cacheElements() {
     const ids = [
       'boot','menu','hud','choice-modal','pause-modal','result-modal','touch-controls',
-      'hero-list','weapon-list','hero-stat','weapon-stat','weapon-description','start-button','pause-button',
+      'hero-list','weapon-list','hero-stat','hero-description','weapon-stat','weapon-description','movement-description','start-button','pause-button',
       'resume-button','quit-button','again-button','menu-button','choice-list','choice-kicker',
       'choice-title','reroll-button','hearts','timer','boss-bar','boss-name','boss-fill',
       'xp-fill','level','ammo','reload-fill','reload-state','result-kicker','result-title','result-score',
@@ -103,9 +117,11 @@ export class UIController {
     const hero = this.heroes[this.selectedHero];
     const weapon = this.weapons[this.selectedWeapon];
     this.el['hero-stat'].textContent = `♥ ${hero.hp} · SPD ${hero.speed}`;
+    this.el['hero-description'].textContent = heroPassiveCopy(hero, this.i18n.lang);
     this.el['weapon-stat'].textContent = `DMG ${weapon.damage} · RATE ${weapon.fireRate.toFixed(1)} · ${weapon.projectiles}× · ${weapon.magazine} RDS · ${weapon.reload.toFixed(1)}s`;
     this.el['weapon-description'].textContent = this.i18n.lang === 'mn'
       ? weapon.descriptionMn : weapon.description;
+    this.el['movement-description'].textContent = movementCopy(this.i18n.lang);
   }
 
   hideAll() {
@@ -164,6 +180,7 @@ export class UIController {
       const desc = this.i18n.lang === 'mn' && card.descMn ? card.descMn : card.desc;
       const treeLabel = this.i18n.lang === 'mn' && card.treeLabelMn ? card.treeLabelMn : card.treeLabel;
       button.innerHTML = `${upgradeIconHtml(card)}<em>${treeLabel || (chest ? 'HUNTER GIFT' : '')}</em><strong>${name}</strong><span class="choice-card__desc">${desc}</span>${upgradePathHtml(card, owned)}`;
+      button.setAttribute('aria-label', `${name}. ${desc}`);
       return button;
     }));
     this.el['choice-modal'].classList.remove('hidden');

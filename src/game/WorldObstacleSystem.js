@@ -1,6 +1,8 @@
 import { attachGroundShadow, syncGroundShadow } from './VisualEffects.js';
 
 export const TREE_CONTACT_DAMAGE = 1;
+export const TREE_ATTACKS = false;
+export const TREE_ROOT_ORIGIN = .925;
 const CHUNK_SIZE = 620;
 
 function hash(value) {
@@ -26,7 +28,9 @@ export class WorldObstacleSystem {
   constructor(scene) {
     this.scene = scene;
     this.loadedChunks = new Set();
-    this.trees = scene.physics.add.staticGroup({ maxSize: 150 });
+    this.chunkRadius = scene.performance?.treeChunkRadius || 2;
+    this.treeCap = scene.performance?.treeCap || 145;
+    this.trees = scene.physics.add.staticGroup({ maxSize: this.treeCap + 4 });
     scene.trees = this.trees;
     scene.physics.add.collider(scene.player, this.trees, (_player, tree) => this.touchTree(tree));
     scene.physics.add.overlap(scene.bullets, this.trees, (bullet, tree) => this.hitTree(bullet, tree));
@@ -36,8 +40,8 @@ export class WorldObstacleSystem {
   update() {
     const chunkX = Math.floor(this.scene.player.x / CHUNK_SIZE);
     const chunkY = Math.floor(this.scene.player.y / CHUNK_SIZE);
-    for (let y = chunkY - 2; y <= chunkY + 2; y += 1) {
-      for (let x = chunkX - 2; x <= chunkX + 2; x += 1) this.loadChunk(x, y);
+    for (let y = chunkY - this.chunkRadius; y <= chunkY + this.chunkRadius; y += 1) {
+      for (let x = chunkX - this.chunkRadius; x <= chunkX + this.chunkRadius; x += 1) this.loadChunk(x, y);
     }
     this.trees.getChildren().forEach((tree) => {
       if (!tree?.active) return;
@@ -56,7 +60,7 @@ export class WorldObstacleSystem {
 
   loadChunk(chunkX, chunkY) {
     const key = `${chunkX}:${chunkY}`;
-    if (this.loadedChunks.has(key) || this.trees.countActive() >= 145) return;
+    if (this.loadedChunks.has(key) || this.trees.countActive() >= this.treeCap) return;
     this.loadedChunks.add(key);
     chunkTreePoints(chunkX, chunkY).forEach(({ x, y }) => this.spawnTree(x, y, chunkX, chunkY));
   }
@@ -64,7 +68,7 @@ export class WorldObstacleSystem {
   spawnTree(x, y, chunkX, chunkY) {
     const tree = this.trees.create(x, y, 'mysterious-tree', 0);
     if (!tree) return;
-    tree.setScale(.43).setDepth(17);
+    tree.setOrigin(.5, TREE_ROOT_ORIGIN).setScale(.43).setDepth(17);
     tree.refreshBody();
     tree.body.setSize(128, 72).setOffset(72, 278);
     tree.hp = 45000;
@@ -72,7 +76,7 @@ export class WorldObstacleSystem {
     tree.chunkX = chunkX;
     tree.chunkY = chunkY;
     attachGroundShadow(this.scene, tree, {
-      width: 92, height: 28, offsetY: 57, depth: 16, alpha: .48,
+      width: 58, height: 10, offsetY: 0, depth: 16, alpha: .32,
     });
   }
 
@@ -82,7 +86,7 @@ export class WorldObstacleSystem {
     tree.hitUntil = this.scene.time.now + 220;
     const angle = Phaser.Math.Angle.Between(tree.x, tree.y, this.scene.player.x, this.scene.player.y);
     this.scene.physics.velocityFromRotation(angle, 240, this.scene.player.body.velocity);
-    this.scene.flashEffect(tree.x, tree.y + 35, 1, .55);
+    this.scene.flashEffect(tree.x, tree.y - 7, 1, .55);
   }
 
   hitTree(bullet, tree) {

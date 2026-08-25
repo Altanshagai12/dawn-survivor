@@ -1,5 +1,5 @@
 import { BOSS_ATLASES, ENEMY_ATLASES } from '../config/assets.js';
-import { BOSSES, MAX_LIVE_ENEMIES, availableEnemies } from '../data/enemies.js';
+import { BOSSES, availableEnemies } from '../data/enemies.js';
 import { enemyHealthScale, spawnInterval, weightedPick } from './simulation.js';
 import { playDirectional } from './animations.js';
 import { attachGroundShadow, showSpawnWarning } from './VisualEffects.js';
@@ -32,7 +32,7 @@ export class Spawner {
     const elapsed = this.scene.state.elapsed;
     this.accumulator += deltaSeconds;
     const interval = spawnInterval(elapsed);
-    while (this.accumulator >= interval && this.scene.enemies.countActive() < MAX_LIVE_ENEMIES) {
+    while (this.accumulator >= interval && this.scene.enemies.countActive() < this.scene.performance.enemyCap) {
       this.accumulator -= interval;
       const definition = weightedPick(availableEnemies(elapsed));
       this.spawnEnemy(definition);

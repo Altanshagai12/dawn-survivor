@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { facingVector } from '../src/game/animations.js';
-import { aimFromClientPoint, PointerFireLatch } from '../src/game/InputController.js';
+import {
+  aimFromClientPoint, PointerFireLatch, radialDeadZone, smoothDirection, smoothStick,
+} from '../src/game/InputController.js';
 
 test('maps a host-offset client point through the canvas and live camera', () => {
   const surface = {
@@ -52,4 +54,12 @@ test('holds the last shot direction through idle and reload frames', () => {
   const idle = { moveX: 0, moveY: 0, aimX: -1, aimY: 0, firing: false };
   assert.deepEqual(facingVector(idle, prior, true), { x: -1, y: 0 });
   assert.deepEqual(facingVector({ ...idle, aimX: 1 }, prior, false), prior);
+});
+
+test('mobile sticks remove center noise and ease movement without losing aim', () => {
+  assert.deepEqual(radialDeadZone({ x: .03, y: -.02 }), { x: 0, y: 0 });
+  const moved = smoothStick({ x: 0, y: 0 }, { x: 1, y: 0 }, .46);
+  assert.deepEqual(moved, { x: .46, y: 0 });
+  assert.deepEqual(smoothDirection({ x: 1, y: 0 }, { x: -1, y: 0 }, .5), { x: -1, y: 0 });
+  assert.deepEqual(smoothDirection({ x: 0, y: -1 }, { x: 0, y: 0 }), { x: 0, y: -1 });
 });

@@ -12,7 +12,11 @@ import { Spawner } from './Spawner.js';
 import { SummonSystem } from './SummonSystem.js';
 import { UpgradeEffectSystem } from './UpgradeEffectSystem.js';
 import { WorldObstacleSystem } from './WorldObstacleSystem.js';
-import { updateMovementFeedback, updateWeaponCharge } from './PlayerFeedback.js';
+import { gameDeviceProfile } from './deviceProfile.js';
+import { movementMultiplier } from './movement.js';
+import {
+  triggerShotFeedback, updateMovementFeedback, updateShotFeedback, updateWeaponCharge,
+} from './PlayerFeedback.js';
 import { facingVector, playDirectional } from './animations.js';
 import { sampleWithoutReplacement, scoreForRun } from './simulation.js';
 import {
@@ -35,6 +39,7 @@ export class GameScene extends Phaser.Scene {
     this.dustAccumulator = 0;
     this.facing = { x: 0, y: 1 };
     this.aimHoldUntil = 0;
+    this.activeVfx = 0;
   }
 
   create() {
@@ -43,6 +48,12 @@ export class GameScene extends Phaser.Scene {
     this.profile = this.game.registry.get('profile');
     this.enemyDefinitions = ENEMIES;
     this.state = new RunState(HEROES[this.selection.heroId], WEAPONS[this.selection.weaponId]);
+    this.performance = gameDeviceProfile({
+      coarse: matchMedia('(pointer: coarse)').matches,
+      width: this.scale.width,
+      cores: navigator.hardwareConcurrency || 8,
+      memory: navigator.deviceMemory || 8,
+    });
     this.createWorld();
     createGameTextures(this);
     this.createGroups();
@@ -69,10 +80,10 @@ export class GameScene extends Phaser.Scene {
   }
 
   createGroups() {
-    this.enemies = this.physics.add.group({ maxSize: 180 });
-    this.bullets = this.physics.add.group({ maxSize: 360 });
-    this.enemyBullets = this.physics.add.group({ maxSize: 180 });
-    this.gems = this.physics.add.group({ maxSize: 280 });
+    this.enemies = this.physics.add.group({ maxSize: this.performance.enemyGroup });
+    this.bullets = this.physics.add.group({ maxSize: this.performance.bulletCap });
+    this.enemyBullets = this.physics.add.group({ maxSize: this.performance.enemyBulletCap });
+    this.gems = this.physics.add.group({ maxSize: this.performance.gemCap });
     this.chests = this.physics.add.group({ maxSize: 4 });
   }
 
@@ -92,8 +103,8 @@ export class GameScene extends Phaser.Scene {
       alpha: .44,
     });
     this.cameras.main.startFollow(this.player, true, .11, .11);
-    this.cameras.main.setZoom(matchMedia('(max-width: 520px)').matches ? .94 : 1.05);
-    this.playerLights = createPlayerLights(this, this.player);
+    this.cameras.main.setZoom(this.performance.cameraZoom);
+    this.playerLights = createPlayerLights(this, this.player, this.performance.lightScale);
     this.reloadIndicator = createReloadIndicator(this, this.player);
   }
 
@@ -111,11 +122,12 @@ export class GameScene extends Phaser.Scene {
     const input = this.inputController.snapshot(this.player);
     this.lastInput = input;
     if (input.firing) this.aimHoldUntil = this.time.now + 850;
-    const firingPenalty = input.firing && !this.state.flags.runGun ? .78 : 1;
+    const firingPenalty = movementMultiplier(input.firing, this.state.flags.runGun);
     this.player.setVelocity(input.moveX * this.state.moveSpeed * firingPenalty, input.moveY * this.state.moveSpeed * firingPenalty);
     const facing = facingVector(input, this.facing, this.time.now < this.aimHoldUntil || this.state.reloading);
     this.facing = facing;
     playDirectional(this.player, HERO_ATLASES[this.state.hero.id].key, facing.x, facing.y, Math.hypot(input.moveX, input.moveY) > .08);
+    updateShotFeedback(this, deltaSeconds);
     syncGroundShadow(this.player);
     syncPlayerLights(this.playerLights, this.player);
     syncReloadIndicator(this.reloadIndicator, this.player, this.state, deltaSeconds);
@@ -176,12 +188,18 @@ export class GameScene extends Phaser.Scene {
     const flame = this.state.weapon.id === 'flame';
     const scale = this.state.weapon.id === 'shotgun' ? .58 : flame ? .46 : .38;
     this.flashEffect(x, y, flame ? 2 : 0, scale);
+    triggerShotFeedback(this, angle);
+    this.cameras.main.shake(55, this.performance.mobile ? .0012 : .0007);
   }
 
   flashEffect(x, y, row, scale = .7) {
+    if (this.activeVfx >= this.performance.vfxCap) return null;
+    this.activeVfx += 1;
     const effect = this.add.sprite(x, y, 'combat-vfx', row * 6).setDepth(40).setScale(scale).setBlendMode(Phaser.BlendModes.ADD);
+    effect.once('destroy', () => { this.activeVfx = Math.max(0, this.activeVfx - 1); });
     effect.play(`combat-vfx-${row}`);
     effect.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => effect.destroy());
+    return effect;
   }
 
   queueLevelUps(count) {

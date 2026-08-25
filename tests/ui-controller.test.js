@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { savedOrDefault, UIController, upgradeIconHtml, upgradePathHtml, weaponIconSvg } from '../src/ui/UIController.js';
+import {
+  heroPassiveCopy, movementCopy, savedOrDefault, UIController,
+  upgradeIconHtml, upgradePathHtml, weaponIconSvg,
+} from '../src/ui/UIController.js';
 
 function classList() {
   return { add() {}, remove() {}, toggle() {} };
@@ -32,11 +35,16 @@ test('upgrade cards show all four nodes in their progression path', () => {
   assert.equal((html.match(/ current/g) || []).length, 1);
 });
 
+test('loadout copy explains personal skills and firing movement speed', () => {
+  assert.match(heroPassiveCopy({ passiveMn: 'Онцгой.' }, 'mn'), /ХУВИЙН ЧАДВАР · Онцгой/);
+  assert.match(movementCopy('mn'), /Буудаж гүйх 78%/);
+});
+
 test('upgrade choices render their icon and localized tree label', () => {
   const previousDocument = globalThis.document;
   globalThis.document = {
     createElement() {
-      return { className: '', innerHTML: '', addEventListener() {} };
+      return { className: '', innerHTML: '', addEventListener() {}, setAttribute() {} };
     },
   };
   try {

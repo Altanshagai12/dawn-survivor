@@ -6,7 +6,14 @@ export class LootSystem {
   }
 
   dropGem(x, y, value = 1) {
-    if (this.scene.gems.countActive() > 260) return;
+    if (this.scene.gems.countActive() >= this.scene.performance.gemCap) {
+      const pooled = this.scene.gems.getChildren().find((gem) => gem?.active);
+      if (pooled) {
+        pooled.xpValue = (pooled.xpValue || 1) + value;
+        pooled.setScale(Math.min(1.7, 1 + Math.log2(pooled.xpValue) * .12));
+      }
+      return;
+    }
     const gem = this.scene.gems.create(x, y, 'ember');
     if (!gem) return;
     gem.setDepth(12).setScale(value >= 5 ? 1.35 : 1);

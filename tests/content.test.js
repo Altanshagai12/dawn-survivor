@@ -14,6 +14,8 @@ test('ships a full ten-minute content set', () => {
   assert.equal(Object.keys(BOSSES).length, 3);
   assert.equal(UPGRADE_TREES.length, 25);
   assert.equal(UPGRADES.length, 100);
+  assert.equal(new Set(Object.values(HEROES).map(({ passive }) => passive)).size, 4);
+  assert.ok(Object.values(HEROES).every(({ passiveText, passiveMn }) => passiveText && passiveMn));
 });
 
 test('boss encounters land at minutes two, five, and nine', () => {

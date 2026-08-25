@@ -22,7 +22,7 @@ async function boot() {
     scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
     physics: { default: 'arcade', arcade: { gravity: { x: 0, y: 0 }, debug: false } },
     scene: [BootScene, GameScene],
-    fps: { target: 60, forceSetTimeOut: false },
+    fps: { target: 60, min: 30, smoothStep: true, forceSetTimeOut: false },
   });
   installVisibleResume(game);
 

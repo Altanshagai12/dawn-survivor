@@ -16,3 +16,5 @@
 - Original-style upgrades need their acquisition branches as well as their mechanics; placing ricochet and back-shot inside unrelated linear trees makes progression feel incorrect.
 - In the original four-node upgrade tree, either one of the two tier-2 branches unlocks tier 3; requiring both branches is stricter than the source game and must be covered by progression tests.
 - Map decoration that has no collision makes a top-down character appear to float over scenery; ground texture and real obstacle silhouettes need separate collision semantics.
+- Grounding an obstacle requires its sprite origin, root collider, dirt contact patch, shadow, and depth comparison to share the same foot-point; adding a shadow beneath a center-anchored sprite can still make it float.
+- Mobile twin-stick feel needs separate raw and smoothed vectors plus a stable aim latch; binding fire directly to noisy pointer magnitude causes intermittent aim and weak recoil feedback.

@@ -155,13 +155,16 @@ export function createGameTextures(scene) {
   }
 }
 
-export function createPlayerLights(scene, player) {
-  return [
+export function createPlayerLights(scene, player, scale = 1) {
+  const lights = [
     scene.add.image(player.x, player.y, 'player-light-outer')
       .setDepth(1).setBlendMode(Phaser.BlendModes.ADD),
     scene.add.image(player.x, player.y, 'player-light-inner')
       .setDepth(2).setBlendMode(Phaser.BlendModes.ADD),
   ];
+  lights[0].setScale(scale);
+  lights[1].setScale(Math.min(1, scale + .08));
+  return lights;
 }
 
 export function syncPlayerLights(lights, player) {
