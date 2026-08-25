@@ -24,7 +24,7 @@ test('uses one original-like hero pace and readable enemy speed tiers', () => {
   assert.ok(Object.values(ENEMIES).every(({ speed }) => speed < BASE_HERO_SPEED));
   assert.ok(ENEMIES.wingling.speed > ENEMIES.crawler.speed);
   assert.ok(ENEMIES.brute.speed < ENEMIES.creeper.speed);
-  assert.match(STATIC_ASSETS.map, /night-soil-dawn-v2\.webp$/);
+  assert.match(STATIC_ASSETS.map, /night-soil-calm-v3-2k\.webp$/);
 });
 
 test('boss encounters land at minutes two, five, and nine', () => {

@@ -25,7 +25,7 @@ export const BOSS_ATLASES = {
 };
 
 export const STATIC_ASSETS = {
-  map: `${base}/map/night-soil-dawn-v2.webp`,
+  map: `${base}/map/night-soil-calm-v3-2k.webp`,
   vfx: `${base}/fx/combat-vfx-atlas.webp`,
   ambient: `${base}/fx/map-ambient-atlas.webp`,
   spirit: `${base}/sprites/spirit-raven.webp`,
