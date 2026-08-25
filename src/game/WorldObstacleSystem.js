@@ -1,11 +1,12 @@
 import { attachGroundShadow, syncGroundShadow } from './VisualEffects.js';
-import { DAMAGE_SOURCE } from './EnemySystem.js?build=20260825e';
+import { DAMAGE_SOURCE } from './EnemySystem.js?build=20260825f';
 
 export const TREE_CONTACT_DAMAGE = 1;
 export const TREE_ATTACKS = false;
 export const TREE_IDLE_FRAME = 0;
 export const TREE_ROOT_ORIGIN = .925;
-export const TREE_CONTACT_RELEASE_DISTANCE = 82;
+export const TREE_CONTACT_EXIT_GRACE_MS = 120;
+export const TREE_COLLIDER = Object.freeze({ width: 48, height: 20 });
 const CHUNK_SIZE = 620;
 
 function hash(value) {
@@ -56,7 +57,7 @@ export class WorldObstacleSystem {
       tree.setFrame(TREE_IDLE_FRAME);
       tree.setDepth(tree.y > this.scene.player.y ? 27 : 17);
       if (tree.contactLatched
-        && Math.hypot(tree.x - this.scene.player.x, tree.y - this.scene.player.y) > TREE_CONTACT_RELEASE_DISTANCE) {
+        && this.scene.time.now - tree.lastContactAt > TREE_CONTACT_EXIT_GRACE_MS) {
         tree.contactLatched = false;
       }
       syncGroundShadow(tree);
@@ -75,18 +76,21 @@ export class WorldObstacleSystem {
     if (!tree) return;
     tree.setOrigin(.5, TREE_ROOT_ORIGIN).setScale(.43).setDepth(17);
     tree.refreshBody();
-    tree.body.setSize(128, 72).setOffset(72, 278);
+    tree.body.setSize(TREE_COLLIDER.width, TREE_COLLIDER.height, true);
     tree.hp = 45000;
     tree.chunkX = chunkX;
     tree.chunkY = chunkY;
     tree.contactLatched = false;
+    tree.lastContactAt = Number.NEGATIVE_INFINITY;
     attachGroundShadow(this.scene, tree, {
       width: 58, height: 10, offsetY: 0, depth: 16, alpha: .32,
     });
   }
 
   touchTree(tree) {
-    if (!tree?.active || tree.contactLatched) return;
+    if (!tree?.active) return;
+    tree.lastContactAt = this.scene.time.now;
+    if (tree.contactLatched) return;
     tree.contactLatched = true;
     this.scene.enemySystem.damagePlayer(TREE_CONTACT_DAMAGE, DAMAGE_SOURCE.TREE);
   }

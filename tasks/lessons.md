@@ -23,3 +23,5 @@
 - Player damage must originate from a visible physics overlap or a readable projectile; center-distance thresholds larger than the combined visible bodies create invisible hits and unexplained deaths.
 - Contact hazards need entry/exit state, not only a global immunity timer; a collider callback repeats while the player keeps pressing into a static body and otherwise becomes periodic passive damage.
 - A production hotfix must version every changed browser module and stylesheet in the import chain; cache-busting only the HTML entry module can still execute stale transitive modules.
+- A contact latch must be released from actual collision inactivity, not a guessed center distance; a release radius smaller than the physics body re-arms damage while contact is still active.
+- Phaser StaticBody offsets are world-pixel offsets from the Game Object's x/y, not source-atlas coordinates; centering a compact body on a root-anchored sprite avoids an invisible collider far below and beside the tree.

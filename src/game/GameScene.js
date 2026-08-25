@@ -4,14 +4,14 @@ import { HEROES } from '../data/heroes.js';
 import { eligibleUpgrades } from '../data/upgrades.js';
 import { WEAPONS } from '../data/weapons.js';
 import { CombatSystem } from './CombatSystem.js';
-import { EnemySystem } from './EnemySystem.js?build=20260825e';
+import { EnemySystem } from './EnemySystem.js?build=20260825f';
 import { InputController } from './InputController.js';
 import { LootSystem } from './LootSystem.js';
 import { RunState } from './RunState.js';
 import { Spawner } from './Spawner.js';
 import { SummonSystem } from './SummonSystem.js';
 import { UpgradeEffectSystem } from './UpgradeEffectSystem.js';
-import { WorldObstacleSystem } from './WorldObstacleSystem.js?build=20260825e';
+import { WorldObstacleSystem } from './WorldObstacleSystem.js?build=20260825f';
 import { gameDeviceProfile } from './deviceProfile.js';
 import { movementMultiplier } from './movement.js';
 import {
