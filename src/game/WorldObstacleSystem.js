@@ -12,6 +12,13 @@ export const TREE_SAFE_START_RADIUS = 420;
 export const TREE_MIN_SPACING = 360;
 const TREE_MARGIN = 190;
 
+export function treeRootBodyOffset(tree, collider = TREE_COLLIDER) {
+  return {
+    x: tree.displayWidth * tree.originX - collider.width / 2,
+    y: tree.displayHeight * tree.originY - collider.height / 2,
+  };
+}
+
 function hash(value) {
   let result = value | 0;
   result = Math.imul(result ^ result >>> 16, 0x45d9f3b);
@@ -80,7 +87,10 @@ export class WorldObstacleSystem {
     if (!tree) return;
     tree.setOrigin(.5, TREE_ROOT_ORIGIN).setScale(.43).setDepth(17);
     tree.refreshBody();
-    tree.body.setSize(TREE_COLLIDER.width, TREE_COLLIDER.height, true);
+    const bodyOffset = treeRootBodyOffset(tree);
+    tree.body
+      .setSize(TREE_COLLIDER.width, TREE_COLLIDER.height, false)
+      .setOffset(bodyOffset.x, bodyOffset.y);
     tree.hp = 45000;
     tree.chunkX = chunkX;
     tree.chunkY = chunkY;

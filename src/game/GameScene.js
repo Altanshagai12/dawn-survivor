@@ -11,7 +11,7 @@ import { RunState } from './RunState.js';
 import { Spawner } from './Spawner.js?build=20260825g';
 import { SummonSystem } from './SummonSystem.js';
 import { UpgradeEffectSystem } from './UpgradeEffectSystem.js';
-import { WorldObstacleSystem } from './WorldObstacleSystem.js?build=20260825g';
+import { WorldObstacleSystem } from './WorldObstacleSystem.js?build=20260825m';
 import { gameDeviceProfile } from './deviceProfile.js';
 import { movementMultiplier } from './movement.js?build=20260825g';
 import {

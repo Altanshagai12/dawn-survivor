@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   TREE_ATTACKS, TREE_COLLIDER, TREE_CONTACT_DAMAGE, TREE_CONTACT_EXIT_GRACE_MS, TREE_IDLE_FRAME,
   TREE_MIN_SPACING, TREE_ROOT_ORIGIN, TREE_SAFE_START_RADIUS, WorldObstacleSystem, chunkTreePoints,
+  treeRootBodyOffset,
 } from '../src/game/WorldObstacleSystem.js';
 import { DAMAGE_SOURCE } from '../src/game/EnemySystem.js';
 
@@ -72,12 +73,12 @@ test('tree contact damages once until collision callbacks stop', () => {
   assert.equal(damage, TREE_CONTACT_DAMAGE * 2);
 });
 
-test('spawned trees never offset their static body away from the visual root', () => {
+test('spawned trees center their static body on the visual root', () => {
   let colliderSize;
-  let offsetCalls = 0;
+  let colliderOffset;
   const body = {
     setSize(...args) { colliderSize = args; return this; },
-    setOffset() { offsetCalls += 1; return this; },
+    setOffset(...args) { colliderOffset = args; return this; },
   };
   const shadow = {
     active: true, alpha: .32,
@@ -85,8 +86,10 @@ test('spawned trees never offset their static body away from the visual root', (
     setPosition() { return this; }, destroy() {},
   };
   const tree = {
-    x: 12, y: 34, depth: 17, alpha: 1, displayHeight: 156, body,
-    setOrigin() { return this; }, setScale() { return this; }, setDepth() { return this; },
+    x: 12, y: 34, depth: 17, alpha: 1, displayWidth: 117, displayHeight: 156,
+    originX: .5, originY: TREE_ROOT_ORIGIN, body,
+    setOrigin(x, y) { this.originX = x; this.originY = y; return this; },
+    setScale() { return this; }, setDepth() { return this; },
     refreshBody() {}, once() {},
   };
   const system = {
@@ -94,8 +97,12 @@ test('spawned trees never offset their static body away from the visual root', (
     scene: { add: { image: () => shadow } },
   };
   WorldObstacleSystem.prototype.spawnTree.call(system, tree.x, tree.y, 0, 0);
-  assert.deepEqual(colliderSize, [TREE_COLLIDER.width, TREE_COLLIDER.height, true]);
-  assert.equal(offsetCalls, 0);
+  assert.deepEqual(colliderSize, [TREE_COLLIDER.width, TREE_COLLIDER.height, false]);
+  assert.deepEqual(colliderOffset, Object.values(treeRootBodyOffset(tree)));
+  const spriteLeft = tree.x - tree.displayWidth * tree.originX;
+  const spriteTop = tree.y - tree.displayHeight * tree.originY;
+  assert.equal(spriteLeft + colliderOffset[0] + TREE_COLLIDER.width / 2, tree.x);
+  assert.equal(spriteTop + colliderOffset[1] + TREE_COLLIDER.height / 2, tree.y);
 });
 
 test('nearby trees remain on their dormant visual frame', () => {
