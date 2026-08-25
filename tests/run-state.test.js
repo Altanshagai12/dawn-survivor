@@ -9,10 +9,10 @@ const upgrade = (id) => UPGRADES.find((item) => item.id === id);
 
 test('applies upgrades once and preserves health bounds', () => {
   const state = new RunState(HEROES.nyra, WEAPONS.revolver);
-  assert.equal(state.applyUpgrade(upgrade('vitality-1')), true);
+  assert.equal(state.applyUpgrade(upgrade('health-1')), true);
   assert.equal(state.maxHp, 5);
   assert.equal(state.hp, 5);
-  assert.equal(state.applyUpgrade(upgrade('vitality-1')), false);
+  assert.equal(state.applyUpgrade(upgrade('health-1')), false);
   state.heal(100);
   assert.equal(state.hp, 5);
 });
@@ -29,7 +29,7 @@ test('shield blocks a hit and recharges on the simulation clock', () => {
   state.applyUpgrade(upgrade('shield-1'));
   assert.deepEqual(state.takeDamage(1), { blocked: true, dead: false });
   assert.equal(state.hp, 3);
-  state.tick(90);
+  state.tick(120);
   assert.equal(state.shieldReady, true);
 });
 
@@ -49,15 +49,19 @@ test('Varka gains permanent attack tempo when damaged', () => {
   assert.ok(state.reloadMs < WEAPONS.revolver.reload * 1000);
 });
 
-test('additive upgrade flags stack instead of replacing prior tiers', () => {
+test('additive dodge tiers stack instead of replacing prior values', () => {
   const state = new RunState(HEROES.nyra, WEAPONS.revolver);
-  state.applyUpgrade(upgrade('summon-1'));
-  state.applyUpgrade(upgrade('summon-2'));
-  state.applyUpgrade(upgrade('summon-3'));
-  assert.equal(state.flags.wispsAdd, 2);
-  state.applyUpgrade(upgrade('frost-1'));
-  state.applyUpgrade(upgrade('frost-2'));
-  state.applyUpgrade(upgrade('frost-3'));
-  state.applyUpgrade(upgrade('frost-4'));
-  assert.equal(state.flags.freezeChanceAdd, .4);
+  state.applyUpgrade(upgrade('dodge-1'));
+  state.applyUpgrade(upgrade('dodge-2'));
+  state.applyUpgrade(upgrade('dodge-3'));
+  assert.ok(Math.abs(state.flags.dodgeAdd - .35) < Number.EPSILON * 4);
+  assert.equal(state.mods.sizeMul, -.25);
+});
+
+test('soul hearts absorb damage before regular health', () => {
+  const state = new RunState(HEROES.nyra, WEAPONS.revolver);
+  state.applyUpgrade(upgrade('soul-1'));
+  assert.equal(state.soulHearts, 1);
+  assert.deepEqual(state.takeDamage(1), { blocked: true, soul: true, dead: false });
+  assert.equal(state.hp, state.maxHp);
 });

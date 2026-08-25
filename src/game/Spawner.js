@@ -79,7 +79,7 @@ export class Spawner {
     sprite.hp = sprite.maxHp;
     sprite.speed = definition.speed * (1 + this.scene.state.elapsed / 1500);
     sprite.nextAttack = this.scene.time.now + 900 + Math.random() * 1200;
-    sprite.status = { burnUntil: 0, burnTick: 0, freezeUntil: 0 };
+    sprite.status = { burnUntil: 0, burnTick: 0, freezeUntil: 0, curseUntil: 0, curseAt: 0 };
     if (definition.id === 'wingling') {
       const warningDuration = 900;
       sprite.spawnReadyAt = this.scene.time.now + warningDuration;
@@ -119,7 +119,7 @@ export class Spawner {
     sprite.hp = definition.hp;
     sprite.speed = definition.speed;
     sprite.nextAttack = this.scene.time.now + 1800;
-    sprite.status = { burnUntil: 0, burnTick: 0, freezeUntil: 0 };
+    sprite.status = { burnUntil: 0, burnTick: 0, freezeUntil: 0, curseUntil: 0, curseAt: 0 };
     sprite.body.setSize(definition.radius * 2 / scale, definition.radius * 2 / scale, true);
     playDirectional(sprite, atlas.key, 0, 1, true);
     this.scene.activeBoss = sprite;

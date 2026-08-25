@@ -115,3 +115,20 @@ test('a surviving enemy receives knockback and a piercing bullet remains active'
   assert.equal(bullet.active, true);
   assert.equal(bullet.pierce, 0);
 });
+
+test('reaper rounds continue through a killed enemy', () => {
+  const scene = makeScene();
+  scene.state.flags.pierceKilled = true;
+  const combat = new CombatSystem(scene);
+  const enemy = makeEnemy();
+  const bullet = {
+    active: true, damage: 20, pierce: 0, knockback: 0, burnChance: 0,
+    hitTargets: new Set(), destroy() { this.active = false; },
+  };
+
+  combat.hitEnemy(bullet, enemy);
+
+  assert.equal(enemy.active, false);
+  assert.equal(bullet.active, true);
+  assert.equal(bullet.pierce, 0);
+});

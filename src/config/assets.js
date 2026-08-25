@@ -25,10 +25,12 @@ export const BOSS_ATLASES = {
 };
 
 export const STATIC_ASSETS = {
-  map: `${base}/map/ashen-clearing.webp`,
+  map: `${base}/map/night-soil.webp`,
   vfx: `${base}/fx/combat-vfx-atlas.webp`,
   ambient: `${base}/fx/map-ambient-atlas.webp`,
   spirit: `${base}/sprites/spirit-raven.webp`,
+  upgradeIcons: `${base}/ui/upgrade-icons.webp`,
+  mysteriousTree: `${base}/sprites/mysterious-tree-4f.webp`,
 };
 
 export const DIRECTION_ROWS = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'];

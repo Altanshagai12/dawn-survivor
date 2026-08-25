@@ -55,4 +55,17 @@ for (const atlas of atlases) {
 
 for (const file of Object.values(STATIC_ASSETS)) await assertFile(file);
 
+const generatedSizes = {
+  [STATIC_ASSETS.upgradeIcons]: [960, 960],
+  [STATIC_ASSETS.map]: [1024, 1024],
+  [STATIC_ASSETS.mysteriousTree]: [1084, 362],
+};
+for (const [file, expected] of Object.entries(generatedSizes)) {
+  const absolute = await assertFile(file);
+  const size = await imageSize(absolute);
+  if (size.width !== expected[0] || size.height !== expected[1]) {
+    throw new Error(`${file}: expected ${expected.join('x')}, received ${size.width}x${size.height}`);
+  }
+}
+
 console.log(`Verified ${atlases.length} directional atlases and ${Object.keys(STATIC_ASSETS).length} static assets.`);

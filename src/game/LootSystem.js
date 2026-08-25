@@ -38,7 +38,13 @@ export class LootSystem {
 
   collectGem(gem) {
     if (!gem.active) return;
-    const gained = this.scene.state.gainXp(gem.xpValue || 1);
+    const state = this.scene.state;
+    if (state.flags.gemAmmoChance && Math.random() < state.flags.gemAmmoChance) {
+      state.ammo = Math.min(state.magazine, state.ammo + 1);
+      this.scene.flashEffect(gem.x, gem.y, 4, .24);
+    }
+    if (state.flags.excitement) state.excitementUntil = state.elapsed + 1;
+    const gained = state.gainXp(gem.xpValue || 1);
     gem.destroy();
     if (gained) this.scene.queueLevelUps(gained);
   }

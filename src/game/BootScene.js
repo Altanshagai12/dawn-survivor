@@ -10,6 +10,8 @@ export class BootScene extends Phaser.Scene {
     }
     this.load.image('ashen-map', STATIC_ASSETS.map);
     this.load.image('spirit-raven', STATIC_ASSETS.spirit);
+    this.load.spritesheet('upgrade-icons', STATIC_ASSETS.upgradeIcons, { frameWidth: 96, frameHeight: 96 });
+    this.load.spritesheet('mysterious-tree', STATIC_ASSETS.mysteriousTree, { frameWidth: 271, frameHeight: 362 });
     this.load.spritesheet('combat-vfx', STATIC_ASSETS.vfx, { frameWidth: 181, frameHeight: 181 });
   }
 

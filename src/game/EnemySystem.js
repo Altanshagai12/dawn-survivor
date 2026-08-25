@@ -35,7 +35,15 @@ export class EnemySystem {
         this.scene.combat.damageEnemy(enemy, enemy.status.burnDamage || 2, { burn: true });
         if (!enemy.active) return;
         enemy.setTint(0xff7a4c);
-      } else if (enemy.status.freezeUntil <= now && enemy.status.burnUntil <= now) enemy.clearTint();
+      }
+      if (enemy.status.curseAt && now >= enemy.status.curseAt) {
+        const curseDamage = enemy.status.curseDamage || 1;
+        enemy.status.curseAt = 0;
+        this.scene.combat.damageEnemy(enemy, curseDamage, { curse: true });
+        if (!enemy.active) return;
+        this.scene.flashEffect(enemy.x, enemy.y, 6, .55);
+      }
+      if (enemy.status.freezeUntil <= now && enemy.status.burnUntil <= now && enemy.status.curseUntil <= now) enemy.clearTint();
 
       const dx = this.scene.player.x - enemy.x;
       const dy = this.scene.player.y - enemy.y;
@@ -150,7 +158,8 @@ export class EnemySystem {
     if (now < this.playerInvulnerableUntil || this.scene.ended) return false;
     const moving = Math.hypot(this.scene.lastInput?.moveX || 0, this.scene.lastInput?.moveY || 0) > .2;
     const dodge = (this.scene.state.flags.dodgeAdd || 0)
-      + (moving ? this.scene.state.flags.dodgeChance || 0 : 0);
+      + (moving ? this.scene.state.flags.dodgeChance || 0 : 0)
+      + (this.scene.state.flags.reflex ? Math.max(0, this.scene.state.multiplierStats.moveSpeed - 1) : 0);
     if (Math.random() < dodge) {
       this.scene.ui.toast('DODGE');
       return false;
@@ -167,11 +176,19 @@ export class EnemySystem {
       onComplete: () => this.scene.player?.active && this.scene.player.setAlpha(1),
     });
     this.scene.player
-      .setTint(result.blocked ? 0x65e6ff : 0xffffff)
+      .setTint(result.soul ? 0xa881ff : result.blocked ? 0x65e6ff : 0xffffff)
       .setTintMode(Phaser.TintModes.FILL);
     this.scene.time.delayedCall(120, () => this.scene.player?.active && this.scene.player.clearTint());
     this.scene.cameras.main.shake(180, result.blocked ? .003 : .009);
-    if (result.blocked && this.scene.state.flags.shieldBurst) this.scene.combat.explode(this.scene.player.x, this.scene.player.y, 40, 115);
+    if (result.soul && this.scene.state.flags.soulLink) {
+      this.scene.enemies.getChildren().forEach((enemy) => {
+        if (enemy?.active && !enemy.enemyDef.boss) this.scene.combat.damageEnemy(enemy, enemy.maxHp * .8, { soul: true });
+      });
+      this.scene.flashEffect(this.scene.player.x, this.scene.player.y, 6, 1.4);
+    }
+    if (result.blocked && this.scene.state.flags.shieldBurst) {
+      this.scene.combat.effects.explode(this.scene.player.x, this.scene.player.y, 40, 115);
+    }
     if (result.dead) this.scene.endRun(false);
     return true;
   }

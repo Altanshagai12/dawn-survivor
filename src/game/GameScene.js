@@ -9,6 +9,9 @@ import { InputController } from './InputController.js';
 import { LootSystem } from './LootSystem.js';
 import { RunState } from './RunState.js';
 import { Spawner } from './Spawner.js';
+import { SummonSystem } from './SummonSystem.js';
+import { UpgradeEffectSystem } from './UpgradeEffectSystem.js';
+import { WorldObstacleSystem } from './WorldObstacleSystem.js';
 import { updateMovementFeedback, updateWeaponCharge } from './PlayerFeedback.js';
 import { facingVector, playDirectional } from './animations.js';
 import { sampleWithoutReplacement, scoreForRun } from './simulation.js';
@@ -29,7 +32,6 @@ export class GameScene extends Phaser.Scene {
     this.hudAccumulator = 0;
     this.regenAccumulator = 0;
     this.magnetAccumulator = 0;
-    this.wispAccumulator = 0;
     this.dustAccumulator = 0;
     this.facing = { x: 0, y: 1 };
     this.aimHoldUntil = 0;
@@ -50,6 +52,9 @@ export class GameScene extends Phaser.Scene {
     this.combat = new CombatSystem(this);
     this.loot = new LootSystem(this);
     this.enemySystem = new EnemySystem(this);
+    this.obstacles = new WorldObstacleSystem(this);
+    this.summons = new SummonSystem(this);
+    this.upgradeEffects = new UpgradeEffectSystem(this);
     this.bindUi();
     this.ui.showGame();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.cleanup());
@@ -58,7 +63,7 @@ export class GameScene extends Phaser.Scene {
   createWorld() {
     this.physics.world.setBounds(-100000, -100000, 200000, 200000);
     this.background = this.add.tileSprite(0, 0, this.scale.width, this.scale.height, 'ashen-map')
-      .setOrigin(0).setScrollFactor(0).setDepth(0).setAlpha(.68).setTint(0x98a6bb);
+      .setOrigin(0).setScrollFactor(0).setDepth(0).setAlpha(.94).setTint(0xc0cada);
     this.onResize = (size) => this.background?.setSize(size.width, size.height);
     this.scale.on('resize', this.onResize);
   }
@@ -69,13 +74,13 @@ export class GameScene extends Phaser.Scene {
     this.enemyBullets = this.physics.add.group({ maxSize: 180 });
     this.gems = this.physics.add.group({ maxSize: 280 });
     this.chests = this.physics.add.group({ maxSize: 4 });
-    this.wisps = this.add.group({ maxSize: 4 });
   }
 
   createPlayer() {
     const atlas = HERO_ATLASES[this.state.hero.id];
     this.player = this.physics.add.sprite(0, 0, atlas.key, 24).setDepth(25);
     const scale = 78 / atlas.frameHeight;
+    this.playerBaseScale = scale;
     this.player.setScale(scale);
     this.player.body.setSize(this.state.hero.size / scale, this.state.hero.size / scale, true);
     this.player.body.setMaxVelocity(500, 500);
@@ -121,9 +126,11 @@ export class GameScene extends Phaser.Scene {
     this.spawner.update(deltaSeconds);
     this.enemySystem.update(deltaSeconds);
     this.loot.update();
-    this.updateSummons(deltaSeconds);
-    this.background.tilePositionX = this.cameras.main.scrollX * .22;
-    this.background.tilePositionY = this.cameras.main.scrollY * .22;
+    this.obstacles.update();
+    this.summons.update(deltaSeconds);
+    this.upgradeEffects.update(deltaSeconds, input);
+    this.background.tilePositionX = this.cameras.main.scrollX;
+    this.background.tilePositionY = this.cameras.main.scrollY;
     this.hudAccumulator += deltaSeconds;
     if (this.hudAccumulator >= .08) {
       this.hudAccumulator = 0;
@@ -147,36 +154,6 @@ export class GameScene extends Phaser.Scene {
     if (this.state.flags.magnetPulse && this.magnetAccumulator >= 20) {
       this.magnetAccumulator = 0;
       this.gems.getChildren().forEach((gem) => gem?.active && this.physics.moveToObject(gem, this.player, 520));
-    }
-  }
-
-  updateSummons(delta) {
-    const desired = this.state.flags.wispsAdd || 0;
-    while (this.wisps.getLength() < desired) {
-      this.wisps.add(this.add.image(this.player.x, this.player.y, 'spirit-raven')
-        .setDepth(29).setScale(.34).setAlpha(.94));
-    }
-    const wisps = this.wisps.getChildren();
-    wisps.forEach((wisp, index) => {
-      const angle = this.state.elapsed * 1.9 + index / Math.max(1, wisps.length) * Math.PI * 2;
-      const bob = Math.sin(this.state.elapsed * 5 + index * 2.4) * 3;
-      wisp.setPosition(this.player.x + Math.cos(angle) * 54, this.player.y + Math.sin(angle) * 40 + bob)
-        .setAngle(Math.sin(this.state.elapsed * 3 + index) * 4);
-    });
-    this.wispAccumulator += delta;
-    if (wisps.length && this.wispAccumulator >= 1.15 / this.state.multiplierStats.summonRate) {
-      this.wispAccumulator = 0;
-      wisps.forEach((wisp) => {
-        const target = this.nearestEnemy(wisp.x, wisp.y, 380);
-        if (!target) return;
-        wisp.setFlipX(target.x < wisp.x);
-        const angle = Phaser.Math.Angle.Between(wisp.x, wisp.y, target.x, target.y);
-        this.combat.spawnBullet(wisp.x, wisp.y, angle, {
-          damage: 10 * this.state.multiplierStats.summonDamage,
-          speed: 470, life: 1, size: 8, texture: 'bullet-spirit',
-        });
-        this.flashEffect(wisp.x, wisp.y, 7, .22);
-      });
     }
   }
 
@@ -228,13 +205,17 @@ export class GameScene extends Phaser.Scene {
       : sampleWithoutReplacement(eligibleUpgrades(this.state.owned), 4);
     let rerolls = item.type === 'level' && this.state.hero.passive === 'reroll' ? 1 : 0;
     while (cards.length) {
-      const choice = await this.ui.choose(cards, { chest: item.type === 'chest', canReroll: rerolls > 0 });
+      const choice = await this.ui.choose(cards, {
+        chest: item.type === 'chest', canReroll: rerolls > 0, owned: this.state.owned,
+      });
       if (choice.reroll) {
         rerolls -= 1;
         cards = sampleWithoutReplacement(eligibleUpgrades(this.state.owned), 4);
         continue;
       }
       this.state.applyUpgrade(choice.card);
+      this.applyPlayerSize();
+      this.upgradeEffects.showAcquired(choice.card);
       this.ui.toast(choice.card.name);
       break;
     }
@@ -252,6 +233,13 @@ export class GameScene extends Phaser.Scene {
       enemy.x += Math.cos(angle) * 34;
       enemy.y += Math.sin(angle) * 34;
     });
+  }
+
+  applyPlayerSize() {
+    const multiplier = 1 + (this.state.mods.sizeMul || 0);
+    const scale = this.playerBaseScale * multiplier;
+    this.player.setScale(scale);
+    this.player.body.setSize(this.state.hero.size / scale, this.state.hero.size / scale, true);
   }
 
   pauseRun() {

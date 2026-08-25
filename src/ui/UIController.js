@@ -13,6 +13,28 @@ export function weaponIconSvg(id) {
   return `<svg viewBox="0 0 32 32" aria-hidden="true">${WEAPON_ICONS[id] || WEAPON_ICONS.revolver}</svg>`;
 }
 
+export function upgradeIconHtml(card) {
+  if (!Number.isInteger(card.iconFrame)) {
+    return `<b class="choice-card__icon" aria-hidden="true">${card.icon || '✦'}</b>`;
+  }
+  const x = card.iconFrame % 10 / 9 * 100;
+  const y = Math.floor(card.iconFrame / 10) / 9 * 100;
+  return `<b class="choice-card__icon choice-card__icon--atlas" aria-hidden="true" style="background-position:${x}% ${y}%"></b>`;
+}
+
+export function upgradePathHtml(card, owned = new Set()) {
+  if (!Number.isInteger(card.iconFrame) || !card.tree) return '';
+  const firstFrame = Math.floor(card.iconFrame / 4) * 4;
+  const icons = Array.from({ length: 4 }, (_, index) => {
+    const frame = firstFrame + index;
+    const x = frame % 10 / 9 * 100;
+    const y = Math.floor(frame / 10) / 9 * 100;
+    const status = frame === card.iconFrame ? ' current' : owned.has(`${card.tree}-${index + 1}`) ? ' owned' : '';
+    return `<i class="choice-card__path-icon${status}" style="background-position:${x}% ${y}%"></i>`;
+  }).join('');
+  return `<span class="choice-card__path" aria-hidden="true">${icons}</span>`;
+}
+
 export class UIController {
   constructor({ heroes, weapons, i18n, profile }) {
     this.heroes = heroes;
@@ -106,6 +128,7 @@ export class UIController {
   updateHud(state, remaining) {
     const hearts = [];
     for (let index = 0; index < state.maxHp; index += 1) hearts.push(index < state.hp ? '♥' : '♡');
+    for (let index = 0; index < (state.soulHearts || 0); index += 1) hearts.push('♦');
     if (state.shieldReady) hearts.push('◈');
     this.el.hearts.textContent = hearts.join('');
     const seconds = Math.max(0, Math.ceil(remaining));
@@ -131,7 +154,7 @@ export class UIController {
     this.el['boss-fill'].style.width = `${Math.max(0, boss.hp / boss.maxHp * 100)}%`;
   }
 
-  choose(cards, { chest = false, canReroll = false } = {}) {
+  choose(cards, { chest = false, canReroll = false, owned = new Set() } = {}) {
     this.el['choice-kicker'].textContent = chest ? 'BOSS CHEST' : 'LEVEL UP';
     this.el['choice-title'].textContent = chest ? 'Claim a hunter gift' : this.i18n.t('chooseUpgrade');
     this.el['choice-list'].replaceChildren(...cards.map((card) => {
@@ -140,7 +163,7 @@ export class UIController {
       const name = this.i18n.lang === 'mn' && card.nameMn ? card.nameMn : card.name;
       const desc = this.i18n.lang === 'mn' && card.descMn ? card.descMn : card.desc;
       const treeLabel = this.i18n.lang === 'mn' && card.treeLabelMn ? card.treeLabelMn : card.treeLabel;
-      button.innerHTML = `<b class="choice-card__icon" aria-hidden="true">${card.icon || '✦'}</b><em>${treeLabel || (chest ? 'HUNTER GIFT' : '')}</em><strong>${name}</strong><span class="choice-card__desc">${desc}</span>`;
+      button.innerHTML = `${upgradeIconHtml(card)}<em>${treeLabel || (chest ? 'HUNTER GIFT' : '')}</em><strong>${name}</strong><span class="choice-card__desc">${desc}</span>${upgradePathHtml(card, owned)}`;
       return button;
     }));
     this.el['choice-modal'].classList.remove('hidden');

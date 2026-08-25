@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { savedOrDefault, UIController, weaponIconSvg } from '../src/ui/UIController.js';
+import { savedOrDefault, UIController, upgradeIconHtml, upgradePathHtml, weaponIconSvg } from '../src/ui/UIController.js';
 
 function classList() {
   return { add() {}, remove() {}, toggle() {} };
@@ -18,6 +18,18 @@ test('every core weapon has a code-native selection icon', () => {
   ['revolver', 'shotgun', 'crossbow', 'flame'].forEach((id) => {
     assert.match(weaponIconSvg(id), /<svg[^>]*>.+<\/svg>/);
   });
+});
+
+test('generated upgrade frames map to the 10 by 10 atlas', () => {
+  assert.match(upgradeIconHtml({ iconFrame: 0 }), /choice-card__icon--atlas/);
+  assert.match(upgradeIconHtml({ iconFrame: 99 }), /background-position:100% 100%/);
+});
+
+test('upgrade cards show all four nodes in their progression path', () => {
+  const html = upgradePathHtml({ tree: 'power', iconFrame: 6 }, new Set(['power-1']));
+  assert.equal((html.match(/choice-card__path-icon/g) || []).length, 4);
+  assert.equal((html.match(/ owned/g) || []).length, 1);
+  assert.equal((html.match(/ current/g) || []).length, 1);
 });
 
 test('upgrade choices render their icon and localized tree label', () => {

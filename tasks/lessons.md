@@ -14,3 +14,5 @@
 - An edge-spawn warning must remain until the fast enemy is actually visible; a fixed timer can expire while the enemy is still outside the camera.
 - Dark airborne enemies need persistent colored contrast and a readable travel trail, not just lower opacity or a short spawn pulse.
 - Original-style upgrades need their acquisition branches as well as their mechanics; placing ricochet and back-shot inside unrelated linear trees makes progression feel incorrect.
+- In the original four-node upgrade tree, either one of the two tier-2 branches unlocks tier 3; requiring both branches is stricter than the source game and must be covered by progression tests.
+- Map decoration that has no collision makes a top-down character appear to float over scenery; ground texture and real obstacle silhouettes need separate collision semantics.
