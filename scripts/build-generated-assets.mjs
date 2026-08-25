@@ -11,31 +11,96 @@ const sheetNames = [
   '04-status-defense.png',
   '05-soul-general.png',
 ];
+const BACKGROUND = '#08070d';
+const VISIBLE_LEVEL = 36;
+
+function projectionBands(values, minimum) {
+  const result = [];
+  let start = -1;
+  values.forEach((value, index) => {
+    if (value >= minimum && start < 0) start = index;
+    if (value < minimum && start >= 0) {
+      result.push([start, index - 1]);
+      start = -1;
+    }
+  });
+  if (start >= 0) result.push([start, values.length - 1]);
+  return result;
+}
+
+function isVisible(data, offset) {
+  return Math.max(data[offset], data[offset + 1], data[offset + 2]) >= VISIBLE_LEVEL;
+}
+
+function contentBounds(data, info, [left, right], [top, bottom]) {
+  let minX = right;
+  let minY = bottom;
+  let maxX = left;
+  let maxY = top;
+  for (let y = top; y <= bottom; y += 1) {
+    for (let x = left; x <= right; x += 1) {
+      const offset = (y * info.width + x) * info.channels;
+      if (!isVisible(data, offset)) continue;
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+    }
+  }
+  if (maxX < minX || maxY < minY) throw new Error('Upgrade icon frame contains no visible pixels');
+  return { left: minX, top: minY, width: maxX - minX + 1, height: maxY - minY + 1 };
+}
+
+function centeredSquare(bounds, info) {
+  const extent = Math.max(bounds.width, bounds.height);
+  const padding = Math.max(6, Math.round(extent * .06));
+  const size = Math.min(Math.min(info.width, info.height), extent + padding * 2);
+  const centerX = bounds.left + (bounds.width - 1) / 2;
+  const centerY = bounds.top + (bounds.height - 1) / 2;
+  const left = Math.max(0, Math.min(info.width - size, Math.round(centerX - (size - 1) / 2)));
+  const top = Math.max(0, Math.min(info.height - size, Math.round(centerY - (size - 1) / 2)));
+  return { left, top, width: size, height: size };
+}
+
+async function detectGrid(file) {
+  const { data, info } = await sharp(file).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  const xProjection = Array(info.width).fill(0);
+  const yProjection = Array(info.height).fill(0);
+  for (let y = 0; y < info.height; y += 1) {
+    for (let x = 0; x < info.width; x += 1) {
+      const offset = (y * info.width + x) * info.channels;
+      if (!isVisible(data, offset)) continue;
+      xProjection[x] += 1;
+      yProjection[y] += 1;
+    }
+  }
+  const columns = projectionBands(xProjection, 10);
+  const rows = projectionBands(yProjection, 8);
+  if (columns.length !== 4 || rows.length !== 5) {
+    throw new Error(`${file}: expected a 4x5 icon grid, received ${columns.length}x${rows.length}`);
+  }
+  return { data, info, columns, rows };
+}
 
 async function buildUpgradeAtlas() {
   const tiles = [];
   for (const sheetName of sheetNames) {
     const file = resolve(root, 'assets/ui/upgrade-sheets', sheetName);
-    const { width, height } = await sharp(file).metadata();
+    const grid = await detectGrid(file);
     for (let row = 0; row < 5; row += 1) {
       for (let column = 0; column < 4; column += 1) {
-        const left = Math.round(column * width / 4);
-        const right = Math.round((column + 1) * width / 4);
-        const top = Math.round(row * height / 5);
-        const bottom = Math.round((row + 1) * height / 5);
-        const size = Math.min(right - left, bottom - top);
-        const squareLeft = left + Math.floor((right - left - size) / 2);
-        const squareTop = top + Math.floor((bottom - top - size) / 2);
+        const bounds = contentBounds(grid.data, grid.info, grid.columns[column], grid.rows[row]);
+        const crop = centeredSquare(bounds, grid.info);
         const input = await sharp(file)
-          .extract({ left: squareLeft, top: squareTop, width: size, height: size })
-          .resize(96, 96, { fit: 'fill' })
+          .extract(crop)
+          .resize(96, 96, { fit: 'fill', kernel: sharp.kernel.nearest })
           .png()
           .toBuffer();
         tiles.push({ input, left: (tiles.length % 10) * 96, top: Math.floor(tiles.length / 10) * 96 });
       }
     }
   }
-  await sharp({ create: { width: 960, height: 960, channels: 4, background: '#08070d' } })
+  await sharp({ create: { width: 960, height: 960, channels: 4, background: BACKGROUND } })
     .composite(tiles)
     .webp({ quality: 88, smartSubsample: true })
     .toFile(resolve(root, 'assets/ui/upgrade-icons.webp'));
@@ -54,5 +119,7 @@ async function buildWorldAssets() {
 
 await mkdir(resolve(root, 'assets/ui'), { recursive: true });
 await buildUpgradeAtlas();
-await buildWorldAssets();
-console.log('Built 100 upgrade icons, ground texture, and 4-frame tree sprite.');
+if (!process.argv.includes('--upgrades-only')) await buildWorldAssets();
+console.log(process.argv.includes('--upgrades-only')
+  ? 'Built 100 centered upgrade icons.'
+  : 'Built 100 centered upgrade icons, ground texture, and 4-frame tree sprite.');

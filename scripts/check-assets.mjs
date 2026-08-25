@@ -33,7 +33,8 @@ async function imageSize(file) {
 }
 
 async function assertFile(relativePath) {
-  const absolutePath = resolve(root, relativePath.replace(/^\.\//, ''));
+  const localPath = relativePath.split(/[?#]/, 1)[0];
+  const absolutePath = resolve(root, localPath.replace(/^\.\//, ''));
   const info = await stat(absolutePath);
   if (!info.isFile() || info.size === 0) throw new Error(`Missing asset: ${relativePath}`);
   return absolutePath;
