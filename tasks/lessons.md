@@ -30,3 +30,4 @@
 - Never apply generic adjacent-button margins to a modal that also contains horizontal button grids; scope vertical spacing to the exact action stack and assert every upgrade tab has zero margin.
 - Equal CSS grid cells are not enough for visual equality: a selected-only outer background or drop shadow can make one upgrade look larger and displaced. Keep selection feedback inside the same icon footprint and compare apparent bounds in screenshots.
 - Never assume an AI-generated sheet fills an equal mathematical grid. Detect the real content bands and center each visible frame before building an atlas; otherwise regular canvas slicing silently crops outer rows and columns.
+- Centering the union of an icon and its effects is not visual normalization: asymmetric flame, glow, or trails can move the shared ornamental frame. Measure and normalize the stable decorative frame itself, then use it as the alignment anchor.

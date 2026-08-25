@@ -29,7 +29,7 @@ export const STATIC_ASSETS = {
   vfx: `${base}/fx/combat-vfx-atlas.webp`,
   ambient: `${base}/fx/map-ambient-atlas.webp`,
   spirit: `${base}/sprites/spirit-raven.webp`,
-  upgradeIcons: `${base}/ui/upgrade-icons.webp?build=20260825k`,
+  upgradeIcons: `${base}/ui/upgrade-icons.webp?build=20260825l`,
   mysteriousTree: `${base}/sprites/mysterious-tree-4f.webp`,
 };
 

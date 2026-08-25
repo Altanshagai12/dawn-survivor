@@ -1,4 +1,4 @@
-import { BOSS_ATLASES, ENEMY_ATLASES, HERO_ATLASES, STATIC_ASSETS } from '../config/assets.js?build=20260825k';
+import { BOSS_ATLASES, ENEMY_ATLASES, HERO_ATLASES, STATIC_ASSETS } from '../config/assets.js?build=20260825l';
 import { createDirectionalAnimations } from './animations.js';
 
 export class BootScene extends Phaser.Scene {

@@ -1,6 +1,6 @@
 import { HEROES } from './data/heroes.js?build=20260825g';
 import { WEAPONS } from './data/weapons.js';
-import { BootScene } from './game/BootScene.js?build=20260825k';
+import { BootScene } from './game/BootScene.js?build=20260825l';
 import { GameScene } from './game/GameScene.js?build=20260825g';
 import { installVisibleResume } from './game/runtimeLifecycle.js';
 import { defaultProfile, initPlatform } from './platform/usion.js';
