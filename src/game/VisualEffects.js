@@ -106,12 +106,17 @@ export function createGameTextures(scene) {
     context.fillStyle = gradient;
     context.fillRect(-40, -44, 80, 88);
   });
-  canvasTexture(scene, 'dust-puff', 42, 22, (context) => {
-    const gradient = context.createRadialGradient(21, 11, 1, 21, 11, 20);
-    gradient.addColorStop(0, 'rgba(151,139,128,.42)');
-    gradient.addColorStop(.42, 'rgba(105,99,96,.22)');
-    gradient.addColorStop(1, 'rgba(70,65,64,0)');
-    context.fillStyle = gradient; context.fillRect(0, 0, 42, 22);
+  canvasTexture(scene, 'dust-puff', 48, 28, (context) => {
+    const gradient = context.createRadialGradient(24, 15, 1, 24, 15, 23);
+    gradient.addColorStop(0, 'rgba(177,155,126,.76)');
+    gradient.addColorStop(.4, 'rgba(126,109,91,.44)');
+    gradient.addColorStop(.76, 'rgba(85,76,70,.2)');
+    gradient.addColorStop(1, 'rgba(64,58,56,0)');
+    context.fillStyle = gradient; context.fillRect(0, 0, 48, 28);
+    context.fillStyle = 'rgba(207,184,145,.54)';
+    context.fillRect(16, 17, 3, 2);
+    context.fillRect(30, 11, 2, 2);
+    context.fillRect(35, 18, 2, 1);
   });
   canvasTexture(scene, 'warning-ring', 80, 80, (context) => {
     context.strokeStyle = 'rgba(191,113,255,.9)'; context.lineWidth = 3;
@@ -185,16 +190,43 @@ export function syncReloadIndicator(indicator, player, state, deltaSeconds) {
   indicator.rotation += deltaSeconds * 2.8;
 }
 
+export function runDustOrigin(player, moveX, moveY) {
+  const length = Math.hypot(moveX, moveY) || 1;
+  const directionX = moveX / length;
+  const directionY = moveY / length;
+  return {
+    x: player.x - directionX * 14,
+    y: player.y + player.displayHeight * .36 - directionY * 8,
+    directionX,
+    directionY,
+  };
+}
+
 export function spawnRunDust(scene, player, moveX, moveY) {
+  const origin = runDustOrigin(player, moveX, moveY);
+  const sideX = -origin.directionY;
+  const sideY = origin.directionX;
+  const side = Phaser.Math.Between(-5, 5);
+  const depth = player.depth - .5;
   const dust = scene.add.image(
-    player.x - moveX * 15 + Phaser.Math.Between(-6, 6),
-    player.y + player.displayHeight * .32 - moveY * 8,
+    origin.x + sideX * side,
+    origin.y + sideY * side,
     'dust-puff',
-  ).setDepth(22).setAlpha(.42).setScale(.45, .3);
+  ).setDepth(depth).setAlpha(.72).setScale(.58, .36);
   scene.tweens.add({
-    targets: dust, alpha: 0, scaleX: .9, scaleY: .55,
-    x: dust.x - moveX * 12, y: dust.y - 3,
-    duration: 360, ease: 'Quad.easeOut', onComplete: () => dust.destroy(),
+    targets: dust, alpha: 0, scaleX: 1.08, scaleY: .66,
+    x: dust.x - origin.directionX * 18, y: dust.y - origin.directionY * 8 - 4,
+    duration: 430, ease: 'Quad.easeOut', onComplete: () => dust.destroy(),
+  });
+  const wisp = scene.add.image(
+    origin.x - origin.directionX * 7 - sideX * side,
+    origin.y - origin.directionY * 4 - sideY * side,
+    'dust-puff',
+  ).setDepth(depth).setAlpha(.5).setScale(.32, .2);
+  scene.tweens.add({
+    targets: wisp, alpha: 0, scaleX: .7, scaleY: .42,
+    x: wisp.x - origin.directionX * 23, y: wisp.y - origin.directionY * 10 - 6,
+    duration: 360, ease: 'Quad.easeOut', onComplete: () => wisp.destroy(),
   });
 }
 
