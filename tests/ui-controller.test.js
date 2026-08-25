@@ -37,7 +37,7 @@ test('upgrade cards show all four nodes in their progression path', () => {
 
 test('loadout copy explains personal skills and firing movement speed', () => {
   assert.match(heroPassiveCopy({ passiveMn: 'Онцгой.' }, 'mn'), /ХУВИЙН ЧАДВАР · Онцгой/);
-  assert.match(movementCopy('mn'), /Буудаж гүйх 78%/);
+  assert.match(movementCopy('mn'), /Буудаж гүйх 50%/);
 });
 
 test('damage sources have readable English and Mongolian labels', () => {
@@ -46,11 +46,15 @@ test('damage sources have readable English and Mongolian labels', () => {
   assert.equal(damageSourceLabel('missing', 'mn'), 'ҮЛ МЭДЭГДЭХ');
 });
 
-test('upgrade choices render their icon and localized tree label', () => {
+test('upgrade choices use icon tabs, a localized detail panel, and explicit confirmation', async () => {
   const previousDocument = globalThis.document;
   globalThis.document = {
     createElement() {
-      return { className: '', innerHTML: '', addEventListener() {}, setAttribute() {} };
+      return {
+        className: '', innerHTML: '', attributes: {}, listeners: {}, classList: classList(),
+        addEventListener(type, listener) { this.listeners[type] = listener; },
+        setAttribute(name, value) { this.attributes[name] = value; },
+      };
     },
   };
   try {
@@ -65,18 +69,37 @@ test('upgrade choices render their icon and localized tree label', () => {
       'choice-title': {},
       'choice-list': list,
       'choice-modal': { classList: classList() },
+      'choice-detail-icon': { innerHTML: '' },
+      'choice-detail-tree': { textContent: '' },
+      'choice-detail-name': { textContent: '' },
+      'choice-detail-description': { textContent: '' },
+      'choice-detail-path': { innerHTML: '' },
+      'choice-confirm': { textContent: '', onclick: null },
       'reroll-button': { classList: classList(), onclick: null },
     };
 
-    controller.choose([{
-      icon: '✹', treeLabel: 'POWER', treeLabelMn: 'ХҮЧ',
-      name: 'Impact Rounds', nameMn: 'Хүчтэй сум',
-      desc: 'Bullet damage +25%.', descMn: 'Сумны гэмтэл +25%.',
-    }]);
+    const cards = [
+      {
+        icon: '✹', treeLabel: 'POWER', treeLabelMn: 'ХҮЧ',
+        name: 'Impact Rounds', nameMn: 'Хүчтэй сум',
+        desc: 'Bullet damage +25%.', descMn: 'Сумны гэмтэл +25%.',
+      },
+      {
+        icon: 'ϟ', treeLabel: 'HASTE', treeLabelMn: 'ХУРД',
+        name: 'Haste', nameMn: 'Шуурхай',
+        desc: 'Move speed +20%.', descMn: 'Хөдөлгөөний хурд +20%.',
+      },
+    ];
+    const result = controller.choose(cards);
 
     assert.match(list.children[0].innerHTML, /choice-card__icon[^>]*>✹</);
-    assert.match(list.children[0].innerHTML, />ХҮЧ</);
-    assert.match(list.children[0].innerHTML, />Хүчтэй сум</);
+    assert.equal(controller.el['choice-detail-tree'].textContent, 'ХҮЧ');
+    assert.equal(controller.el['choice-detail-name'].textContent, 'Хүчтэй сум');
+    list.children[1].listeners.click();
+    assert.equal(controller.el['choice-detail-name'].textContent, 'Шуурхай');
+    assert.equal(list.children[1].attributes['aria-selected'], 'true');
+    controller.el['choice-confirm'].onclick();
+    assert.deepEqual(await result, { card: cards[1], reroll: false });
   } finally {
     globalThis.document = previousDocument;
   }

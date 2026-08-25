@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { edgeSpawnOffsets } from '../src/game/Spawner.js';
+import { edgeSpawnOffsets, enemyMoveSpeed } from '../src/game/Spawner.js';
 import { edgeWarningPosition, isInsideView } from '../src/game/WinglingFeedback.js';
 
 test('fast enemies spawn outside the view while their warning stays inside', () => {
@@ -22,4 +22,9 @@ test('wingling warning is pinned inside the camera until the enemy appears', () 
   assert.ok(top.y >= 48 && top.y <= 796);
   assert.equal(isInsideView(view, 195, 422), true);
   assert.equal(isInsideView(view, 520, 300), false);
+});
+
+test('enemy movement speed stays fixed instead of silently accelerating over time', () => {
+  assert.equal(enemyMoveSpeed({ speed: 48 }), 48);
+  assert.equal(enemyMoveSpeed({ speed: 92 }), 92);
 });

@@ -12,6 +12,8 @@ const specs = [
   ...GENERAL_TREES,
 ];
 
+export const UPGRADE_CHOICE_COUNT = 5;
+
 function makeTree([id, label, labelMn, rows], treeIndex) {
   return rows.map(([name, nameMn, desc, descMn, mods = {}, set = {}], index) => ({
     id: `${id}-${index + 1}`,

@@ -1,5 +1,5 @@
 import { attachGroundShadow, syncGroundShadow } from './VisualEffects.js';
-import { DAMAGE_SOURCE } from './EnemySystem.js?build=20260825f';
+import { DAMAGE_SOURCE } from './EnemySystem.js?build=20260825g';
 
 export const TREE_CONTACT_DAMAGE = 1;
 export const TREE_ATTACKS = false;
@@ -7,7 +7,10 @@ export const TREE_IDLE_FRAME = 0;
 export const TREE_ROOT_ORIGIN = .925;
 export const TREE_CONTACT_EXIT_GRACE_MS = 120;
 export const TREE_COLLIDER = Object.freeze({ width: 48, height: 20 });
-const CHUNK_SIZE = 620;
+export const TREE_CHUNK_SIZE = 680;
+export const TREE_SAFE_START_RADIUS = 420;
+export const TREE_MIN_SPACING = 360;
+const TREE_MARGIN = 190;
 
 function hash(value) {
   let result = value | 0;
@@ -18,14 +21,15 @@ function hash(value) {
 
 export function chunkTreePoints(chunkX, chunkY) {
   const seed = hash(chunkX * 73856093 ^ chunkY * 19349663);
-  const count = 1 + seed % 2;
-  return Array.from({ length: count }, (_, index) => {
-    const local = hash(seed + index * 83492791);
-    return {
-      x: chunkX * CHUNK_SIZE + 95 + local % 430,
-      y: chunkY * CHUNK_SIZE + 100 + (local >>> 9) % 410,
-    };
-  }).filter(({ x, y }) => Math.hypot(x, y) > 260);
+  if (seed % 100 >= 84) return [];
+  const xHash = hash(seed ^ 0x68bc21eb);
+  const yHash = hash(seed ^ 0x02e5be93);
+  const localSpan = TREE_CHUNK_SIZE - TREE_MARGIN * 2;
+  const point = {
+    x: chunkX * TREE_CHUNK_SIZE + TREE_MARGIN + xHash % (localSpan + 1),
+    y: chunkY * TREE_CHUNK_SIZE + TREE_MARGIN + yHash % (localSpan + 1),
+  };
+  return Math.hypot(point.x, point.y) > TREE_SAFE_START_RADIUS ? [point] : [];
 }
 
 export class WorldObstacleSystem {
@@ -42,8 +46,8 @@ export class WorldObstacleSystem {
   }
 
   update() {
-    const chunkX = Math.floor(this.scene.player.x / CHUNK_SIZE);
-    const chunkY = Math.floor(this.scene.player.y / CHUNK_SIZE);
+    const chunkX = Math.floor(this.scene.player.x / TREE_CHUNK_SIZE);
+    const chunkY = Math.floor(this.scene.player.y / TREE_CHUNK_SIZE);
     for (let y = chunkY - this.chunkRadius; y <= chunkY + this.chunkRadius; y += 1) {
       for (let x = chunkX - this.chunkRadius; x <= chunkX + this.chunkRadius; x += 1) this.loadChunk(x, y);
     }

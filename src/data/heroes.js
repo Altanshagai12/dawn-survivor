@@ -1,6 +1,8 @@
+export const BASE_HERO_SPEED = 180;
+
 export const HEROES = {
   nyra: {
-    id: 'nyra', name: 'Nyra', nameMn: 'Найра', hp: 4, speed: 168, size: 42,
+    id: 'nyra', name: 'Nyra', nameMn: 'Найра', hp: 4, speed: BASE_HERO_SPEED, size: 42,
     portrait: './assets/portraits/nyra-anchor.webp',
     passive: 'reroll',
     passiveText: 'Reroll upgrade choices once each level.',
@@ -12,7 +14,7 @@ export const HEROES = {
     ],
   },
   varka: {
-    id: 'varka', name: 'Varka', nameMn: 'Варка', hp: 7, speed: 142, size: 48,
+    id: 'varka', name: 'Varka', nameMn: 'Варка', hp: 7, speed: BASE_HERO_SPEED, size: 48,
     portrait: './assets/portraits/varka-anchor.webp',
     passive: 'rage',
     passiveText: 'Taking damage permanently adds fire and reload rate.',
@@ -24,7 +26,7 @@ export const HEROES = {
     ],
   },
   sola: {
-    id: 'sola', name: 'Sola', nameMn: 'Сола', hp: 3, speed: 154, size: 43,
+    id: 'sola', name: 'Sola', nameMn: 'Сола', hp: 3, speed: BASE_HERO_SPEED, size: 43,
     portrait: './assets/portraits/sola-anchor.webp',
     passive: 'fireWave',
     passiveText: 'Every third shot releases a burning wave.',
@@ -36,7 +38,7 @@ export const HEROES = {
     ],
   },
   kage: {
-    id: 'kage', name: 'Kage', nameMn: 'Кагэ', hp: 3, speed: 178, size: 41,
+    id: 'kage', name: 'Kage', nameMn: 'Кагэ', hp: 3, speed: BASE_HERO_SPEED, size: 41,
     portrait: './assets/portraits/kage-anchor.webp',
     passive: 'shadow',
     passiveText: 'Kills can release a homing shadow bolt.',

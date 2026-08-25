@@ -1,11 +1,11 @@
-import { HEROES } from './data/heroes.js';
+import { HEROES } from './data/heroes.js?build=20260825g';
 import { WEAPONS } from './data/weapons.js';
-import { BootScene } from './game/BootScene.js';
-import { GameScene } from './game/GameScene.js?build=20260825f';
+import { BootScene } from './game/BootScene.js?build=20260825g';
+import { GameScene } from './game/GameScene.js?build=20260825g';
 import { installVisibleResume } from './game/runtimeLifecycle.js';
 import { defaultProfile, initPlatform } from './platform/usion.js';
 import { createI18n } from './ui/i18n.js';
-import { UIController } from './ui/UIController.js?build=20260825f';
+import { UIController } from './ui/UIController.js?build=20260825g';
 
 async function boot() {
   const platform = await initPlatform();

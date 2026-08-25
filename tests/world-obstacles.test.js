@@ -1,16 +1,22 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  TREE_ATTACKS, TREE_COLLIDER, TREE_CONTACT_DAMAGE, TREE_CONTACT_EXIT_GRACE_MS, TREE_IDLE_FRAME, TREE_ROOT_ORIGIN,
-  WorldObstacleSystem, chunkTreePoints,
+  TREE_ATTACKS, TREE_COLLIDER, TREE_CONTACT_DAMAGE, TREE_CONTACT_EXIT_GRACE_MS, TREE_IDLE_FRAME,
+  TREE_MIN_SPACING, TREE_ROOT_ORIGIN, TREE_SAFE_START_RADIUS, WorldObstacleSystem, chunkTreePoints,
 } from '../src/game/WorldObstacleSystem.js';
 import { DAMAGE_SOURCE } from '../src/game/EnemySystem.js';
 
 test('mysterious trees have deterministic sparse world placement', () => {
   assert.deepEqual(chunkTreePoints(4, -3), chunkTreePoints(4, -3));
-  assert.ok(chunkTreePoints(4, -3).length >= 1);
-  assert.ok(chunkTreePoints(4, -3).length <= 2);
-  assert.notDeepEqual(chunkTreePoints(4, -3), chunkTreePoints(5, -3));
+  const points = [];
+  for (let y = -5; y <= 5; y += 1) {
+    for (let x = -5; x <= 5; x += 1) points.push(...chunkTreePoints(x, y));
+  }
+  assert.ok(points.length >= 70 && points.length <= 110);
+  assert.ok(points.every(({ x, y }) => Math.hypot(x, y) > TREE_SAFE_START_RADIUS));
+  points.forEach((point, index) => points.slice(index + 1).forEach((other) => {
+    assert.ok(Math.hypot(point.x - other.x, point.y - other.y) >= TREE_MIN_SPACING);
+  }));
 });
 
 test('tree damage uses a compact collider centered on its anchored root', () => {

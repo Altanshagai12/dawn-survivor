@@ -82,14 +82,31 @@ h2 { margin: 2px 0 18px; font-size: clamp(28px, 8vw, 44px); line-height: 1; }
 .modal__panel { width: min(560px, 100%); max-height: 92vh; overflow-y: auto; padding: 24px; border: 1px solid var(--line); border-radius: 18px; background: var(--panel); box-shadow: 0 30px 80px rgba(0,0,0,.55); }
 .modal__panel--small { max-width: 360px; text-align: center; }
 .modal__panel button + button { margin-top: 8px; }
-.choice-list { display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 174px; align-items: stretch; gap: 9px; margin-bottom: 12px; }
-.choice-card { width: 100%; height: 100%; min-height: 0; overflow: hidden; padding: 13px; text-align: left; border: 1px solid var(--line); border-radius: 12px; background: linear-gradient(145deg, rgba(168,129,255,.12), rgba(255,255,255,.025)); display: grid; grid-template-columns: 38px minmax(0,1fr); grid-template-rows: auto auto minmax(0,1fr) auto; column-gap: 10px; align-items: start; }
-.choice-card strong { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; margin-bottom: 7px; font-size: 14px; line-height: 1.15; }
-.choice-card .choice-card__desc { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 4; color: var(--muted); font-size: 11px; line-height: 1.35; }
-.choice-card em { display: block; color: var(--cyan); font-size: 9px; font-style: normal; letter-spacing: .12em; margin-bottom: 5px; }
+.choice-panel { width: min(820px, 100%); border-color: #38544f; border-radius: 4px; background: rgba(31,24,41,.97); }
+.choice-panel > .eyebrow { text-align: center; color: #829a82; }
+.choice-panel > h2 { margin-bottom: 16px; text-align: center; color: #ff596f; font-size: clamp(31px, 6vw, 54px); letter-spacing: -.04em; }
+.choice-tabs { width: min(590px, 100%); margin: 0 auto 17px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.choice-tab { min-width: 0; aspect-ratio: 1; padding: 9px 5px 7px; overflow: hidden; border: 2px solid #456557; background: #251e2e; clip-path: polygon(20% 5%,80% 5%,98% 24%,98% 76%,80% 95%,20% 95%,2% 76%,2% 24%); display: grid; place-items: center; align-content: center; gap: 2px; color: #f2dfd1; }
+.choice-tab.selected { border-color: #ffe6d6; background: #344c4f; filter: drop-shadow(0 0 6px rgba(255,230,214,.5)); }
+.choice-tab span { width: 100%; overflow: hidden; color: #c5b7bd; font-size: 8px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.choice-tab.selected span { color: #fff2e8; }
+.choice-detail { min-height: 188px; padding: 21px; border: 3px solid #385a55; background: #221b2b; display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 18px; align-items: start; box-shadow: inset 0 0 0 2px rgba(5,8,12,.45); }
+.choice-detail__icon { display: grid; place-items: center; width: 78px; height: 78px; border: 2px solid #526f61; border-radius: 16px; background: #2d3840; }
+.choice-detail__copy { min-width: 0; }
+.choice-detail__copy em { display: block; margin-bottom: 4px; color: #809b81; font-size: 11px; font-style: normal; font-weight: 800; letter-spacing: .13em; }
+.choice-detail__copy h3 { margin: 0 0 10px; color: #f3ddce; font-size: clamp(24px, 4vw, 38px); line-height: 1; }
+.choice-detail__copy p { min-height: 40px; margin: 0; color: #b5a9b5; font-size: 14px; line-height: 1.45; }
+.choice-detail__path { margin-top: 14px; }
+.choice-actions { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; margin-top: 13px; }
+.choice-actions .primary { background: #ff596f; color: #211824; }
+.choice-actions .secondary { min-width: 130px; }
 .choice-card__icon { grid-row: 1 / 5; display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid rgba(101,230,255,.28); border-radius: 10px; background: radial-gradient(circle, rgba(101,230,255,.18), rgba(168,129,255,.08)); color: var(--cyan); font-size: 23px; line-height: 1; text-shadow: 0 0 12px rgba(101,230,255,.7); }
 .choice-card__icon--atlas { width: 48px; height: 48px; margin-left: -5px; border: 0; border-radius: 7px; background-image: url('./assets/ui/upgrade-icons.webp'); background-size: 1000% 1000%; background-repeat: no-repeat; image-rendering: pixelated; box-shadow: 0 0 15px rgba(101,230,255,.13); }
-.choice-card__path { grid-column: 2; align-self: end; display: flex; gap: 4px; margin-top: 8px; }
+.choice-tab .choice-card__icon { grid-row: auto; }
+.choice-tab .choice-card__icon--atlas { width: min(64px, 72%); height: auto; aspect-ratio: 1; margin: 0; box-shadow: none; }
+.choice-detail__icon .choice-card__icon { grid-row: auto; width: 58px; height: 58px; }
+.choice-detail__icon .choice-card__icon--atlas { margin: 0; border-radius: 9px; }
+.choice-card__path { display: flex; gap: 6px; }
 .choice-card__path-icon { width: 22px; height: 22px; border-radius: 4px; opacity: .22; background: url('./assets/ui/upgrade-icons.webp') no-repeat; background-size: 1000% 1000%; image-rendering: pixelated; filter: grayscale(1); }
 .choice-card__path-icon.owned { opacity: .72; filter: none; }
 .choice-card__path-icon.current { opacity: 1; filter: none; outline: 1px solid var(--cyan); box-shadow: 0 0 8px rgba(101,230,255,.45); }
@@ -122,11 +139,18 @@ h2 { margin: 2px 0 18px; font-size: clamp(28px, 8vw, 44px); line-height: 1; }
 @media (max-width: 440px) {
   .modal { padding: 12px; }
   .modal__panel { padding: 17px; }
-  .choice-list { grid-auto-rows: 168px; gap: 7px; }
-  .choice-card { padding: 10px; grid-template-columns: 32px minmax(0,1fr); column-gap: 7px; }
-  .choice-card strong { font-size: 12px; }
-  .choice-card .choice-card__desc { font-size: 10px; }
-  .choice-card__icon--atlas { width: 40px; height: 40px; margin-left: -4px; }
+  .choice-panel > h2 { margin-bottom: 11px; font-size: 30px; }
+  .choice-tabs { gap: 3px; margin-bottom: 10px; }
+  .choice-tab { padding: 5px 2px 4px; border-width: 1px; }
+  .choice-tab span { display: none; }
+  .choice-tab .choice-card__icon--atlas { width: 80%; }
+  .choice-detail { min-height: 164px; padding: 14px; grid-template-columns: 56px minmax(0, 1fr); gap: 11px; }
+  .choice-detail__icon { width: 56px; height: 56px; border-radius: 12px; }
+  .choice-detail__icon .choice-card__icon { width: 44px; height: 44px; }
+  .choice-detail__copy h3 { margin-bottom: 7px; font-size: 22px; }
+  .choice-detail__copy p { font-size: 11px; }
+  .choice-actions { grid-template-columns: 1fr; gap: 7px; }
+  .choice-actions .secondary { min-width: 0; }
   .choice-card__path { gap: 3px; }
   .choice-card__path-icon { width: 18px; height: 18px; }
 }

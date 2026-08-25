@@ -16,9 +16,9 @@ test('mobile profile bounds expensive entities while preserving desktop quality'
 });
 
 test('firing movement is slower until Run and Gun removes the penalty', () => {
-  assert.equal(FIRING_MOVE_MULTIPLIER, .78);
+  assert.equal(FIRING_MOVE_MULTIPLIER, .5);
   assert.equal(movementMultiplier(false, false), 1);
-  assert.equal(movementMultiplier(true, false), .78);
+  assert.equal(movementMultiplier(true, false), .5);
   assert.equal(movementMultiplier(true, true), 1);
 });
 

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
     <meta name="theme-color" content="#09080d" />
     <title>Dawn Survivor</title>
-    <link rel="stylesheet" href="./styles.css?build=20260825f" />
+    <link rel="stylesheet" href="./styles.css?build=20260825g" />
     <script src="https://usions.com/usion-sdk.js"></script>
     <script src="https://usions.com/vendor/phaser/4.2.1/phaser.min.js"></script>
   </head>
@@ -63,11 +63,23 @@
       </section>
 
       <section id="choice-modal" class="modal hidden" aria-labelledby="choice-title">
-        <div class="modal__panel">
+        <div class="modal__panel choice-panel">
           <p class="eyebrow" id="choice-kicker">LEVEL UP</p>
           <h2 id="choice-title" data-i18n="chooseUpgrade">Choose an upgrade</h2>
-          <div id="choice-list" class="choice-list"></div>
-          <button id="reroll-button" class="secondary hidden" data-i18n="reroll">REROLL</button>
+          <div id="choice-list" class="choice-tabs" role="tablist"></div>
+          <article id="choice-detail" class="choice-detail" aria-live="polite">
+            <div id="choice-detail-icon" class="choice-detail__icon"></div>
+            <div class="choice-detail__copy">
+              <em id="choice-detail-tree"></em>
+              <h3 id="choice-detail-name"></h3>
+              <p id="choice-detail-description"></p>
+              <div id="choice-detail-path" class="choice-detail__path"></div>
+            </div>
+          </article>
+          <div class="choice-actions">
+            <button id="choice-confirm" class="primary">CHOOSE</button>
+            <button id="reroll-button" class="secondary hidden" data-i18n="reroll">REROLL</button>
+          </div>
         </div>
       </section>
 
@@ -102,6 +114,6 @@
       </div>
       <div id="toast" class="toast hidden"></div>
     </main>
-    <script type="module" src="./src/main.js?build=20260825f"></script>
+    <script type="module" src="./src/main.js?build=20260825g"></script>
   </body>
 </html>

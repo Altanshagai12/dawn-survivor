@@ -1,5 +1,5 @@
-import { BOSS_ATLASES, ENEMY_ATLASES } from '../config/assets.js';
-import { BOSSES, availableEnemies } from '../data/enemies.js';
+import { BOSS_ATLASES, ENEMY_ATLASES } from '../config/assets.js?build=20260825g';
+import { BOSSES, availableEnemies } from '../data/enemies.js?build=20260825g';
 import { enemyHealthScale, spawnInterval, weightedPick } from './simulation.js';
 import { playDirectional } from './animations.js';
 import { attachGroundShadow, showSpawnWarning } from './VisualEffects.js';
@@ -18,6 +18,10 @@ export function edgeSpawnOffsets(halfWidth, halfHeight, angle, distanceBoost = 0
     warningX: cos * Math.max(42, edgeDistance - 46),
     warningY: sin * Math.max(42, edgeDistance - 46),
   };
+}
+
+export function enemyMoveSpeed(definition) {
+  return definition.speed;
 }
 
 export class Spawner {
@@ -77,7 +81,7 @@ export class Spawner {
     sprite.enemyDef = definition;
     sprite.maxHp = definition.hp * enemyHealthScale(this.scene.state.elapsed);
     sprite.hp = sprite.maxHp;
-    sprite.speed = definition.speed * (1 + this.scene.state.elapsed / 1500);
+    sprite.speed = enemyMoveSpeed(definition);
     sprite.nextAttack = this.scene.time.now + 900 + Math.random() * 1200;
     sprite.status = { burnUntil: 0, burnTick: 0, freezeUntil: 0, curseUntil: 0, curseAt: 0 };
     if (definition.id === 'wingling') {

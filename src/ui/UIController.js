@@ -1,4 +1,4 @@
-import { FIRING_MOVE_MULTIPLIER } from '../game/movement.js';
+import { FIRING_MOVE_MULTIPLIER } from '../game/movement.js?build=20260825g';
 
 const DAMAGE_SOURCE_LABELS = {
   'enemy-contact': { en: 'ENEMY CONTACT', mn: 'ДАЙСНЫ МӨРГӨЛТ' },
@@ -83,7 +83,8 @@ export class UIController {
       'boot','menu','hud','choice-modal','pause-modal','result-modal','touch-controls',
       'hero-list','weapon-list','hero-stat','hero-description','weapon-stat','weapon-description','movement-description','start-button','pause-button',
       'resume-button','quit-button','again-button','menu-button','choice-list','choice-kicker',
-      'choice-title','reroll-button','hearts','timer','boss-bar','boss-name','boss-fill',
+      'choice-title','choice-detail','choice-detail-icon','choice-detail-tree','choice-detail-name',
+      'choice-detail-description','choice-detail-path','choice-confirm','reroll-button','hearts','timer','boss-bar','boss-name','boss-fill',
       'xp-fill','level','ammo','reload-fill','reload-state','result-kicker','result-title','result-score',
       'result-kills','result-level','result-cause','friends-board','damage-source','toast',
     ];
@@ -186,25 +187,48 @@ export class UIController {
   choose(cards, { chest = false, canReroll = false, owned = new Set() } = {}) {
     this.el['choice-kicker'].textContent = chest ? 'BOSS CHEST' : 'LEVEL UP';
     this.el['choice-title'].textContent = chest ? 'Claim a hunter gift' : this.i18n.t('chooseUpgrade');
-    this.el['choice-list'].replaceChildren(...cards.map((card) => {
+    let selectedIndex = 0;
+    const copyFor = (card) => ({
+      name: this.i18n.lang === 'mn' && card.nameMn ? card.nameMn : card.name,
+      desc: this.i18n.lang === 'mn' && card.descMn ? card.descMn : card.desc,
+      tree: this.i18n.lang === 'mn' && card.treeLabelMn ? card.treeLabelMn : card.treeLabel,
+    });
+    const tabs = cards.map((card, index) => {
       const button = document.createElement('button');
-      button.className = 'choice-card';
-      const name = this.i18n.lang === 'mn' && card.nameMn ? card.nameMn : card.name;
-      const desc = this.i18n.lang === 'mn' && card.descMn ? card.descMn : card.desc;
-      const treeLabel = this.i18n.lang === 'mn' && card.treeLabelMn ? card.treeLabelMn : card.treeLabel;
-      button.innerHTML = `${upgradeIconHtml(card)}<em>${treeLabel || (chest ? 'HUNTER GIFT' : '')}</em><strong>${name}</strong><span class="choice-card__desc">${desc}</span>${upgradePathHtml(card, owned)}`;
+      const { name, desc } = copyFor(card);
+      button.className = `choice-tab${index === 0 ? ' selected' : ''}`;
+      button.innerHTML = `${upgradeIconHtml(card)}<span>${name}</span>`;
       button.setAttribute('aria-label', `${name}. ${desc}`);
+      button.setAttribute('role', 'tab');
+      button.setAttribute('aria-selected', index === 0 ? 'true' : 'false');
       return button;
-    }));
+    });
+    const renderSelection = (index) => {
+      selectedIndex = index;
+      tabs.forEach((tab, tabIndex) => {
+        const selected = tabIndex === index;
+        tab.classList.toggle('selected', selected);
+        tab.setAttribute('aria-selected', selected ? 'true' : 'false');
+      });
+      const card = cards[index];
+      const { name, desc, tree } = copyFor(card);
+      this.el['choice-detail-icon'].innerHTML = upgradeIconHtml(card);
+      this.el['choice-detail-tree'].textContent = tree || (chest ? 'HUNTER GIFT' : 'UPGRADE');
+      this.el['choice-detail-name'].textContent = name;
+      this.el['choice-detail-description'].textContent = desc;
+      this.el['choice-detail-path'].innerHTML = upgradePathHtml(card, owned);
+    };
+    tabs.forEach((tab, index) => tab.addEventListener('click', () => renderSelection(index)));
+    this.el['choice-list'].replaceChildren(...tabs);
+    renderSelection(0);
     this.el['choice-modal'].classList.remove('hidden');
     this.el['reroll-button'].classList.toggle('hidden', !canReroll);
+    this.el['choice-confirm'].textContent = chest ? 'CLAIM' : this.i18n.lang === 'mn' ? 'СОНГОХ' : 'CHOOSE';
     return new Promise((resolve) => {
-      [...this.el['choice-list'].children].forEach((button, index) => {
-        button.addEventListener('click', () => {
-          this.el['choice-modal'].classList.add('hidden');
-          resolve({ card: cards[index], reroll: false });
-        }, { once: true });
-      });
+      this.el['choice-confirm'].onclick = () => {
+        this.el['choice-modal'].classList.add('hidden');
+        resolve({ card: cards[selectedIndex], reroll: false });
+      };
       this.el['reroll-button'].onclick = () => {
         this.el['choice-modal'].classList.add('hidden');
         resolve({ card: null, reroll: true });

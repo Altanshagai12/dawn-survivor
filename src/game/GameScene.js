@@ -1,19 +1,19 @@
-import { HERO_ATLASES } from '../config/assets.js';
-import { ENEMIES, RUN_SECONDS } from '../data/enemies.js';
-import { HEROES } from '../data/heroes.js';
-import { eligibleUpgrades } from '../data/upgrades.js';
+import { HERO_ATLASES } from '../config/assets.js?build=20260825g';
+import { ENEMIES, RUN_SECONDS } from '../data/enemies.js?build=20260825g';
+import { HEROES } from '../data/heroes.js?build=20260825g';
+import { UPGRADE_CHOICE_COUNT, eligibleUpgrades } from '../data/upgrades.js?build=20260825g';
 import { WEAPONS } from '../data/weapons.js';
 import { CombatSystem } from './CombatSystem.js';
-import { EnemySystem } from './EnemySystem.js?build=20260825f';
+import { EnemySystem } from './EnemySystem.js?build=20260825g';
 import { InputController } from './InputController.js';
 import { LootSystem } from './LootSystem.js';
 import { RunState } from './RunState.js';
-import { Spawner } from './Spawner.js';
+import { Spawner } from './Spawner.js?build=20260825g';
 import { SummonSystem } from './SummonSystem.js';
 import { UpgradeEffectSystem } from './UpgradeEffectSystem.js';
-import { WorldObstacleSystem } from './WorldObstacleSystem.js?build=20260825f';
+import { WorldObstacleSystem } from './WorldObstacleSystem.js?build=20260825g';
 import { gameDeviceProfile } from './deviceProfile.js';
-import { movementMultiplier } from './movement.js';
+import { movementMultiplier } from './movement.js?build=20260825g';
 import {
   triggerShotFeedback, updateMovementFeedback, updateShotFeedback, updateWeaponCharge,
 } from './PlayerFeedback.js';
@@ -74,7 +74,7 @@ export class GameScene extends Phaser.Scene {
   createWorld() {
     this.physics.world.setBounds(-100000, -100000, 200000, 200000);
     this.background = this.add.tileSprite(0, 0, this.scale.width, this.scale.height, 'ashen-map')
-      .setOrigin(0).setScrollFactor(0).setDepth(0).setAlpha(.94).setTint(0xc0cada);
+      .setOrigin(0).setScrollFactor(0).setDepth(0);
     this.onResize = (size) => this.background?.setSize(size.width, size.height);
     this.scale.on('resize', this.onResize);
   }
@@ -220,7 +220,7 @@ export class GameScene extends Phaser.Scene {
     const item = this.choiceQueue.shift();
     let cards = item.type === 'chest'
       ? item.perks.filter((perk) => !this.state.owned.has(perk.id))
-      : sampleWithoutReplacement(eligibleUpgrades(this.state.owned), 4);
+      : sampleWithoutReplacement(eligibleUpgrades(this.state.owned), UPGRADE_CHOICE_COUNT);
     let rerolls = item.type === 'level' && this.state.hero.passive === 'reroll' ? 1 : 0;
     while (cards.length) {
       const choice = await this.ui.choose(cards, {
@@ -228,7 +228,7 @@ export class GameScene extends Phaser.Scene {
       });
       if (choice.reroll) {
         rerolls -= 1;
-        cards = sampleWithoutReplacement(eligibleUpgrades(this.state.owned), 4);
+        cards = sampleWithoutReplacement(eligibleUpgrades(this.state.owned), UPGRADE_CHOICE_COUNT);
         continue;
       }
       this.state.applyUpgrade(choice.card);

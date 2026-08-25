@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { HEROES } from '../src/data/heroes.js';
+import { BASE_HERO_SPEED, HEROES } from '../src/data/heroes.js';
 import { WEAPONS } from '../src/data/weapons.js';
 import { BOSSES, ENEMIES, RUN_SECONDS, availableEnemies } from '../src/data/enemies.js';
-import { UPGRADES, UPGRADE_TREES, eligibleUpgrades } from '../src/data/upgrades.js';
-import { ENEMY_ATLASES } from '../src/config/assets.js';
+import { UPGRADES, UPGRADE_CHOICE_COUNT, UPGRADE_TREES, eligibleUpgrades } from '../src/data/upgrades.js';
+import { ENEMY_ATLASES, STATIC_ASSETS } from '../src/config/assets.js';
 
 test('ships a full ten-minute content set', () => {
   assert.equal(RUN_SECONDS, 600);
@@ -16,6 +16,15 @@ test('ships a full ten-minute content set', () => {
   assert.equal(UPGRADES.length, 100);
   assert.equal(new Set(Object.values(HEROES).map(({ passive }) => passive)).size, 4);
   assert.ok(Object.values(HEROES).every(({ passiveText, passiveMn }) => passiveText && passiveMn));
+  assert.equal(UPGRADE_CHOICE_COUNT, 5);
+});
+
+test('uses one original-like hero pace and readable enemy speed tiers', () => {
+  assert.ok(Object.values(HEROES).every(({ speed }) => speed === BASE_HERO_SPEED));
+  assert.ok(Object.values(ENEMIES).every(({ speed }) => speed < BASE_HERO_SPEED));
+  assert.ok(ENEMIES.wingling.speed > ENEMIES.crawler.speed);
+  assert.ok(ENEMIES.brute.speed < ENEMIES.creeper.speed);
+  assert.match(STATIC_ASSETS.map, /night-soil-dawn-v2\.webp$/);
 });
 
 test('boss encounters land at minutes two, five, and nine', () => {
