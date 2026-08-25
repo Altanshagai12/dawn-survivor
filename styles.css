@@ -86,8 +86,8 @@ h2 { margin: 2px 0 18px; font-size: clamp(28px, 8vw, 44px); line-height: 1; }
 .choice-panel > .eyebrow { text-align: center; color: #829a82; }
 .choice-panel > h2 { margin: 0 0 16px; padding: .04em 0 .02em; overflow: visible; text-align: center; color: #ff596f; font-size: clamp(31px, 6vw, 54px); line-height: 1.12; letter-spacing: -.04em; }
 .choice-tabs { width: min(590px, 100%); margin: 0 auto 17px; display: grid; grid-template-columns: repeat(var(--choice-count, 5), minmax(0, 110px)); justify-content: center; align-items: stretch; gap: 10px; }
-.choice-tab { width: 100%; min-width: 0; height: auto; aspect-ratio: 1; margin: 0; padding: 9px 5px 7px; overflow: hidden; border: 2px solid #456557; background: #251e2e; clip-path: polygon(20% 5%,80% 5%,98% 24%,98% 76%,80% 95%,20% 95%,2% 76%,2% 24%); display: grid; place-items: center; align-content: center; gap: 2px; color: #f2dfd1; }
-.choice-tab.selected { border-color: #ffe6d6; background: #344c4f; filter: drop-shadow(0 0 6px rgba(255,230,214,.5)); }
+.choice-tab { width: 100%; min-width: 0; height: auto; aspect-ratio: 1; margin: 0; padding: 9px 5px 7px; overflow: hidden; border: 0; background: transparent; clip-path: none; display: grid; place-items: center; align-content: center; gap: 2px; color: #f2dfd1; }
+.choice-tab.selected { background: transparent; filter: none; }
 .choice-tab span { width: 100%; overflow: hidden; color: #c5b7bd; font-size: 8px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
 .choice-tab.selected span { color: #fff2e8; }
 .choice-detail { min-height: 188px; padding: 21px; border: 3px solid #385a55; background: #221b2b; display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 18px; align-items: start; box-shadow: inset 0 0 0 2px rgba(5,8,12,.45); }
@@ -104,7 +104,8 @@ h2 { margin: 2px 0 18px; font-size: clamp(28px, 8vw, 44px); line-height: 1; }
 .choice-card__icon { grid-row: 1 / 5; display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid rgba(101,230,255,.28); border-radius: 10px; background: radial-gradient(circle, rgba(101,230,255,.18), rgba(168,129,255,.08)); color: var(--cyan); font-size: 23px; line-height: 1; text-shadow: 0 0 12px rgba(101,230,255,.7); }
 .choice-card__icon--atlas { width: 48px; height: 48px; margin-left: -5px; border: 0; border-radius: 7px; background-image: url('./assets/ui/upgrade-icons.webp'); background-size: 1000% 1000%; background-repeat: no-repeat; image-rendering: pixelated; box-shadow: 0 0 15px rgba(101,230,255,.13); }
 .choice-tab .choice-card__icon { grid-row: auto; }
-.choice-tab .choice-card__icon--atlas { width: min(64px, 72%); height: auto; aspect-ratio: 1; margin: 0; box-shadow: none; }
+.choice-tab .choice-card__icon--atlas { width: min(64px, 72%); height: auto; aspect-ratio: 1; margin: 0; border: 2px solid transparent; box-shadow: none; }
+.choice-tab.selected .choice-card__icon--atlas { border-color: #87aa9d; box-shadow: inset 0 0 0 2px rgba(101,230,255,.2), inset 0 0 13px rgba(101,230,255,.18); filter: brightness(1.12); }
 .choice-detail__icon .choice-card__icon { grid-row: auto; width: 58px; height: 58px; }
 .choice-detail__icon .choice-card__icon--atlas { margin: 0; border-radius: 9px; }
 .choice-card__path { display: flex; gap: 6px; }
