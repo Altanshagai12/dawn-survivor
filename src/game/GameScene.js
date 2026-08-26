@@ -4,7 +4,7 @@ import { HEROES } from '../data/heroes.js?build=20260826e';
 import { TOMES, sampleUpgradeCards } from '../data/upgrades.js?build=20260826b';
 import { WEAPONS } from '../data/weapons.js?build=20260826d';
 import { createCameraFittedBackground } from './BackgroundSystem.js?build=20260826d';
-import { CombatSystem } from './CombatSystem.js?build=20260826e';
+import { CombatSystem } from './CombatSystem.js?build=20260826f';
 import { BossBarrierSystem } from './BossBarrierSystem.js?build=20260825r';
 import { CharacterAbilitySystem } from './CharacterAbilitySystem.js?build=20260826e';
 import { EnemySystem } from './EnemySystem.js?build=20260826d';
@@ -15,17 +15,17 @@ import { Spawner } from './Spawner.js?build=20260825r';
 import { SummonSystem } from './SummonSystem.js?build=20260825r';
 import { UpgradeEffectSystem } from './UpgradeEffectSystem.js?build=20260825r';
 import { WorldObstacleSystem } from './WorldObstacleSystem.js?build=20260826c';
+import { WeaponAudio } from './WeaponAudio.js?build=20260826f';
+import { presentWeaponShot } from './WeaponPresentation.js?build=20260826f';
 import { gameDeviceProfile } from './deviceProfile.js?build=20260826d';
 import { movementMultiplier } from './movement.js?build=20260825r';
-import {
-  triggerShotFeedback, updateMovementFeedback, updateShotFeedback, updateWeaponCharge,
-} from './PlayerFeedback.js?build=20260825r';
+import { updateMovementFeedback, updateShotFeedback, updateWeaponCharge } from './PlayerFeedback.js?build=20260826f';
 import { facingVector, playDirectional } from './animations.js?build=20260825r';
 import { scoreForRun } from './simulation.js?build=20260825r';
 import {
   attachGroundShadow, createGameTextures, createPlayerLights, createReloadIndicator,
   syncGroundShadow, syncPlayerLights, syncReloadIndicator,
-} from './VisualEffects.js?build=20260826e';
+} from './VisualEffects.js?build=20260826f';
 
 export class GameScene extends Phaser.Scene {
   constructor() { super('game'); }
@@ -59,6 +59,7 @@ export class GameScene extends Phaser.Scene {
     createGameTextures(this);
     this.createGroups();
     this.createPlayer();
+    this.weaponAudio = new WeaponAudio();
     this.inputController = new InputController(this);
     this.barrier = new BossBarrierSystem(this);
     this.spawner = new Spawner(this);
@@ -170,16 +171,10 @@ export class GameScene extends Phaser.Scene {
     return best;
   }
 
-  onShot(angle) {
+  onShot(angle, { shotAngles } = {}) {
     this.facing = { x: Math.cos(angle), y: Math.sin(angle) };
     this.aimHoldUntil = this.time.now + 850;
-    const x = this.player.x + Math.cos(angle) * 31;
-    const y = this.player.y + Math.sin(angle) * 31;
-    const flame = this.state.weapon.id === 'flame';
-    const scale = this.state.weapon.id === 'shotgun' ? .58 : flame ? .46 : .38;
-    this.flashEffect(x, y, flame ? 2 : 0, scale);
-    triggerShotFeedback(this, angle);
-    this.cameras.main.shake(55, this.performance.mobile ? .0012 : .0007);
+    presentWeaponShot(this, angle, shotAngles);
   }
 
   flashEffect(x, y, row, scale = .7) {
@@ -293,6 +288,7 @@ export class GameScene extends Phaser.Scene {
     this.inputController?.destroy();
     this.characterAbility?.destroy();
     this.summons?.destroy();
+    this.weaponAudio?.destroy();
     this.time.paused = false;
     this.ui.hidePause();
   }

@@ -24,34 +24,41 @@ function radialTexture(scene, key, size, stops) {
 
 export function createGameTextures(scene) {
   circleTexture(scene, 'bullet', 0x9cf4ff, 4);
-  canvasTexture(scene, 'bullet-revolver', 24, 10, (context) => {
-    const trail = context.createLinearGradient(0, 0, 24, 0);
-    trail.addColorStop(0, 'rgba(70,190,230,0)');
-    trail.addColorStop(.62, 'rgba(105,230,255,.48)');
-    trail.addColorStop(1, 'rgba(245,255,255,1)');
+  canvasTexture(scene, 'bullet-revolver', 36, 14, (context) => {
+    const trail = context.createLinearGradient(0, 0, 36, 0);
+    trail.addColorStop(0, 'rgba(255,226,202,0)');
+    trail.addColorStop(.58, 'rgba(255,226,202,.34)');
+    trail.addColorStop(1, 'rgba(255,250,235,1)');
     context.fillStyle = trail;
     context.beginPath();
-    context.moveTo(0, 5); context.lineTo(20, 2); context.lineTo(24, 5); context.lineTo(20, 8);
+    context.moveTo(0, 7); context.lineTo(28, 4); context.lineTo(36, 7); context.lineTo(28, 10);
     context.closePath(); context.fill();
+    context.strokeStyle = 'rgba(255,238,220,.68)'; context.lineWidth = 1;
+    context.beginPath(); context.moveTo(6, 3); context.lineTo(13, 6); context.moveTo(10, 11); context.lineTo(17, 8); context.stroke();
   });
-  canvasTexture(scene, 'bullet-pellet', 12, 8, (context) => {
-    context.fillStyle = '#d9fbff';
-    context.beginPath(); context.ellipse(7, 4, 5, 2.5, 0, 0, Math.PI * 2); context.fill();
+  canvasTexture(scene, 'bullet-pellet', 20, 10, (context) => {
+    const trail = context.createLinearGradient(0, 0, 20, 0);
+    trail.addColorStop(0, 'rgba(255,222,195,0)'); trail.addColorStop(.55, 'rgba(255,226,204,.45)'); trail.addColorStop(1, '#fff8e7');
+    context.fillStyle = trail;
+    context.beginPath(); context.moveTo(1, 5); context.lineTo(15, 2); context.lineTo(20, 5); context.lineTo(15, 8); context.closePath(); context.fill();
   });
-  canvasTexture(scene, 'bullet-bolt', 32, 10, (context) => {
-    context.fillStyle = '#8aeaff'; context.fillRect(3, 4, 25, 2);
-    context.fillStyle = '#efffff';
-    context.beginPath(); context.moveTo(32, 5); context.lineTo(24, 1); context.lineTo(24, 9); context.closePath(); context.fill();
-    context.fillStyle = '#6386b8';
-    context.beginPath(); context.moveTo(5, 5); context.lineTo(0, 0); context.lineTo(2, 5); context.lineTo(0, 10); context.closePath(); context.fill();
+  canvasTexture(scene, 'bullet-bolt', 64, 10, (context) => {
+    const streak = context.createLinearGradient(0, 0, 64, 0);
+    streak.addColorStop(0, 'rgba(255,238,218,0)'); streak.addColorStop(.18, 'rgba(255,238,218,.25)'); streak.addColorStop(1, '#fff9ec');
+    context.fillStyle = streak; context.fillRect(2, 4, 55, 2);
+    context.fillStyle = '#fffdf3';
+    context.beginPath(); context.moveTo(64, 5); context.lineTo(54, 1); context.lineTo(56, 5); context.lineTo(54, 9); context.closePath(); context.fill();
   });
-  canvasTexture(scene, 'bullet-flame', 42, 22, (context) => {
-    const glow = context.createLinearGradient(0, 0, 42, 0);
-    glow.addColorStop(0, 'rgba(255,64,15,0)'); glow.addColorStop(.45, 'rgba(255,80,20,.7)');
-    glow.addColorStop(.82, 'rgba(255,186,48,.96)'); glow.addColorStop(1, '#fff3aa');
-    context.fillStyle = glow;
-    context.beginPath(); context.moveTo(1, 11); context.quadraticCurveTo(17, 0, 39, 8);
-    context.quadraticCurveTo(44, 11, 39, 14); context.quadraticCurveTo(17, 22, 1, 11); context.fill();
+  canvasTexture(scene, 'bullet-flame', 44, 22, (context) => {
+    [[18, 11, 10], [28, 8, 8], [36, 12, 7]].forEach(([x, y, radius], index) => {
+      const glow = context.createRadialGradient(x + 2, y, 1, x, y, radius);
+      glow.addColorStop(0, index === 2 ? '#fff4c9' : '#ffd970');
+      glow.addColorStop(.42, index === 0 ? 'rgba(255,85,26,.88)' : 'rgba(255,151,35,.92)');
+      glow.addColorStop(1, 'rgba(255,62,18,0)');
+      context.fillStyle = glow; context.beginPath(); context.arc(x, y, radius, 0, Math.PI * 2); context.fill();
+    });
+    context.fillStyle = 'rgba(166,142,126,.4)';
+    context.fillRect(3, 9, 4, 3); context.fillRect(9, 5, 3, 2); context.fillRect(11, 15, 3, 2);
   });
   canvasTexture(scene, 'bullet-spirit', 28, 14, (context) => {
     const glow = context.createRadialGradient(20, 7, 1, 20, 7, 9);

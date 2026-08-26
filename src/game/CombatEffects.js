@@ -93,7 +93,7 @@ export class CombatEffects {
   fireball(angle) {
     this.combat.spawnBullet(this.scene.player.x, this.scene.player.y, angle, {
       damage: 40, speed: 380, life: 1.25, size: 18, burnChance: 1, burnDps: 3,
-      fireball: true, texture: 'bullet-flame',
+      fireball: true, texture: 'bullet-flame', weaponId: 'flame',
     });
     this.scene.flashEffect(this.scene.player.x, this.scene.player.y, 2, .75);
   }

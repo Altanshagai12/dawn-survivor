@@ -42,3 +42,5 @@
 - In a twin-stick game, movement abilities must consume the movement vector (or its last non-zero latch), never the aim vector; test with the two sticks held in opposite directions.
 - World-space combat progress should have one authoritative presentation near the player. Leaving a second fixed-corner meter makes the new feedback look broken or easy to miss.
 - Projectile visual scale and collision radius are separate balance controls. Increase render presence independently when improving weapon feel so the hitbox and authored range do not silently grow.
+- A weapon roster needs presentation identity as well as stat identity: projectile silhouette, muzzle pattern, impact, trail, recoil, and sound must all derive from the same authored weapon ID.
+- Mobile Web Audio must be created or resumed from a real pointer/keyboard gesture; a sound call from the later game update frame is not a reliable autoplay unlock.

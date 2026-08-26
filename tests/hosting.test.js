@@ -36,6 +36,7 @@ test('mobile boots directly into automatic landscape with dedicated Hina ability
   const main = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
   const orientation = await readFile(new URL('../src/ui/orientation.js', import.meta.url), 'utf8');
   const input = await readFile(new URL('../src/game/InputController.js', import.meta.url), 'utf8');
+  const weaponAudio = await readFile(new URL('../src/game/WeaponAudio.js', import.meta.url), 'utf8');
   const css = await readFile(new URL('../styles.css', import.meta.url), 'utf8');
   assert.doesNotMatch(html, /orientation-gate|ROTATE TO LANDSCAPE/);
   assert.match(html, /id="ability-button"/);
@@ -46,8 +47,10 @@ test('mobile boots directly into automatic landscape with dedicated Hina ability
   assert.match(css, /html\.mobile-rotated #app/);
   assert.match(css, /rotate\(90deg\)/);
   assert.match(css, /#game canvas[^}]*width:\s*100%\s*!important[^}]*height:\s*100%\s*!important/s);
-  assert.match(main, /GameScene\.js\?build=20260826e/);
+  assert.match(main, /GameScene\.js\?build=20260826f/);
   assert.doesNotMatch(html, /reload-fill|reload-state/);
+  assert.match(weaponAudio, /AudioContext/);
+  assert.doesNotMatch(html, /<audio|\.mp3|\.wav|\.ogg/);
   assert.match(css, /html\.mobile-rotated \.ability-button[^}]*bottom:\s*max\(180px/s);
   assert.match(orientation, /--app-viewport-width/);
   assert.match(orientation, /--app-viewport-height/);

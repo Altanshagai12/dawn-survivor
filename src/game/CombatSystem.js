@@ -1,7 +1,8 @@
 import { clamp } from './simulation.js?build=20260825r';
-import { CombatEffects } from './CombatEffects.js?build=20260825r';
+import { CombatEffects } from './CombatEffects.js?build=20260826f';
 import { handleSpecialKill } from './KillProgression.js?build=20260825r';
 import { shouldConsumeAmmo, upgradedProjectileCount } from './WeaponMechanics.js?build=20260825r';
+import { presentWeaponImpact, updateProjectilePresentation } from './WeaponPresentation.js?build=20260826f';
 
 export function projectileScale(size = 7) {
   return size / 8 * 1.2;
@@ -36,6 +37,7 @@ export class CombatSystem {
         const angle = Phaser.Math.Angle.Between(bullet.x, bullet.y, bullet.homingTarget.x, bullet.homingTarget.y);
         this.scene.physics.velocityFromRotation(angle, bullet.speed, bullet.body.velocity);
       }
+      updateProjectilePresentation(this.scene, bullet);
       if (this.scene.time.now >= bullet.expiresAt) bullet.destroy();
     });
   }
@@ -67,11 +69,14 @@ export class CombatSystem {
       freezeChance: state.flags.freezeChanceAdd || 0,
       curseChance: state.flags.curseChanceAdd || 0,
       texture: weapon.projectileTexture,
+      weaponId: weapon.id,
     };
+    const shotAngles = [];
     for (let index = 0; index < count; index += 1) {
       const centered = count === 1 ? 0 : index / (count - 1) - .5;
       const random = count === 1 ? Phaser.Math.FloatBetween(-.5, .5) : 0;
       const angle = baseAngle + Phaser.Math.DegToRad((centered + random * .3) * spread);
+      shotAngles.push(angle);
       this.spawnBullet(this.scene.player.x + aimX * 26, this.scene.player.y + aimY * 26, angle, shotSpec);
     }
     if (state.flags.backShot) {
@@ -85,7 +90,7 @@ export class CombatSystem {
     state.ammo -= consumedAmmo ? 1 : 0;
     if (consumedAmmo && state.ammo === 0 && state.flags.fanFire) this.fanFire(shotSpec);
     this.nextShotAt = this.scene.time.now + state.fireDelayMs;
-    this.scene.onShot(baseAngle);
+    this.scene.onShot(baseAngle, { shotAngles });
     if (state.flags.electroCadence && state.shots % state.flags.electroCadence === 0) {
       const target = this.scene.nearestEnemy(this.scene.player.x, this.scene.player.y, 540);
       if (target) this.effects.lightning(target);
@@ -113,6 +118,7 @@ export class CombatSystem {
     bullet.explosionDamage = spec.explosionDamage || 0;
     bullet.fireball = Boolean(spec.fireball);
     bullet.summon = Boolean(spec.summon);
+    bullet.weaponId = spec.weaponId || null;
     bullet.speed = speed;
     bullet.expiresAt = this.scene.time.now + (spec.life || 1) * 1000;
     bullet.hitTargets = new Set();
@@ -154,6 +160,7 @@ export class CombatSystem {
     bullet.hitTargets.add(enemy.spawnId);
     const impactX = enemy.x;
     const impactY = enemy.y;
+    presentWeaponImpact(this.scene, bullet, impactX, impactY);
     let damage = bullet.damage;
     if (Math.random() < (this.scene.state.mods.critChanceAdd || 0)) damage *= 2;
     if (bullet.summon && this.scene.state.flags.summonExecute && !enemy.enemyDef.boss
@@ -173,7 +180,6 @@ export class CombatSystem {
       enemy.knockbackVelocity = velocity;
       enemy.knockbackUntil = this.scene.time.now + clamp(100 + bullet.knockback * .55, 115, 180);
       enemy.body.velocity.add(velocity);
-      this.scene.flashEffect(impactX, impactY, 1, .28);
     }
     if (!enemy.active && this.scene.state.flags.pierceKilled) bullet.pierce += 1;
     this.finishBulletHit(bullet);
@@ -228,7 +234,7 @@ export class CombatSystem {
     for (let index = -2; index <= 2; index += 1) {
       this.spawnBullet(this.scene.player.x, this.scene.player.y, angle + index * .13, {
         damage: this.scene.state.weapon.damage * .7, speed: 420, life: .7,
-        pierce: 1, size: 12, burnChance: 1, burnDps: 3, texture: 'bullet-flame',
+        pierce: 1, size: 12, burnChance: 1, burnDps: 3, texture: 'bullet-flame', weaponId: 'flame',
       });
     }
   }
