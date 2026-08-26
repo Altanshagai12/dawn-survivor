@@ -6,27 +6,36 @@ import { installVisibleResume } from './game/runtimeLifecycle.js?build=20260825r
 import { defaultProfile, initPlatform } from './platform/usion.js?build=20260825r';
 import { createI18n } from './ui/i18n.js?build=20260825r';
 import { UIController } from './ui/UIController.js?build=20260825r';
-import { installOrientationGate, requestLandscape } from './ui/orientation.js?build=20260825r';
+import { gameViewportSize, installAutoLandscape, requestLandscape } from './ui/orientation.js?build=20260826a';
 
 async function boot() {
-  installOrientationGate();
+  const syncOrientation = installAutoLandscape();
   const platform = await initPlatform();
   const stored = await platform.loadProfile();
   const profile = { ...defaultProfile(), ...(stored || {}) };
   const i18n = createI18n(platform.config.language);
   const ui = new UIController({ heroes: HEROES, weapons: WEAPONS, i18n, profile });
 
+  const viewport = gameViewportSize();
   const game = new Phaser.Game({
     type: Phaser.AUTO,
     parent: 'game',
     backgroundColor: '#09080d',
     render: { antialias: false, pixelArt: true, roundPixels: true },
-    scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
+    scale: { mode: Phaser.Scale.NONE, width: viewport.width, height: viewport.height },
     physics: { default: 'arcade', arcade: { gravity: { x: 0, y: 0 }, debug: false } },
     scene: [BootScene, GameScene],
     fps: { target: 60, min: 30, smoothStep: true, forceSetTimeOut: false },
   });
   installVisibleResume(game);
+  const resizeGame = () => {
+    const next = gameViewportSize();
+    if (game.scale.width !== next.width || game.scale.height !== next.height) {
+      game.scale.resize(next.width, next.height);
+    }
+  };
+  addEventListener('resize', resizeGame, { passive: true });
+  addEventListener('orientationchange', resizeGame, { passive: true });
 
   game.registry.set('platform', platform);
   game.registry.set('profile', profile);
@@ -35,6 +44,8 @@ async function boot() {
 
   ui.onStart = async (selection) => {
     await requestLandscape();
+    syncOrientation();
+    resizeGame();
     profile.selectedHero = selection.heroId;
     profile.selectedWeapon = selection.weaponId;
     await platform.saveProfile(profile);

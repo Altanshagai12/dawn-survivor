@@ -1,9 +1,30 @@
+const COARSE_POINTER = '(pointer: coarse)';
+const PORTRAIT = '(orientation: portrait)';
+
+function matches(query) {
+  return typeof matchMedia === 'function' && matchMedia(query).matches;
+}
+
 export function isMobilePortrait() {
-  return matchMedia('(pointer: coarse)').matches && matchMedia('(orientation: portrait)').matches;
+  return matches(COARSE_POINTER) && matches(PORTRAIT);
+}
+
+export function landscapeViewportSize({ width, height, mobilePortrait }) {
+  return mobilePortrait
+    ? { width: Math.max(width, height), height: Math.min(width, height) }
+    : { width, height };
+}
+
+export function gameViewportSize() {
+  return landscapeViewportSize({
+    width: window.innerWidth,
+    height: window.innerHeight,
+    mobilePortrait: isMobilePortrait(),
+  });
 }
 
 export async function requestLandscape() {
-  if (!matchMedia('(pointer: coarse)').matches || !screen.orientation?.lock) return false;
+  if (!matches(COARSE_POINTER) || !screen.orientation?.lock) return false;
   try {
     await screen.orientation.lock('landscape');
     return true;
@@ -12,12 +33,14 @@ export async function requestLandscape() {
   }
 }
 
-export function installOrientationGate() {
-  const gate = document.getElementById('orientation-gate');
-  const refresh = () => gate?.classList.toggle('hidden', !isMobilePortrait());
+export function installAutoLandscape() {
+  const refresh = () => {
+    document.documentElement.classList.toggle('mobile-rotated', isMobilePortrait());
+  };
+
   addEventListener('resize', refresh, { passive: true });
   addEventListener('orientationchange', refresh, { passive: true });
   refresh();
-  requestLandscape();
+  void requestLandscape().finally(refresh);
   return refresh;
 }
