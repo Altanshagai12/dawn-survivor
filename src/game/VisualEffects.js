@@ -1,7 +1,16 @@
 export const PLAYER_OUTER_LIGHT_DIAMETER = 720;
+export const PLAYER_INNER_LIGHT_DIAMETER = 280;
 
 export function playerOuterLightRadius(scale = 1) {
   return PLAYER_OUTER_LIGHT_DIAMETER * .5 * scale;
+}
+
+export function playerInnerLightScale(scale = 1) {
+  return Math.min(1, scale + .08);
+}
+
+export function playerBrightLightRadius(scale = 1) {
+  return PLAYER_INNER_LIGHT_DIAMETER * .5 * playerInnerLightScale(scale);
 }
 
 function circleTexture(scene, key, color, radius) {
@@ -104,7 +113,7 @@ export function createGameTextures(scene) {
     [.42, 'rgba(70,145,190,.08)'],
     [1, 'rgba(35,80,125,0)'],
   ]);
-  radialTexture(scene, 'player-light-inner', 280, [
+  radialTexture(scene, 'player-light-inner', PLAYER_INNER_LIGHT_DIAMETER, [
     [0, 'rgba(255,233,185,.32)'],
     [.34, 'rgba(255,211,145,.20)'],
     [1, 'rgba(235,170,95,0)'],
@@ -176,7 +185,7 @@ export function createPlayerLights(scene, player, scale = 1) {
       .setDepth(2).setBlendMode(Phaser.BlendModes.ADD),
   ];
   lights[0].setScale(scale);
-  lights[1].setScale(Math.min(1, scale + .08));
+  lights[1].setScale(playerInnerLightScale(scale));
   return lights;
 }
 

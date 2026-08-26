@@ -9,7 +9,7 @@ import { BossBarrierSystem } from './BossBarrierSystem.js?build=20260825r';
 import { CharacterAbilitySystem } from './CharacterAbilitySystem.js?build=20260826e';
 import { EnemySystem } from './EnemySystem.js?build=20260826h';
 import { InputController } from './InputController.js?build=20260826b';
-import { LootSystem } from './LootSystem.js?build=20260826h';
+import { LootSystem } from './LootSystem.js?build=20260826i';
 import { RunState } from './RunState.js?build=20260825r';
 import { Spawner } from './Spawner.js?build=20260825r';
 import { SummonSystem } from './SummonSystem.js?build=20260825r';
@@ -25,7 +25,7 @@ import { scoreForRun } from './simulation.js?build=20260825r';
 import {
   attachGroundShadow, createGameTextures, createPlayerLights, createReloadIndicator,
   syncGroundShadow, syncPlayerLights, syncReloadIndicator,
-} from './VisualEffects.js?build=20260826h';
+} from './VisualEffects.js?build=20260826i';
 
 export class GameScene extends Phaser.Scene {
   constructor() { super('game'); }

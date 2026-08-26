@@ -2,15 +2,15 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { LootSystem, xpAttractionRange, xpAttractionSpeed } from '../src/game/LootSystem.js';
 
-test('XP attraction begins at the exact visible outer-light boundary', () => {
-  assert.equal(xpAttractionRange(1, 1), 360);
-  assert.ok(Math.abs(xpAttractionRange(.82, 1) - 295.2) < 1e-9);
-  assert.equal(xpAttractionRange(1, 1.5), 540);
+test('XP attraction begins where bright light hands off to the faint outer light', () => {
+  assert.equal(xpAttractionRange(1, 1), 140);
+  assert.ok(Math.abs(xpAttractionRange(.82, 1) - 126) < 1e-9);
+  assert.equal(xpAttractionRange(1, 1.5), 210);
 });
 
 test('a spark at the light edge is pulled immediately while one outside stays still', () => {
-  const edge = { active: true, x: 360, y: 0, attracting: false };
-  const outside = { active: true, x: 361, y: 0, attracting: false };
+  const edge = { active: true, x: 140, y: 0, attracting: false };
+  const outside = { active: true, x: 141, y: 0, attracting: false };
   const moves = [];
   const scene = {
     physics: {
@@ -32,6 +32,6 @@ test('a spark at the light edge is pulled immediately while one outside stays st
   }
   assert.equal(edge.attracting, true);
   assert.equal(outside.attracting, false);
-  assert.deepEqual(moves, [{ gem: edge, speed: xpAttractionSpeed(360, 360) }]);
+  assert.deepEqual(moves, [{ gem: edge, speed: xpAttractionSpeed(140, 140) }]);
   assert.ok(moves[0].speed >= 460);
 });

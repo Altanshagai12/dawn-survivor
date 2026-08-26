@@ -46,3 +46,4 @@
 - Mobile Web Audio must be created or resumed from a real pointer/keyboard gesture; a sound call from the later game update frame is not a reliable autoplay unlock.
 - Enemy pursuit balance must be compared with the player's firing-walk speed, not only full run speed; a contact enemy slower than sprinting can still feel unfair when it outruns normal shooting movement.
 - Mobile zoom/selection prevention must cover the entire interactive surface and iOS-specific gesture, callout, drag, and selection paths; a standard `user-select: none` on `body` alone is incomplete inside a WebView.
+- A pickup radius described by a lighting boundary must anchor to the named gradient transition, not the texture's transparent outer extent; “bright-to-faint” means the inner light's rendered edge on each device profile.

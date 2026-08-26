@@ -1,7 +1,7 @@
-import { playerOuterLightRadius } from './VisualEffects.js?build=20260826h';
+import { playerBrightLightRadius } from './VisualEffects.js?build=20260826i';
 
 export function xpAttractionRange(lightScale = 1, pickupMultiplier = 1) {
-  return playerOuterLightRadius(lightScale) * pickupMultiplier;
+  return playerBrightLightRadius(lightScale) * pickupMultiplier;
 }
 
 export function xpAttractionSpeed(distance, range) {
