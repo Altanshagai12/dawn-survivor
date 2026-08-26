@@ -17,3 +17,8 @@ export function cameraCompensatedViewport(width, height, zoom = 1) {
   const safeZoom = Number.isFinite(zoom) && zoom > 0 ? zoom : 1;
   return { width: width / safeZoom, height: height / safeZoom };
 }
+
+export function gameRenderResolution(devicePixelRatio = 1) {
+  const ratio = Number(devicePixelRatio);
+  return Math.min(2, Math.max(1, Number.isFinite(ratio) ? ratio : 1));
+}

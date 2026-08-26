@@ -47,3 +47,7 @@
 - Enemy pursuit balance must be compared with the player's firing-walk speed, not only full run speed; a contact enemy slower than sprinting can still feel unfair when it outruns normal shooting movement.
 - Mobile zoom/selection prevention must cover the entire interactive surface and iOS-specific gesture, callout, drag, and selection paths; a standard `user-select: none` on `body` alone is incomplete inside a WebView.
 - A pickup radius described by a lighting boundary must anchor to the named gradient transition, not the texture's transparent outer extent; “bright-to-faint” means the inner light's rendered edge on each device profile.
+- A gameplay modal that opens during an active fire pointer must ignore the inherited synthesized click and activate only from a new pointerdown (while preserving detail-zero keyboard clicks); a visual pause alone does not stop input bleed-through.
+- A survival leaderboard must submit the duration itself, not a composite combat score with a time component; store points and record duration as separate profile fields and format the duration consistently in result and friends views.
+- A shrinking boss arena must snapshot the player's current position as its center and materialize the boss inside that arena; centering on an offscreen boss lets the first clamp teleport and damage the player.
+- Mobile sharpness is controlled by the canvas backing resolution independently of the logical Phaser viewport; cap device-pixel-ratio scaling for clarity without changing world scale or collision math.

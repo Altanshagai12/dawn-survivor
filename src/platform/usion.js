@@ -1,4 +1,5 @@
 const STORAGE_KEY = 'dawn-survivor-profile-v1';
+const LOCAL_RECORD_KEY = 'dawn-best-survival-ms-v1';
 
 function localAdapter() {
   return {
@@ -12,9 +13,10 @@ function localAdapter() {
       return true;
     },
     async submitScore(score) {
-      const best = Math.max(score, Number(localStorage.getItem('dawn-best') || 0));
-      localStorage.setItem('dawn-best', String(best));
-      return { success: true, score, best, rank: null, updated: score >= best };
+      const previous = Number(localStorage.getItem(LOCAL_RECORD_KEY) || 0);
+      const best = Math.max(score, previous);
+      localStorage.setItem(LOCAL_RECORD_KEY, String(best));
+      return { success: true, score, best, rank: null, updated: score > previous };
     },
     async friends() { return []; },
     releaseBack() {},
@@ -49,7 +51,7 @@ export async function initPlatform() {
 
 export function defaultProfile() {
   return {
-    selectedHero: 'shana', selectedWeapon: 'revolver', best: 0,
+    selectedHero: 'shana', selectedWeapon: 'revolver', best: 0, bestSurvivalMs: 0,
     runs: 0, wins: 0, totalKills: 0,
   };
 }

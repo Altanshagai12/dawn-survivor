@@ -29,6 +29,22 @@ export function movementCopy(language = 'en') {
     : `MOVEMENT · Running 100% · Running while firing ${firingPercent}% · Run and Gun restores 100%`;
 }
 
+export function formatSurvivalTime(milliseconds) {
+  const totalSeconds = Math.max(0, Math.floor((Number(milliseconds) || 0) / 1000));
+  return `${String(Math.floor(totalSeconds / 60)).padStart(2, '0')}:${String(totalSeconds % 60).padStart(2, '0')}`;
+}
+
+export function setFreshActivation(element, activate) {
+  element.onpointerdown = (event) => {
+    if (event?.pointerType !== 'touch' && event?.button != null && event.button !== 0) return;
+    event?.preventDefault?.();
+    activate();
+  };
+  element.onclick = (event) => {
+    if (event?.detail === 0) activate();
+  };
+}
+
 const WEAPON_ICONS = {
   revolver: '<path d="M4 10h18v5H4zm8 5h10l5 4h-9l-1 7h-6z"/>',
   shotgun: '<path d="M3 8h25v4H3zm1 6h23v4H4zm15 4 7 6h-7l-6-6z"/>',
@@ -218,7 +234,7 @@ export class UIController {
       this.el['choice-detail-description'].textContent = desc;
       this.el['choice-detail-path'].innerHTML = upgradePathHtml(card, owned);
     };
-    tabs.forEach((tab, index) => tab.addEventListener('click', () => renderSelection(index)));
+    tabs.forEach((tab, index) => setFreshActivation(tab, () => renderSelection(index)));
     this.el['choice-list'].style?.setProperty('--choice-count', String(Math.max(1, Math.min(5, cards.length))));
     this.el['choice-list'].replaceChildren(...tabs);
     renderSelection(0);
@@ -227,14 +243,15 @@ export class UIController {
     this.el['choice-confirm'].textContent = rewardType === 'level'
       ? (this.i18n.lang === 'mn' ? 'СОНГОХ' : 'CHOOSE') : 'CLAIM';
     return new Promise((resolve) => {
-      this.el['choice-confirm'].onclick = () => {
+      let settled = false;
+      const finish = (choice) => {
+        if (settled) return;
+        settled = true;
         this.el['choice-modal'].classList.add('hidden');
-        resolve({ card: cards[selectedIndex], reroll: false });
+        resolve(choice);
       };
-      this.el['reroll-button'].onclick = () => {
-        this.el['choice-modal'].classList.add('hidden');
-        resolve({ card: null, reroll: true });
-      };
+      setFreshActivation(this.el['choice-confirm'], () => finish({ card: cards[selectedIndex], reroll: false }));
+      setFreshActivation(this.el['reroll-button'], () => finish({ card: null, reroll: true }));
     });
   }
 
@@ -254,7 +271,7 @@ export class UIController {
     this.el['result-modal'].classList.remove('hidden');
     this.el['result-kicker'].textContent = result.won ? 'DAWN REACHED' : 'THE NIGHT CLAIMED YOU';
     this.el['result-title'].textContent = result.won ? 'You survived.' : 'Rise again.';
-    this.el['result-score'].textContent = result.score.toLocaleString();
+    this.el['result-score'].textContent = formatSurvivalTime(result.survivalMs);
     this.el['result-kills'].textContent = result.kills.toLocaleString();
     this.el['result-level'].textContent = result.level;
     const causePrefix = this.i18n.lang === 'mn' ? 'ЯЛАГДСАН ШАЛТГААН' : 'DEFEATED BY';
@@ -264,7 +281,8 @@ export class UIController {
     this.el['friends-board'].replaceChildren(...friends.map((entry) => {
       const row = document.createElement('div');
       row.className = 'friend-row';
-      row.innerHTML = `<span>${entry.rank || '—'} · ${entry.name || 'Hunter'}</span><strong>${Number(entry.score || 0).toLocaleString()}</strong>`;
+      const survivalMs = Number(entry.metadata?.survivalMs ?? entry.score ?? 0);
+      row.innerHTML = `<span>${entry.rank || '—'} · ${entry.name || 'Hunter'}</span><strong>${formatSurvivalTime(survivalMs)}</strong>`;
       return row;
     }));
   }

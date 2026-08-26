@@ -4,7 +4,7 @@ const COPY = {
     hunter: 'Hunter', weapon: 'Weapon', begin: 'ENTER THE NIGHT',
     controls: 'WASD + mouse · dual touch sticks', untilDawn: 'UNTIL DAWN',
     chooseUpgrade: 'Choose an upgrade', reroll: 'REROLL', paused: 'Paused',
-    resume: 'RESUME', endRun: 'END RUN', score: 'SCORE', kills: 'KILLS',
+    resume: 'RESUME', endRun: 'END RUN', survived: 'SURVIVED', kills: 'KILLS',
     level: 'LEVEL', again: 'PLAY AGAIN', loadout: 'CHANGE LOADOUT',
   },
   mn: {
@@ -12,7 +12,7 @@ const COPY = {
     hunter: 'Баатар', weapon: 'Зэвсэг', begin: 'ШӨНӨ РҮҮ ОРОХ',
     controls: 'WASD + хулгана · хос touch joystick', untilDawn: 'ҮҮР ЦАЙХАД',
     chooseUpgrade: 'Сайжруулалтаа сонго', reroll: 'ШИНЭЧЛЭХ', paused: 'Түр зогслоо',
-    resume: 'ҮРГЭЛЖЛҮҮЛЭХ', endRun: 'ТОГЛОЛТ ДУУСГАХ', score: 'ОНОО', kills: 'УСТГАЛ',
+    resume: 'ҮРГЭЛЖЛҮҮЛЭХ', endRun: 'ТОГЛОЛТ ДУУСГАХ', survived: 'АМЬД ҮЛДСЭН', kills: 'УСТГАЛ',
     level: 'ТҮВШИН', again: 'ДАХИН ТОГЛОХ', loadout: 'СОНГОЛТ СОЛИХ',
   },
 };

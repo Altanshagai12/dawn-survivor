@@ -6,6 +6,7 @@ import {
   sampleWithoutReplacement,
   scoreForRun,
   spawnInterval,
+  survivalRecordMs,
   weightedPick,
   xpRequired,
 } from '../src/game/simulation.js';
@@ -35,4 +36,10 @@ test('random helpers are deterministic with an injected source', () => {
 test('winning grants a meaningful score bonus', () => {
   const run = { kills: 100, bosses: 3, level: 15, elapsed: 600 };
   assert.equal(scoreForRun({ ...run, won: true }) - scoreForRun({ ...run, won: false }), 5000);
+});
+
+test('leaderboard records use clamped survival duration in milliseconds', () => {
+  assert.equal(survivalRecordMs(-1), 0);
+  assert.equal(survivalRecordMs(93.456), 93_456);
+  assert.equal(survivalRecordMs(900), 600_000);
 });

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { cameraCompensatedViewport, gameDeviceProfile } from '../src/game/deviceProfile.js';
+import { cameraCompensatedViewport, gameDeviceProfile, gameRenderResolution } from '../src/game/deviceProfile.js';
 import { FIRING_MOVE_MULTIPLIER, movementMultiplier } from '../src/game/movement.js';
 import { recoilPose } from '../src/game/PlayerFeedback.js';
 import { runDustOrigin, spawnRunDust } from '../src/game/VisualEffects.js';
@@ -22,6 +22,12 @@ test('the ground compensates camera zoom and fills every viewport edge', () => {
   const desktop = cameraCompensatedViewport(1440, 900, 1.05);
   assert.ok(Math.abs(desktop.width * 1.05 - 1440) < 1e-9);
   assert.ok(Math.abs(desktop.height * 1.05 - 900) < 1e-9);
+});
+
+test('high-density mobile screens render at up to twice their CSS resolution', () => {
+  assert.equal(gameRenderResolution(3), 2);
+  assert.equal(gameRenderResolution(1.5), 1.5);
+  assert.equal(gameRenderResolution(0), 1);
 });
 
 test('firing movement is slower until Run and Gun removes the penalty', () => {

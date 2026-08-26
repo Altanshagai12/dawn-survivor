@@ -50,3 +50,7 @@ export function scoreForRun({ kills, bosses, level, elapsed, won }) {
   const survival = Math.floor(Math.min(elapsed, RUN_SECONDS) * 8);
   return Math.max(0, Math.round(kills * 12 + bosses * 1200 + level * 90 + survival + (won ? 5000 : 0)));
 }
+
+export function survivalRecordMs(elapsed) {
+  return Math.round(clamp(Number(elapsed) || 0, 0, RUN_SECONDS) * 1000);
+}

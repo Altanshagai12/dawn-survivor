@@ -23,6 +23,18 @@ export function followedCameraView(player, camera) {
   };
 }
 
+export function shubArenaLayout(player, definition, random = Math.random) {
+  const { startWidth, startHeight } = TEN_MINUTES_BALANCE.barrier;
+  const clearance = 36;
+  const distance = Math.max(72, Math.min(startWidth, startHeight) / 2 - definition.radius - clearance);
+  const angle = random() * Math.PI * 2;
+  const center = { x: player.x, y: player.y };
+  return {
+    center,
+    boss: { x: center.x + Math.cos(angle) * distance, y: center.y + Math.sin(angle) * distance },
+  };
+}
+
 export class Spawner {
   constructor(scene) {
     this.scene = scene;
@@ -131,13 +143,22 @@ export class Spawner {
   }
 
   spawnBoss(definition) {
-    const point = this.spawnPoint();
+    let arena = null;
+    let point = definition.id === 'shub' ? null : this.spawnPoint();
+    if (definition.id === 'shub') {
+      for (let attempt = 0; attempt < TEN_MINUTES_BALANCE.spawning.retries; attempt += 1) {
+        const candidate = shubArenaLayout(this.scene.player, definition);
+        arena = candidate;
+        point = candidate.boss;
+        if (this.scene.obstacles?.isSpawnClear?.(point, definition.radius + 18) ?? true) break;
+      }
+    }
     const atlas = BOSS_ATLASES[definition.id];
     const sprite = this.acquire(atlas, point.x, point.y);
     if (!sprite) { this.spawnedBosses.delete(definition.id); return null; }
     this.setupSprite(sprite, { ...definition, boss: true, xp: 0 }, atlas, definition.hp);
     this.scene.activeBoss = sprite;
-    if (definition.id === 'shub') this.scene.barrier?.activate(sprite.x, sprite.y);
+    if (arena) this.scene.barrier?.activate(arena.center.x, arena.center.y);
     this.scene.ui.toast(`${definition.name} approaches`, 2400);
     this.scene.cameras.main.shake(500, .006);
     return sprite;

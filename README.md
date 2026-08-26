@@ -28,5 +28,5 @@ npm run check
 
 Path B static game. It loads only the official Usion SDK and platform-hosted
 Phaser runtime, starts after `Usion.init`, stores progression with
-`Usion.storage`, and submits completed-run scores with
-`Usion.leaderboard.submit`.
+`Usion.storage`, and submits survival duration in milliseconds with
+`Usion.leaderboard.submit` so longer runs rank higher.

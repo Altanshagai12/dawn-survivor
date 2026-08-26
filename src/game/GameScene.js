@@ -11,17 +11,17 @@ import { EnemySystem } from './EnemySystem.js?build=20260826h';
 import { InputController } from './InputController.js?build=20260826b';
 import { LootSystem } from './LootSystem.js?build=20260826i';
 import { RunState } from './RunState.js?build=20260825r';
-import { Spawner } from './Spawner.js?build=20260825r';
+import { Spawner } from './Spawner.js?build=20260826j';
 import { SummonSystem } from './SummonSystem.js?build=20260825r';
 import { UpgradeEffectSystem } from './UpgradeEffectSystem.js?build=20260825r';
 import { WorldObstacleSystem } from './WorldObstacleSystem.js?build=20260826c';
 import { WeaponAudio } from './WeaponAudio.js?build=20260826f';
 import { presentWeaponShot } from './WeaponPresentation.js?build=20260826g';
-import { gameDeviceProfile } from './deviceProfile.js?build=20260826d';
+import { gameDeviceProfile } from './deviceProfile.js?build=20260826j';
 import { movementMultiplier } from './movement.js?build=20260825r';
 import { updateMovementFeedback, updateShotFeedback, updateWeaponCharge } from './PlayerFeedback.js?build=20260826f';
 import { facingVector, playDirectional } from './animations.js?build=20260825r';
-import { scoreForRun } from './simulation.js?build=20260825r';
+import { scoreForRun, survivalRecordMs } from './simulation.js?build=20260826j';
 import {
   attachGroundShadow, createGameTextures, createPlayerLights, createReloadIndicator,
   syncGroundShadow, syncPlayerLights, syncReloadIndicator,
@@ -262,9 +262,11 @@ export class GameScene extends Phaser.Scene {
     this.physics.pause();
     this.enemyBullets.clear(true, true);
     const score = scoreForRun({ kills: this.state.kills, bosses: this.state.bosses, level: this.state.level, elapsed: this.state.elapsed, won }) + this.runScore;
+    const survivalMs = survivalRecordMs(this.state.elapsed);
     const result = {
       won,
       score,
+      survivalMs,
       kills: this.state.kills,
       bosses: this.state.bosses,
       level: this.state.level,
@@ -275,9 +277,12 @@ export class GameScene extends Phaser.Scene {
     this.profile.wins += won ? 1 : 0;
     this.profile.totalKills += this.state.kills;
     this.profile.best = Math.max(this.profile.best || 0, score);
+    this.profile.bestSurvivalMs = Math.max(this.profile.bestSurvivalMs || 0, survivalMs);
     await Promise.all([
       this.platform.saveProfile(this.profile),
-      this.platform.submitScore(score, { won, kills: result.kills, level: result.level }),
+      this.platform.submitScore(survivalMs, {
+        metric: 'survival_ms', survivalMs, won, kills: result.kills, level: result.level,
+      }),
     ]);
     const friends = await this.platform.friends();
     this.ui.showResult(result, friends);

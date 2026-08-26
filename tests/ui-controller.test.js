@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  damageSourceLabel, heroPassiveCopy, movementCopy, savedOrDefault, UIController,
-  upgradeIconHtml, upgradePathHtml, weaponIconSvg,
+  damageSourceLabel, formatSurvivalTime, heroPassiveCopy, movementCopy, savedOrDefault,
+  setFreshActivation, UIController, upgradeIconHtml, upgradePathHtml, weaponIconSvg,
 } from '../src/ui/UIController.js';
 
 function classList() {
@@ -47,6 +47,26 @@ test('damage sources have readable English and Mongolian labels', () => {
   assert.equal(damageSourceLabel('tree-contact', 'en'), 'TREE ROOT');
   assert.equal(damageSourceLabel('enemy-projectile', 'mn'), 'ДАЙСНЫ СУМ');
   assert.equal(damageSourceLabel('missing', 'mn'), 'ҮЛ МЭДЭГДЭХ');
+});
+
+test('survival records render as a stable ten-minute clock', () => {
+  assert.equal(formatSurvivalTime(0), '00:00');
+  assert.equal(formatSurvivalTime(571_999), '09:31');
+  assert.equal(formatSurvivalTime(600_000), '10:00');
+});
+
+test('modal actions ignore an inherited pointer click and require a fresh press', () => {
+  const button = {};
+  let activations = 0;
+  setFreshActivation(button, () => { activations += 1; });
+  button.onclick({ detail: 1 });
+  assert.equal(activations, 0);
+  button.onpointerdown({ pointerType: 'touch', preventDefault() {} });
+  assert.equal(activations, 1);
+  button.onclick({ detail: 1 });
+  assert.equal(activations, 1);
+  button.onclick({ detail: 0 });
+  assert.equal(activations, 2);
 });
 
 test('upgrade choices use icon tabs, a localized detail panel, and explicit confirmation', async () => {
@@ -102,10 +122,15 @@ test('upgrade choices use icon tabs, a localized detail panel, and explicit conf
     assert.equal(list.children[1].attributes['aria-setsize'], '2');
     assert.equal(controller.el['choice-detail-tree'].textContent, 'ХҮЧ');
     assert.equal(controller.el['choice-detail-name'].textContent, 'Хүчтэй сум');
-    list.children[1].listeners.click();
+    list.children[1].onpointerdown({ pointerType: 'touch', preventDefault() {} });
     assert.equal(controller.el['choice-detail-name'].textContent, 'Шуурхай');
     assert.equal(list.children[1].attributes['aria-selected'], 'true');
-    controller.el['choice-confirm'].onclick();
+    controller.el['choice-confirm'].onclick({ detail: 1 });
+    let resolved = false;
+    result.then(() => { resolved = true; });
+    await Promise.resolve();
+    assert.equal(resolved, false);
+    controller.el['choice-confirm'].onpointerdown({ pointerType: 'touch', preventDefault() {} });
     assert.deepEqual(await result, { card: cards[1], reroll: false });
   } finally {
     globalThis.document = previousDocument;
