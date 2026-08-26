@@ -33,12 +33,12 @@ test('weapons preserve their authored near-to-far projectile travel roles', () =
 
 test('Big Shot enlarges both projectile rendering and its collision footprint', () => {
   const bigShotSize = WEAPONS.revolver.bulletSize * 1.4;
-  assert.ok(Math.abs(projectileScale(bigShotSize) - 1.68) < 1e-9);
+  assert.ok(Math.abs(projectileScale(bigShotSize) - 2.03) < 1e-9);
   assert.ok(Math.abs(projectileCollisionRadius(bigShotSize) - 5.6) < 1e-9);
 });
 
-test('base projectiles render 20% larger without silently widening their hit radius', () => {
-  assert.equal(projectileScale(WEAPONS.revolver.bulletSize), 1.2);
+test('base projectiles render 45% larger without silently widening their hit radius', () => {
+  assert.equal(projectileScale(WEAPONS.revolver.bulletSize), 1.45);
   assert.equal(projectileCollisionRadius(WEAPONS.revolver.bulletSize), 4);
 });
 

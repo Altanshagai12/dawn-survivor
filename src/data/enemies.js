@@ -1,4 +1,4 @@
-import { SPAWN_SESSIONS, TEN_MINUTES_BALANCE } from '../config/balance.js';
+import { SPAWN_SESSIONS, TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260826g';
 
 const baseSpeed = TEN_MINUTES_BALANCE.player.baseRunSpeed;
 

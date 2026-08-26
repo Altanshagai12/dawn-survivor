@@ -2,10 +2,12 @@ import { clamp } from './simulation.js?build=20260825r';
 import { CombatEffects } from './CombatEffects.js?build=20260826f';
 import { handleSpecialKill } from './KillProgression.js?build=20260825r';
 import { shouldConsumeAmmo, upgradedProjectileCount } from './WeaponMechanics.js?build=20260825r';
-import { presentWeaponImpact, updateProjectilePresentation } from './WeaponPresentation.js?build=20260826f';
+import { presentWeaponImpact, updateProjectilePresentation } from './WeaponPresentation.js?build=20260826g';
+
+export const PROJECTILE_RENDER_MULTIPLIER = 1.45;
 
 export function projectileScale(size = 7) {
-  return size / 8 * 1.2;
+  return size / 8 * PROJECTILE_RENDER_MULTIPLIER;
 }
 
 export function projectileCollisionRadius(size = 7) {

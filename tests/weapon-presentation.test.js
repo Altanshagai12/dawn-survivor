@@ -24,6 +24,14 @@ test('crossbow owns the longest tracer while flame owns a dedicated profile', ()
   assert.equal(weaponEffectProfile('flame').color, 0xffa13d);
 });
 
+test('every weapon profile has a deliberately amplified visual footprint', () => {
+  Object.keys(WEAPONS).forEach((id) => {
+    const profile = weaponEffectProfile(id);
+    assert.ok(profile.visualScale >= 1.2);
+    assert.ok(profile.tracer >= 40);
+  });
+});
+
 test('weapon audio fails safely when Web Audio is unavailable', () => {
   const audio = new WeaponAudio({});
   assert.equal(audio.unlock(), false);

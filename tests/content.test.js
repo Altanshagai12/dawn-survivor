@@ -80,6 +80,18 @@ test('spawn sessions preserve the authored ten-minute schedule', () => {
   assert.equal(TEN_MINUTES_BALANCE.enemy.shub.chargeRatio, 2.6);
 });
 
+test('contact enemies remain kiteable while the player is firing', () => {
+  const firingSpeed = TEN_MINUTES_BALANCE.player.baseRunSpeed
+    * TEN_MINUTES_BALANCE.player.shootWalkRatio;
+  ['tentacle', 'boomer', 'elder', 'shub'].forEach((id) => {
+    const definition = ENEMIES[id] || BOSSES[id];
+    assert.ok(definition.speed < firingSpeed, `${id} pursuit speed must stay below firing movement`);
+  });
+  assert.ok(ENEMIES.eye.speed < firingSpeed);
+  assert.ok(TEN_MINUTES_BALANCE.enemy.shub.chargeRatio > 2,
+    'the telegraphed boss charge remains the intentional speed threat');
+});
+
 test('content mappings use only the approved enemies and bosses', () => {
   assert.deepEqual(Object.keys(ENEMY_ATLASES), Object.keys(ENEMIES));
   assert.deepEqual(Object.keys(BOSS_ATLASES), Object.keys(BOSSES));

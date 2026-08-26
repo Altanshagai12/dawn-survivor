@@ -1,10 +1,10 @@
 import { triggerShotFeedback } from './PlayerFeedback.js?build=20260826f';
 
 export const WEAPON_EFFECT_PROFILES = Object.freeze({
-  revolver: Object.freeze({ color: 0xffead8, tracer: 48, shake: .0008, duration: 90 }),
-  shotgun: Object.freeze({ color: 0xffe2c8, tracer: 44, shake: .00145, duration: 105 }),
-  crossbow: Object.freeze({ color: 0xfff1df, tracer: 142, shake: .00055, duration: 125 }),
-  flame: Object.freeze({ color: 0xffa13d, tracer: 32, shake: .0009, duration: 145 }),
+  revolver: Object.freeze({ color: 0xffead8, tracer: 60, shake: .00105, duration: 105, visualScale: 1.28 }),
+  shotgun: Object.freeze({ color: 0xffe2c8, tracer: 54, shake: .0017, duration: 120, visualScale: 1.22 }),
+  crossbow: Object.freeze({ color: 0xfff1df, tracer: 170, shake: .0008, duration: 140, visualScale: 1.32 }),
+  flame: Object.freeze({ color: 0xffa13d, tracer: 42, shake: .0012, duration: 165, visualScale: 1.38 }),
 });
 
 export function weaponEffectProfile(weaponId) {
@@ -39,18 +39,27 @@ function tracer(scene, x, y, angle, length, width, color, alpha, duration) {
   });
 }
 
-function sparkBurst(scene, x, y, angle, color, count = 4) {
+function pulse(scene, x, y, color, scale = 1) {
+  const glow = scene.add.circle(x, y, 7 * scale, color, .38)
+    .setDepth(35).setBlendMode(Phaser.BlendModes.ADD);
+  return track(scene, glow, {
+    alpha: 0, scale: 2.15, duration: 115, ease: 'Quad.Out',
+  });
+}
+
+function sparkBurst(scene, x, y, angle, color, count = 4, scale = 1) {
   for (let index = 0; index < count; index += 1) {
     const offset = (index - (count - 1) / 2) * .27;
     const sparkAngle = angle + offset + (index % 2 ? .12 : -.12);
-    tracer(scene, x, y, sparkAngle, 9 + index * 2, 1.5, color, .9, 85 + index * 8);
+    tracer(scene, x, y, sparkAngle, (9 + index * 2) * scale, 1.5 * scale, color, .9, 85 + index * 8);
   }
 }
 
-function flameBlob(scene, x, y, angle, index, smoke = false) {
+function flameBlob(scene, x, y, angle, index, smoke = false, scale = 1) {
   const side = index % 2 ? 1 : -1;
   const color = smoke ? 0x786d68 : [0xfff0a1, 0xffbf46, 0xff6a22][index % 3];
-  const blob = scene.add.circle(x, y + side * (2 + index), smoke ? 4.5 : 3.5 + index * .45, color, smoke ? .28 : .88)
+  const radius = (smoke ? 4.5 : 3.5 + index * .45) * scale;
+  const blob = scene.add.circle(x, y + side * (2 + index), radius, color, smoke ? .28 : .88)
     .setDepth(35).setBlendMode(smoke ? Phaser.BlendModes.NORMAL : Phaser.BlendModes.ADD);
   track(scene, blob, {
     x: x + Math.cos(angle) * (22 + index * 7),
@@ -66,17 +75,20 @@ export function presentWeaponShot(scene, angle, authoredAngles = null) {
   const x = scene.player.x + Math.cos(angle) * 27;
   const y = scene.player.y + Math.sin(angle) * 27;
   const angles = authoredAngles?.length ? authoredAngles : weaponShotAngles(weapon, angle);
+  pulse(scene, x, y, profile.color, profile.visualScale * .8);
   if (weapon.id === 'shotgun') {
-    angles.forEach((shotAngle) => tracer(scene, x, y, shotAngle, profile.tracer, 2.4, profile.color, .92, profile.duration));
+    angles.forEach((shotAngle) => tracer(scene, x, y, shotAngle, profile.tracer,
+      2.4 * profile.visualScale, profile.color, .92, profile.duration));
   } else if (weapon.id === 'crossbow') {
-    tracer(scene, x, y, angle, profile.tracer, 5.5, 0xffd7bd, .16, profile.duration);
-    tracer(scene, x, y, angle, profile.tracer, 1.35, profile.color, 1, profile.duration);
+    tracer(scene, x, y, angle, profile.tracer, 5.5 * profile.visualScale, 0xffd7bd, .2, profile.duration);
+    tracer(scene, x, y, angle, profile.tracer, 1.35 * profile.visualScale, profile.color, 1, profile.duration);
   } else if (weapon.id === 'flame') {
-    for (let index = 0; index < 4; index += 1) flameBlob(scene, x, y, angle, index);
-    flameBlob(scene, x, y, angle, 2, true);
+    for (let index = 0; index < 4; index += 1) flameBlob(scene, x, y, angle, index, false, profile.visualScale);
+    flameBlob(scene, x, y, angle, 2, true, profile.visualScale);
   } else {
-    tracer(scene, x, y, angle, profile.tracer, 2.2, profile.color, .95, profile.duration);
-    sparkBurst(scene, x + Math.cos(angle) * 7, y + Math.sin(angle) * 7, angle, profile.color, 4);
+    tracer(scene, x, y, angle, profile.tracer, 2.2 * profile.visualScale, profile.color, .95, profile.duration);
+    sparkBurst(scene, x + Math.cos(angle) * 7, y + Math.sin(angle) * 7,
+      angle, profile.color, 4, profile.visualScale);
   }
   triggerShotFeedback(scene, angle);
   scene.weaponAudio?.play(weapon.id);
@@ -87,12 +99,17 @@ export function presentWeaponImpact(scene, bullet, x, y) {
   if (!bullet?.weaponId || !scene?.add?.rectangle) return;
   const profile = weaponEffectProfile(bullet.weaponId);
   const angle = bullet.rotation || 0;
+  pulse(scene, x, y, profile.color, profile.visualScale);
   if (bullet.weaponId === 'flame') {
-    for (let index = 0; index < 3; index += 1) flameBlob(scene, x, y, angle + Math.PI, index);
+    for (let index = 0; index < 3; index += 1) {
+      flameBlob(scene, x, y, angle + Math.PI, index, false, profile.visualScale);
+    }
   } else if (bullet.weaponId === 'crossbow') {
-    tracer(scene, x - Math.cos(angle) * 13, y - Math.sin(angle) * 13, angle, 34, 1.4, profile.color, .9, 95);
+    tracer(scene, x - Math.cos(angle) * 13, y - Math.sin(angle) * 13, angle,
+      42 * profile.visualScale, 1.4 * profile.visualScale, profile.color, .95, 110);
   } else {
-    sparkBurst(scene, x, y, angle + Math.PI, profile.color, bullet.weaponId === 'shotgun' ? 3 : 5);
+    sparkBurst(scene, x, y, angle + Math.PI, profile.color,
+      bullet.weaponId === 'shotgun' ? 4 : 6, profile.visualScale);
   }
 }
 
@@ -102,6 +119,7 @@ export function updateProjectilePresentation(scene, bullet) {
   const angle = bullet.rotation || 0;
   const x = bullet.x - Math.cos(angle) * 12;
   const y = bullet.y - Math.sin(angle) * 12;
-  flameBlob(scene, x, y, angle + Math.PI, 1);
-  if (!scene.performance?.mobile) flameBlob(scene, x, y, angle + Math.PI, 1, true);
+  const scale = weaponEffectProfile('flame').visualScale;
+  flameBlob(scene, x, y, angle + Math.PI, 1, false, scale);
+  if (!scene.performance?.mobile) flameBlob(scene, x, y, angle + Math.PI, 1, true, scale);
 }
