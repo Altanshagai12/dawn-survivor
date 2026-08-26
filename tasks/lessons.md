@@ -51,3 +51,5 @@
 - A survival leaderboard must submit the duration itself, not a composite combat score with a time component; store points and record duration as separate profile fields and format the duration consistently in result and friends views.
 - A shrinking boss arena must snapshot the player's current position as its center and materialize the boss inside that arena; centering on an offscreen boss lets the first clamp teleport and damage the player.
 - Mobile sharpness is controlled by the canvas backing resolution independently of the logical Phaser viewport; cap device-pixel-ratio scaling for clarity without changing world scale or collision math.
+- Every collectible promised to use the player's light must share the same attraction helper and boundary; a boss chest with overlap-only pickup is inconsistent with XP, and its idle tween must stop before physics homing begins.
+- Exact rendered pickup boundaries need a tiny numeric tolerance because profile scale arithmetic such as `.82 + .08` can land infinitesimally below the visible whole-pixel radius and reject loot sitting on the edge.

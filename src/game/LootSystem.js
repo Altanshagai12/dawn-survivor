@@ -8,6 +8,19 @@ export function xpAttractionSpeed(distance, range) {
   return 460 + Math.max(0, range - distance) * 4;
 }
 
+export function attractLoot(scene, loot, range) {
+  if (!loot?.active) return false;
+  const distance = Phaser.Math.Distance.Between(loot.x, loot.y, scene.player.x, scene.player.y);
+  if (distance > range + 1e-6 && !loot.attracting) return false;
+  if (!loot.attracting) {
+    loot.attracting = true;
+    loot.floatTween?.stop();
+    loot.floatTween = null;
+  }
+  scene.physics.moveToObject(loot, scene.player, xpAttractionSpeed(distance, range));
+  return true;
+}
+
 export class LootSystem {
   constructor(scene) {
     this.scene = scene;
@@ -40,8 +53,11 @@ export class LootSystem {
     const chest = this.scene.chests.create(x, y, 'chest');
     if (!chest) return;
     chest.setDepth(15).setScale(1.1).setData('rewardType', rewardType);
+    chest.attracting = false;
     chest.body.setCircle(18);
-    this.scene.tweens.add({ targets: chest, y: y - 8, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.inOut' });
+    chest.floatTween = this.scene.tweens.add({
+      targets: chest, y: y - 8, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.inOut',
+    });
   }
 
   update() {
@@ -49,14 +65,8 @@ export class LootSystem {
       this.scene.performance.lightScale,
       this.scene.state.multiplierStats.pickup,
     );
-    this.scene.gems.getChildren().forEach((gem) => {
-      if (!gem?.active) return;
-      const distance = Phaser.Math.Distance.Between(gem.x, gem.y, this.scene.player.x, this.scene.player.y);
-      if (distance <= pickupRange) {
-        gem.attracting = true;
-        this.scene.physics.moveToObject(gem, this.scene.player, xpAttractionSpeed(distance, pickupRange));
-      }
-    });
+    this.scene.gems.getChildren().forEach((gem) => attractLoot(this.scene, gem, pickupRange));
+    this.scene.chests.getChildren().forEach((chest) => attractLoot(this.scene, chest, pickupRange));
   }
 
   collectGem(gem) {
@@ -75,6 +85,7 @@ export class LootSystem {
   collectChest(chest) {
     if (!chest.active) return;
     const rewardType = chest.getData('rewardType') || 'chest';
+    chest.floatTween?.stop();
     chest.destroy();
     this.scene.openBossReward(rewardType);
   }
