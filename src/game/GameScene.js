@@ -280,8 +280,9 @@ export class GameScene extends Phaser.Scene {
     this.profile.bestSurvivalMs = Math.max(this.profile.bestSurvivalMs || 0, survivalMs);
     await Promise.all([
       this.platform.saveProfile(this.profile),
-      this.platform.submitScore(survivalMs, {
-        metric: 'survival_ms', survivalMs, won, kills: result.kills, level: result.level,
+      this.platform.submitScore(score, {
+        metric: 'score', duration_ms: survivalMs, survivalMs,
+        won, kills: result.kills, level: result.level,
       }),
     ]);
     const friends = await this.platform.friends();

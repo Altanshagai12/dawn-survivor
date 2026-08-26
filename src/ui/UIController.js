@@ -34,6 +34,15 @@ export function formatSurvivalTime(milliseconds) {
   return `${String(Math.floor(totalSeconds / 60)).padStart(2, '0')}:${String(totalSeconds % 60).padStart(2, '0')}`;
 }
 
+export function leaderboardDurationMs(entry) {
+  const metadata = entry?.metadata || {};
+  const candidate = entry?.duration_ms ?? metadata.duration_ms ?? metadata.survivalMs
+    ?? (metadata.metric === 'survival_ms' ? entry?.score : null);
+  if (candidate == null || typeof candidate === 'boolean') return null;
+  const value = Number(candidate);
+  return Number.isFinite(value) && value >= 0 ? Math.round(value) : null;
+}
+
 export function setFreshActivation(element, activate) {
   element.onpointerdown = (event) => {
     if (event?.pointerType !== 'touch' && event?.button != null && event.button !== 0) return;
@@ -104,7 +113,7 @@ export class UIController {
       'resume-button','quit-button','again-button','menu-button','choice-list','choice-kicker',
       'choice-title','choice-detail','choice-detail-icon','choice-detail-tree','choice-detail-name',
       'choice-detail-description','choice-detail-path','choice-confirm','reroll-button','hearts','timer','boss-bar','boss-name','boss-fill',
-      'xp-fill','level','ammo','result-kicker','result-title','result-score',
+      'xp-fill','level','ammo','result-kicker','result-title','result-score','result-time',
       'result-kills','result-level','result-cause','friends-board','damage-source','toast',
     ];
     this.el = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
@@ -271,7 +280,8 @@ export class UIController {
     this.el['result-modal'].classList.remove('hidden');
     this.el['result-kicker'].textContent = result.won ? 'DAWN REACHED' : 'THE NIGHT CLAIMED YOU';
     this.el['result-title'].textContent = result.won ? 'You survived.' : 'Rise again.';
-    this.el['result-score'].textContent = formatSurvivalTime(result.survivalMs);
+    this.el['result-score'].textContent = Number(result.score || 0).toLocaleString();
+    this.el['result-time'].textContent = `⏱ ${formatSurvivalTime(result.survivalMs)}`;
     this.el['result-kills'].textContent = result.kills.toLocaleString();
     this.el['result-level'].textContent = result.level;
     const causePrefix = this.i18n.lang === 'mn' ? 'ЯЛАГДСАН ШАЛТГААН' : 'DEFEATED BY';
@@ -281,8 +291,20 @@ export class UIController {
     this.el['friends-board'].replaceChildren(...friends.map((entry) => {
       const row = document.createElement('div');
       row.className = 'friend-row';
-      const survivalMs = Number(entry.metadata?.survivalMs ?? entry.score ?? 0);
-      row.innerHTML = `<span>${entry.rank || '—'} · ${entry.name || 'Hunter'}</span><strong>${formatSurvivalTime(survivalMs)}</strong>`;
+      const identity = document.createElement('span');
+      identity.textContent = `${entry.rank || '—'} · ${entry.name || 'Hunter'}`;
+      const record = document.createElement('span');
+      record.className = 'friend-row__record';
+      const score = document.createElement('strong');
+      score.textContent = Number(entry.score || 0).toLocaleString();
+      record.append(score);
+      const durationMs = leaderboardDurationMs(entry);
+      if (durationMs != null) {
+        const duration = document.createElement('small');
+        duration.textContent = `⏱ ${formatSurvivalTime(durationMs)}`;
+        record.append(duration);
+      }
+      row.append(identity, record);
       return row;
     }));
   }

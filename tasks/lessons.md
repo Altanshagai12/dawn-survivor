@@ -53,3 +53,4 @@
 - Mobile sharpness is controlled by the canvas backing resolution independently of the logical Phaser viewport; cap device-pixel-ratio scaling for clarity without changing world scale or collision math.
 - Every collectible promised to use the player's light must share the same attraction helper and boundary; a boss chest with overlap-only pickup is inconsistent with XP, and its idle tween must stop before physics homing begins.
 - Exact rendered pickup boundaries need a tiny numeric tolerance because profile scale arithmetic such as `.82 + .08` can land infinitesimally below the visible whole-pixel radius and reject loot sitting on the edge.
+- When a leaderboard needs both ranking points and survival time, submit the points as the primary score and attach `duration_ms` as metadata; render duration as an optional line beneath score instead of replacing score with time.

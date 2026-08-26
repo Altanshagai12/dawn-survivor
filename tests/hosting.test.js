@@ -27,7 +27,8 @@ test('runtime uses Phaser 4 group iteration and real Usion SDK calls', async () 
   assert.ok(!gameCode.includes('.setTintFill('));
   assert.ok(gameCode.includes('getWorldPoint'));
   assert.ok(gameCode.includes('setPointerCapture'));
-  assert.match(gameCode, /submitScore\(survivalMs/);
+  assert.match(gameCode, /submitScore\(score/);
+  assert.match(gameCode, /duration_ms:\s*survivalMs/);
   assert.ok(!gameCode.includes('input.activePointer'));
   assert.ok(!/Usion\.(ready|user\.info)|Usion\.game\.emit/.test(platformCode));
 });
@@ -48,7 +49,7 @@ test('mobile boots directly into automatic landscape with dedicated Hina ability
   assert.match(css, /html\.mobile-rotated #app/);
   assert.match(css, /rotate\(90deg\)/);
   assert.match(css, /#game canvas[^}]*width:\s*100%\s*!important[^}]*height:\s*100%\s*!important/s);
-  assert.match(main, /GameScene\.js\?build=20260826k/);
+  assert.match(main, /GameScene\.js\?build=20260826l/);
   assert.match(main, /resolution:\s*gameRenderResolution\(window\.devicePixelRatio\)/);
   assert.match(html, /minimum-scale=1,maximum-scale=1/);
   assert.match(css, /-webkit-touch-callout:\s*none/);
