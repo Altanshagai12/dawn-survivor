@@ -5,7 +5,7 @@ import { BOSS_ATLASES, ENEMY_ATLASES, STATIC_ASSETS } from '../src/config/assets
 import { BOSSES, ENEMIES, RUN_SECONDS } from '../src/data/enemies.js';
 import { BASE_HERO_SPEED, HEROES } from '../src/data/heroes.js';
 import {
-  ALL_UPGRADES, TOMES, UPGRADES, UPGRADE_CHOICE_COUNT, UPGRADE_TREES,
+  ALL_UPGRADES, TOMES, UPGRADES, UPGRADE_CHOICE_COUNT, UPGRADE_ICON_FRAMES, UPGRADE_TREES,
   eligibleUpgrades, sampleUpgradeCards,
 } from '../src/data/upgrades.js';
 
@@ -17,6 +17,22 @@ test('ships the exact original ten-minute roster', () => {
   assert.deepEqual(Object.keys(ENEMIES), ['tentacle', 'boomer', 'eye']);
   assert.deepEqual(Object.keys(BOSSES), ['elder', 'shub']);
   assert.deepEqual(Object.values(BOSSES).map(({ spawnAt, hp }) => [spawnAt, hp]), [[180, 1000], [300, 2500]]);
+});
+
+test('every shipped upgrade name points at its authored icon family', () => {
+  const expectedTrees = {
+    pyro: [56, 57, 58, 59], frost: [52, 53, 54, 55], electro: [48, 49, 50, 51],
+    ghost: [24, 25, 26, 27], weaponry: [36, 32, 35, 36], power: [4, 6, 5, 7],
+    multi: [12, 13, 14, 15], rapid: [8, 9, 10, 11], reload: [16, 17, 18, 19],
+    health: [68, 70, 69, 71], movement: [88, 89, 90, 91], shield: [72, 73, 74, 75],
+  };
+  UPGRADE_TREES.forEach((tree) => {
+    assert.deepEqual(tree.map(({ iconFrame }) => iconFrame), expectedTrees[tree[0].tree]);
+  });
+  assert.equal(UPGRADE_ICON_FRAMES.ghost_friend, 24);
+  assert.equal(UPGRADE_ICON_FRAMES.double_shot, 12);
+  assert.notEqual(UPGRADE_ICON_FRAMES.ghost_friend, UPGRADE_ICON_FRAMES.double_shot);
+  assert.ok(ALL_UPGRADES.every(({ iconFrame }) => Number.isInteger(iconFrame)));
 });
 
 test('uses the exact 48 normal upgrades and three boss-only Tomes', () => {

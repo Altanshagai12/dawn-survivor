@@ -34,6 +34,7 @@ test('runtime uses Phaser 4 group iteration and real Usion SDK calls', async () 
 test('mobile boots directly into automatic landscape with dedicated Hina ability input', async () => {
   const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
   const main = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
+  const orientation = await readFile(new URL('../src/ui/orientation.js', import.meta.url), 'utf8');
   const input = await readFile(new URL('../src/game/InputController.js', import.meta.url), 'utf8');
   const css = await readFile(new URL('../styles.css', import.meta.url), 'utf8');
   assert.doesNotMatch(html, /orientation-gate|ROTATE TO LANDSCAPE/);
@@ -44,6 +45,10 @@ test('mobile boots directly into automatic landscape with dedicated Hina ability
   assert.match(input, /event\.button === 2/);
   assert.match(css, /html\.mobile-rotated #app/);
   assert.match(css, /rotate\(90deg\)/);
+  assert.match(css, /#game canvas[^}]*width:\s*100%\s*!important[^}]*height:\s*100%\s*!important/s);
+  assert.match(css, /html\.mobile-rotated \.ability-button[^}]*bottom:\s*max\(180px/s);
+  assert.match(orientation, /--app-viewport-width/);
+  assert.match(orientation, /--app-viewport-height/);
   assert.match(css, /orientation:\s*landscape/);
   assert.match(css, /max-height:\s*600px/);
 });

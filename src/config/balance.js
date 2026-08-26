@@ -35,11 +35,11 @@ export const TEN_MINUTES_BALANCE = {
   },
   environment: {
     chunkSize: 24 * WORLD_UNIT,
-    minTreesPerChunk: 3,
-    maxTreesPerChunk: 6,
-    minTreeSeparation: 4.5 * WORLD_UNIT,
-    playerSafeRadius: 10 * WORLD_UNIT,
-    treeColliderRadius: 0.65 * WORLD_UNIT,
+    minTreesPerChunk: 1,
+    maxTreesPerChunk: 3,
+    minTreeSeparation: 9 * WORLD_UNIT,
+    playerSafeRadius: 12 * WORLD_UNIT,
+    treeColliderRadius: 1.15 * WORLD_UNIT,
     treeHp: 45000,
   },
 };

@@ -12,18 +12,21 @@
 }
 
 * { box-sizing: border-box; }
-html, body, #app, #game { width: 100%; height: 100%; margin: 0; overflow: hidden; }
-body { background: var(--night); color: var(--ink); touch-action: none; user-select: none; }
+html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--night); }
+body { position: fixed; inset: 0; color: var(--ink); touch-action: none; user-select: none; overscroll-behavior: none; }
+#app, #game { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; overflow: hidden; background: var(--night); }
 button { font: inherit; color: inherit; }
 .hidden { display: none !important; }
-#game canvas { display: block; }
-.vignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(circle at center, transparent 32%, rgba(0,0,0,.12) 60%, rgba(0,0,0,.58) 100%); z-index: 3; }
+#game canvas { display: block; width: 100% !important; height: 100% !important; }
+.vignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(circle at center, transparent 36%, rgba(0,0,0,.08) 64%, rgba(0,0,0,.34) 100%); z-index: 3; }
 html.mobile-rotated #app {
   position: fixed;
   left: 50%;
   top: 50%;
-  width: 100vh;
-  height: 100vw;
+  right: auto;
+  bottom: auto;
+  width: calc(var(--app-viewport-height, 100vh) + 2px);
+  height: calc(var(--app-viewport-width, 100vw) + 2px);
   transform: translate(-50%, -50%) rotate(90deg);
   transform-origin: center;
 }
@@ -147,7 +150,7 @@ h2 { margin: 2px 0 18px; font-size: clamp(28px, 8vw, 44px); line-height: 1; }
 .stick--aim { left: auto; right: max(30px, env(safe-area-inset-right)); border-color: rgba(101,230,255,.28); }
 .stick i { position: absolute; width: 50px; height: 50px; left: 33px; top: 33px; border-radius: 50%; background: rgba(255,255,255,.24); box-shadow: 0 5px 18px rgba(0,0,0,.28); }
 .stick--aim i { background: rgba(101,230,255,.28); }
-.ability-button { position: absolute; right: max(132px, calc(env(safe-area-inset-right) + 132px)); bottom: max(62px, calc(env(safe-area-inset-bottom) + 30px)); width: 68px; height: 68px; border: 1px solid rgba(168,129,255,.65); border-radius: 50%; background: rgba(65,38,94,.72); color: #eadcff; font-size: 10px; font-weight: 900; pointer-events: auto; box-shadow: 0 0 22px rgba(168,129,255,.28); }
+.ability-button { position: absolute; right: max(55px, calc(env(safe-area-inset-right) + 55px)); bottom: max(240px, calc(env(safe-area-inset-bottom) + 208px)); width: 68px; height: 68px; border: 1px solid rgba(168,129,255,.65); border-radius: 50%; background: rgba(65,38,94,.72); color: #eadcff; font-size: 10px; font-weight: 900; pointer-events: auto; box-shadow: 0 0 22px rgba(168,129,255,.28); }
 .toast { position: fixed; z-index: 20; left: 50%; top: 17%; transform: translateX(-50%); padding: 10px 14px; border: 1px solid var(--line); border-radius: 9px; background: rgba(8,7,12,.9); font-size: 12px; }
 
 @media (min-width: 720px) {
@@ -161,7 +164,7 @@ h2 { margin: 2px 0 18px; font-size: clamp(28px, 8vw, 44px); line-height: 1; }
 @media (pointer: coarse) and (orientation: landscape) and (max-height: 600px) {
   .stick { width: 96px; height: 96px; bottom: max(35px, env(safe-area-inset-bottom)); }
   .stick i { width: 42px; height: 42px; left: 26px; top: 26px; }
-  .ability-button { right: max(116px, calc(env(safe-area-inset-right) + 116px)); bottom: max(28px, env(safe-area-inset-bottom)); width: 58px; height: 58px; }
+  .ability-button { right: max(49px, calc(env(safe-area-inset-right) + 49px)); bottom: max(180px, calc(env(safe-area-inset-bottom) + 180px)); width: 58px; height: 58px; }
   .modal { padding: 8px max(12px, env(safe-area-inset-left)); }
   .choice-panel { max-height: 98vh; padding: 10px 16px; }
   .choice-panel > .eyebrow { margin-bottom: 2px; }
@@ -181,7 +184,7 @@ h2 { margin: 2px 0 18px; font-size: clamp(28px, 8vw, 44px); line-height: 1; }
 }
 html.mobile-rotated .stick { width: 96px; height: 96px; bottom: max(35px, env(safe-area-inset-bottom)); }
 html.mobile-rotated .stick i { width: 42px; height: 42px; left: 26px; top: 26px; }
-html.mobile-rotated .ability-button { right: max(116px, calc(env(safe-area-inset-right) + 116px)); bottom: max(28px, env(safe-area-inset-bottom)); width: 58px; height: 58px; }
+html.mobile-rotated .ability-button { right: max(49px, calc(env(safe-area-inset-right) + 49px)); bottom: max(180px, calc(env(safe-area-inset-bottom) + 180px)); width: 58px; height: 58px; }
 html.mobile-rotated .modal { padding: 8px max(12px, env(safe-area-inset-left)); }
 html.mobile-rotated .modal__panel { max-height: calc(100% - 4px); }
 html.mobile-rotated .choice-panel { padding: 10px 16px; }

@@ -35,6 +35,8 @@ export async function requestLandscape() {
 
 export function installAutoLandscape() {
   const refresh = () => {
+    document.documentElement.style.setProperty('--app-viewport-width', `${window.innerWidth}px`);
+    document.documentElement.style.setProperty('--app-viewport-height', `${window.innerHeight}px`);
     document.documentElement.classList.toggle('mobile-rotated', isMobilePortrait());
   };
 

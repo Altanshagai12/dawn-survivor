@@ -79,13 +79,29 @@ const TREE_SPECS = [
   ]],
 ];
 
-function makeTree([tree, treeLabel, treeLabelMn, nodes], treeIndex) {
+export const UPGRADE_ICON_FRAMES = Object.freeze({
+  pyro_mage: 56, fire_starter: 57, intense_burn: 58, soothing_warmth: 59,
+  frost_mage: 52, frostbite: 53, ice_shard: 54, shatter: 55,
+  electro_mage: 48, electro_bug: 49, energized: 50, electro_mastery: 51,
+  ghost_friend: 24, energetic_friends: 25, in_sync: 26, vengeful_ghost: 27,
+  light_weaponry: 36, heavy_weaponry: 32, sharpen: 35, dual_wield: 36,
+  power_shot: 4, splinter: 6, big_shot: 5, reaper_rounds: 7,
+  double_shot: 12, fan_fire: 13, split_fire: 14, fusillade: 15,
+  rapid_fire: 8, light_bullets: 9, rubber_bullets: 10, siege: 11,
+  quick_hands: 16, armed_and_ready: 17, fresh_clip: 18, kill_clip: 19,
+  vitality: 68, giant: 70, anger_point: 69, regeneration: 71,
+  haste: 88, blazing_speed: 89, run_and_gun: 90, in_the_wind: 91,
+  holy_shield: 72, divine_blessing: 73, divine_wrath: 74, stalwart_shield: 75,
+  tome_of_summoning: 40, tome_of_rage: 44, tome_of_power: 4,
+});
+
+function makeTree([tree, treeLabel, treeLabelMn, nodes]) {
   const rootId = nodes[0].id;
   const tier2Ids = [nodes[1].id, nodes[2].id];
   return nodes.map((upgrade, index) => ({
     ...upgrade, type: 'normal', tree, treeLabel, treeLabelMn,
     tier: index === 0 ? 1 : index === 3 ? 3 : 2,
-    iconFrame: treeIndex * 4 + index,
+    iconFrame: UPGRADE_ICON_FRAMES[upgrade.id],
     requires: index === 0 ? [] : index === 3 ? [] : [rootId],
     requiresAny: index === 3 ? tier2Ids : [],
   }));
@@ -100,7 +116,9 @@ export const TOMES = [
   n('tome_of_summoning', 'Tome of Summoning', 'Дуудлагын судар', 'Summon Damage and Attack Speed +50%; Reload Rate -50%.', 'Дуудлагын гэмтэл, хурд +50%; цэнэглэлт -50%.', { summonDamageMul: .5, summonRateMul: .5, reloadMul: -.5 }),
   n('tome_of_rage', 'Tome of Rage', 'Хилэнгийн судар', 'Fire Rate +66%, Spread +60, base ammo ×3, Damage -50%, Knockback -95%.', 'Галлах хурд +66%, тархалт +60, үндсэн сум ×3, гэмтэл -50%, түлхэлт -95%.', { fireRateMul: .66, spreadAdd: 60, damageMul: -.5, knockbackMul: -.95 }, { baseAmmoMultiplier: 3 }),
   n('tome_of_power', 'Tome of Power', 'Хүчний судар', 'Damage +50%, Size +100%, Pierce +1, Fire Rate -25%, Max HP -1.', 'Гэмтэл +50%, хэмжээ +100%, нэвтлэлт +1, галлах хурд -25%, дээд амь -1.', { damageMul: .5, bulletSizeMul: 1, pierceAdd: 1, fireRateMul: -.25, maxHpAdd: -1 }),
-].map((tome, index) => ({ ...tome, type: 'tome', tier: 0, iconFrame: 48 + index, tree: 'tome', treeNodes: [] }));
+].map((tome) => ({
+  ...tome, type: 'tome', tier: 0, iconFrame: UPGRADE_ICON_FRAMES[tome.id], tree: 'tome', treeNodes: [],
+}));
 
 export const ALL_UPGRADES = [...NORMAL_UPGRADES, ...TOMES];
 

@@ -1,10 +1,39 @@
-export function aimFromClientPoint(point, surface, camera, player, fallback = { x: 1, y: 0 }) {
-  if (!point || !surface || !camera || !player) return { ...fallback };
+export function isRotatedMobileFallback() {
+  return typeof document !== 'undefined'
+    && document.documentElement.classList.contains('mobile-rotated');
+}
+
+export function gameVectorFromClient(vector, rotated = false) {
+  return rotated ? { x: vector.y, y: -vector.x } : { ...vector };
+}
+
+export function surfacePointFromClient(point, surface, rotated = false) {
   const rect = surface.getBoundingClientRect();
-  if (!rect.width || !rect.height) return { ...fallback };
-  const screenX = (point.clientX - rect.left) * (surface.width / rect.width);
-  const screenY = (point.clientY - rect.top) * (surface.height / rect.height);
-  const world = camera.getWorldPoint(screenX, screenY);
+  if (!rect.width || !rect.height) return null;
+  if (rotated) {
+    return {
+      x: (point.clientY - rect.top) * (surface.width / rect.height),
+      y: (rect.right - point.clientX) * (surface.height / rect.width),
+    };
+  }
+  return {
+    x: (point.clientX - rect.left) * (surface.width / rect.width),
+    y: (point.clientY - rect.top) * (surface.height / rect.height),
+  };
+}
+
+export function aimFromClientPoint(
+  point,
+  surface,
+  camera,
+  player,
+  fallback = { x: 1, y: 0 },
+  rotated = isRotatedMobileFallback(),
+) {
+  if (!point || !surface || !camera || !player) return { ...fallback };
+  const screen = surfacePointFromClient(point, surface, rotated);
+  if (!screen) return { ...fallback };
+  const world = camera.getWorldPoint(screen.x, screen.y);
   const x = world.x - player.x;
   const y = world.y - player.y;
   const length = Math.hypot(x, y);
@@ -150,8 +179,11 @@ export class InputController {
     const update = (event) => {
       if (pointerId !== event.pointerId) return;
       const rect = element.getBoundingClientRect();
-      let x = (event.clientX - (rect.left + rect.width / 2)) / (rect.width * .34);
-      let y = (event.clientY - (rect.top + rect.height / 2)) / (rect.height * .34);
+      const clientVector = {
+        x: (event.clientX - (rect.left + rect.width / 2)) / (rect.width * .34),
+        y: (event.clientY - (rect.top + rect.height / 2)) / (rect.height * .34),
+      };
+      let { x, y } = gameVectorFromClient(clientVector, isRotatedMobileFallback());
       const length = Math.hypot(x, y) || 1;
       if (length > 1) { x /= length; y /= length; }
       const adjusted = radialDeadZone({ x, y }, isAim ? .045 : .08);

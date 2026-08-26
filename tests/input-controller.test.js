@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { facingVector } from '../src/game/animations.js';
 import {
-  aimFromClientPoint, PointerFireLatch, radialDeadZone, smoothDirection, smoothStick,
+  aimFromClientPoint, gameVectorFromClient, PointerFireLatch, radialDeadZone,
+  smoothDirection, smoothStick, surfacePointFromClient,
 } from '../src/game/InputController.js';
 
 test('maps a host-offset client point through the canvas and live camera', () => {
@@ -24,6 +25,22 @@ test('maps a host-offset client point through the canvas and live camera', () =>
   assert.deepEqual(
     aimFromClientPoint({ clientX: 100, clientY: 95 }, surface, camera, { x: 0, y: 25 }),
     { x: -1, y: 0 },
+  );
+});
+
+test('inverse-maps touch controls through the clockwise mobile fallback rotation', () => {
+  assert.deepEqual(gameVectorFromClient({ x: 0, y: 1 }, true), { x: 1, y: -0 });
+  assert.deepEqual(gameVectorFromClient({ x: 1, y: 0 }, true), { x: 0, y: -1 });
+  const surface = {
+    width: 844,
+    height: 390,
+    getBoundingClientRect() {
+      return { left: 20, right: 410, top: 70, width: 390, height: 844 };
+    },
+  };
+  assert.deepEqual(
+    surfacePointFromClient({ clientX: 310, clientY: 570 }, surface, true),
+    { x: 500, y: 100 },
   );
 });
 

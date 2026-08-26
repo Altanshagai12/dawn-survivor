@@ -1,4 +1,4 @@
-import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260825r';
+import { TEN_MINUTES_BALANCE, WORLD_UNIT } from '../config/balance.js?build=20260826b';
 import { attachGroundShadow, syncGroundShadow } from './VisualEffects.js?build=20260825r';
 import { DAMAGE_SOURCE } from './EnemySystem.js?build=20260825r';
 
@@ -12,6 +12,7 @@ export const TREE_CHUNK_SIZE = environment.chunkSize;
 export const TREE_SAFE_START_RADIUS = environment.playerSafeRadius;
 export const TREE_MIN_SPACING = environment.minTreeSeparation;
 export const TREE_COLLIDER_RADIUS = environment.treeColliderRadius;
+export const TREE_PLAYER_SPAWN_CLEARANCE = TREE_COLLIDER_RADIUS + 2 * WORLD_UNIT;
 const TREE_MARGIN = TREE_MIN_SPACING / 2;
 
 function hash(value) {
@@ -87,6 +88,8 @@ export class WorldObstacleSystem {
     if (this.loadedChunks.has(key) || this.trees.countActive() >= this.treeCap) return;
     this.loadedChunks.add(key);
     chunkTreePoints(chunkX, chunkY).forEach(({ x, y }) => {
+      const playerDistance = Math.hypot(x - this.scene.player.x, y - this.scene.player.y);
+      if (playerDistance < TREE_PLAYER_SPAWN_CLEARANCE) return;
       if (this.trees.countActive() < this.treeCap) this.spawnTree(x, y, chunkX, chunkY);
     });
   }
@@ -96,8 +99,10 @@ export class WorldObstacleSystem {
     if (!tree) return;
     tree.setOrigin(.5, TREE_ROOT_ORIGIN).setScale(.43).setDepth(17);
     tree.refreshBody();
-    tree.body.setCircle(TREE_COLLIDER_RADIUS, tree.displayWidth * .5 - TREE_COLLIDER_RADIUS,
-      tree.displayHeight * TREE_ROOT_ORIGIN - TREE_COLLIDER_RADIUS);
+    const scale = Math.abs(tree.scaleX) || 1;
+    const sourceRadius = TREE_COLLIDER_RADIUS / scale;
+    tree.body.setCircle(sourceRadius, tree.displayWidth / scale * .5 - sourceRadius,
+      tree.displayHeight / scale * TREE_ROOT_ORIGIN - sourceRadius);
     tree.hp = environment.treeHp;
     tree.chunkX = chunkX;
     tree.chunkY = chunkY;
