@@ -108,3 +108,27 @@ test('a Boomer arms on contact and only damages when its windup explodes', () =>
     globalThis.Phaser = previousPhaser;
   }
 });
+
+test('burn damage keeps a visible flame pulse on the affected enemy', () => {
+  let damage = 0;
+  const flashes = [];
+  const enemy = {
+    active: true, x: 80, y: 120, displayHeight: 50,
+    enemyDef: { boss: false },
+    status: { burnUntil: 5000, burnTick: 0, burnDamage: 1.5, freezeUntil: 0 },
+    setTint(value) { this.tint = value; },
+    clearTint() {},
+  };
+  const system = {
+    scene: {
+      time: { now: 1000 },
+      combat: { damageEnemy(_enemy, amount) { damage += amount; } },
+      flashEffect(x, y, row, scale) { flashes.push({ x, y, row, scale }); },
+    },
+  };
+  EnemySystem.prototype.updateStatuses.call(system, enemy, 1000);
+  assert.equal(damage, 1.5);
+  assert.equal(enemy.tint, 0xff7a38);
+  assert.deepEqual(flashes, [{ x: 80, y: 116, row: 2, scale: .2 }]);
+  assert.equal(enemy.status.burnTick, 1500);
+});

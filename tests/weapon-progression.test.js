@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { WEAPONS } from '../src/data/weapons.js';
+import { projectileTravelDistance, WEAPONS } from '../src/data/weapons.js';
 import { UPGRADES } from '../src/data/upgrades.js';
-import { CombatSystem } from '../src/game/CombatSystem.js';
+import { CombatSystem, projectileCollisionRadius, projectileScale } from '../src/game/CombatSystem.js';
 import { shouldConsumeAmmo, upgradedProjectileCount } from '../src/game/WeaponMechanics.js';
 import { nextWeaponCharge } from '../src/game/PlayerFeedback.js';
 import { RunState } from '../src/game/RunState.js';
@@ -19,6 +19,22 @@ test('ships the four core ten-minute weapon profiles', () => {
       flame: [3, 2.5, 1, 12, 1.4],
     },
   );
+});
+
+test('weapons preserve their authored near-to-far projectile travel roles', () => {
+  const ranges = Object.fromEntries(Object.entries(WEAPONS)
+    .map(([id, weapon]) => [id, projectileTravelDistance(weapon)]));
+  assert.deepEqual(ranges, { revolver: 864, shotgun: 280, crossbow: 1350, flame: 241.8 });
+  assert.ok(ranges.crossbow > ranges.revolver);
+  assert.ok(ranges.revolver > ranges.shotgun);
+  assert.ok(ranges.shotgun > ranges.flame);
+  assert.equal(projectileTravelDistance(WEAPONS.shotgun, 1.15), 322);
+});
+
+test('Big Shot enlarges both projectile rendering and its collision footprint', () => {
+  const bigShotSize = WEAPONS.revolver.bulletSize * 1.4;
+  assert.equal(projectileScale(bigShotSize), 1.4);
+  assert.ok(Math.abs(projectileCollisionRadius(bigShotSize) - 5.6) < 1e-9);
 });
 
 test('crossbow charge grows while still and resets on movement', () => {

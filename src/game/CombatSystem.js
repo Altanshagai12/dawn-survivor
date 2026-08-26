@@ -3,6 +3,14 @@ import { CombatEffects } from './CombatEffects.js?build=20260825r';
 import { handleSpecialKill } from './KillProgression.js?build=20260825r';
 import { shouldConsumeAmmo, upgradedProjectileCount } from './WeaponMechanics.js?build=20260825r';
 
+export function projectileScale(size = 7) {
+  return size / 8;
+}
+
+export function projectileCollisionRadius(size = 7) {
+  return 4 * projectileScale(size);
+}
+
 export class CombatSystem {
   constructor(scene) {
     this.scene = scene;
@@ -93,7 +101,7 @@ export class CombatSystem {
     const bullet = this.scene.bullets.create(x, y, spec.texture || 'bullet');
     if (!bullet) return null;
     const speed = spec.speed || 620;
-    bullet.setDepth(30).setScale((spec.size || 7) / 8).setRotation(angle);
+    bullet.setDepth(30).setScale(projectileScale(spec.size)).setRotation(angle);
     bullet.damage = spec.damage || 1;
     bullet.pierce = spec.pierce || 0;
     bullet.bounces = spec.bounces || 0;
@@ -108,9 +116,10 @@ export class CombatSystem {
     bullet.speed = speed;
     bullet.expiresAt = this.scene.time.now + (spec.life || 1) * 1000;
     bullet.hitTargets = new Set();
+    if (bullet.burnChance) bullet.setTint(0xffa34f).setBlendMode(Phaser.BlendModes.ADD);
     this.applyLens(bullet, angle);
     this.scene.physics.velocityFromRotation(angle, speed, bullet.body.velocity);
-    bullet.body.setCircle(4);
+    bullet.body.setCircle(projectileCollisionRadius(spec.size) / projectileScale(spec.size));
     return bullet;
   }
 

@@ -41,6 +41,7 @@ html.mobile-rotated .loadout-detail { margin-top: 3px; }
 html.mobile-rotated .loadout-detail--movement { margin: -2px 2px; }
 html.mobile-rotated #start-button { min-height: 40px; }
 html.mobile-rotated .controls-copy { display: none; }
+html.mobile-rotated .vignette { background: radial-gradient(circle at center, transparent 52%, rgba(0,0,0,.04) 78%, rgba(0,0,0,.12) 100%); }
 
 .screen { position: fixed; inset: 0; z-index: 8; padding: max(22px, env(safe-area-inset-top)) 20px max(22px, env(safe-area-inset-bottom)); background: radial-gradient(circle at 50% 25%, rgba(46,32,72,.42), rgba(9,8,13,.97) 58%); }
 .screen--center { display: grid; place-content: center; justify-items: center; gap: 14px; }
@@ -162,6 +163,7 @@ h2 { margin: 2px 0 18px; font-size: clamp(28px, 8vw, 44px); line-height: 1; }
 
 @media (pointer: fine) { .touch-controls { display: none !important; } }
 @media (pointer: coarse) and (orientation: landscape) and (max-height: 600px) {
+  .vignette { background: radial-gradient(circle at center, transparent 52%, rgba(0,0,0,.04) 78%, rgba(0,0,0,.12) 100%); }
   .stick { width: 96px; height: 96px; bottom: max(35px, env(safe-area-inset-bottom)); }
   .stick i { width: 42px; height: 42px; left: 26px; top: 26px; }
   .ability-button { right: max(49px, calc(env(safe-area-inset-right) + 49px)); bottom: max(180px, calc(env(safe-area-inset-bottom) + 180px)); width: 58px; height: 58px; }

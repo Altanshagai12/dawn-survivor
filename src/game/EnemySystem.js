@@ -114,7 +114,11 @@ export class EnemySystem {
     if (enemy.status.burnUntil > now && now >= enemy.status.burnTick) {
       enemy.status.burnTick = now + 500;
       this.scene.combat.damageEnemy(enemy, enemy.status.burnDamage || 1.5, { burn: true });
-      if (enemy.active) enemy.setTint(0xff7a38);
+      if (enemy.active) {
+        enemy.setTint(0xff7a38);
+        this.scene.flashEffect(enemy.x, enemy.y - enemy.displayHeight * .08, 2,
+          enemy.enemyDef.boss ? .3 : .2);
+      }
     }
     if (enemy.active && enemy.status.freezeUntil > now) enemy.setTint(0x8eeeff);
     else if (enemy.active && enemy.status.burnUntil <= now) enemy.clearTint();

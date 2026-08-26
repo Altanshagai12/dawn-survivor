@@ -32,6 +32,13 @@ test('Tome of Power reduces Max HP and clamps current HP', () => {
   assert.equal(state.hp, 2);
 });
 
+test('Big Shot visibly enlarges bullets by forty percent', () => {
+  const state = new RunState(HEROES.shana, WEAPONS.revolver);
+  state.applyUpgrade(upgrade('big_shot'));
+  assert.equal(state.multiplierStats.bulletSize, 1.4);
+  assert.equal(WEAPONS.revolver.bulletSize * state.multiplierStats.bulletSize, 11.2);
+});
+
 test('Holy Shield blocks one hit and follows 120/60 second recharge rules', () => {
   const state = new RunState(HEROES.hina, WEAPONS.crossbow);
   state.applyUpgrade(upgrade('holy_shield'));

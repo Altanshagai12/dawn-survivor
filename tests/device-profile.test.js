@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { gameDeviceProfile } from '../src/game/deviceProfile.js';
+import { cameraCompensatedViewport, gameDeviceProfile } from '../src/game/deviceProfile.js';
 import { FIRING_MOVE_MULTIPLIER, movementMultiplier } from '../src/game/movement.js';
 import { recoilPose } from '../src/game/PlayerFeedback.js';
 import { runDustOrigin, spawnRunDust } from '../src/game/VisualEffects.js';
@@ -13,6 +13,15 @@ test('mobile preserves the same enemy difficulty while reducing only visual cost
   assert.equal(mobile.enemyCap, 620);
   assert.ok(mobile.vfxCap < desktop.vfxCap);
   assert.ok(mobile.cameraZoom < desktop.cameraZoom);
+});
+
+test('the ground compensates camera zoom and fills every viewport edge', () => {
+  const mobile = cameraCompensatedViewport(844, 390, .82);
+  assert.ok(Math.abs(mobile.width * .82 - 844) < 1e-9);
+  assert.ok(Math.abs(mobile.height * .82 - 390) < 1e-9);
+  const desktop = cameraCompensatedViewport(1440, 900, 1.05);
+  assert.ok(Math.abs(desktop.width * 1.05 - 1440) < 1e-9);
+  assert.ok(Math.abs(desktop.height * 1.05 - 900) < 1e-9);
 });
 
 test('firing movement is slower until Run and Gun removes the penalty', () => {

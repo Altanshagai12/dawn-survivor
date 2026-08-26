@@ -38,3 +38,4 @@
 - Upgrade atlas frames must be mapped by authored semantic ID, never by the current tree array index. Reordering or selecting a subset of upgrade trees otherwise silently swaps names and images.
 - Procedural obstacle balance needs density, cross-chunk separation, player-safe materialization, and a collider matching the visible ground footprint; spacing tests alone do not prevent clutter or characters entering the trunk.
 - Tree collision has two independent concerns: compensate the source-space body for sprite scale, then tune its world radius only to the solid central trunk/root. Treating decorative outer roots as solid makes contact trigger visibly too early.
+- A camera-fixed Phaser background is still transformed by camera zoom. Size and center the tile surface in inverse-zoom world units, or mobile zoom below 1 leaves a sharp black border on all four sides even when the canvas itself is full-bleed.

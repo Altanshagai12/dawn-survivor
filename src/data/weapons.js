@@ -34,3 +34,7 @@ export const WEAPONS = {
     descriptionMn: 'Ойрын зайны дөлөн сум дайсныг үргэлж шатаана.',
   },
 };
+
+export function projectileTravelDistance(weapon, speedMultiplier = 1) {
+  return weapon.projectileSpeed * speedMultiplier * weapon.projectileLife;
+}

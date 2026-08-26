@@ -2,11 +2,12 @@ import { HERO_ATLASES } from '../config/assets.js?build=20260825r';
 import { ENEMIES, RUN_SECONDS } from '../data/enemies.js?build=20260825r';
 import { HEROES } from '../data/heroes.js?build=20260826c';
 import { TOMES, sampleUpgradeCards } from '../data/upgrades.js?build=20260826b';
-import { WEAPONS } from '../data/weapons.js?build=20260825r';
-import { CombatSystem } from './CombatSystem.js?build=20260825r';
+import { WEAPONS } from '../data/weapons.js?build=20260826d';
+import { createCameraFittedBackground } from './BackgroundSystem.js?build=20260826d';
+import { CombatSystem } from './CombatSystem.js?build=20260826d';
 import { BossBarrierSystem } from './BossBarrierSystem.js?build=20260825r';
 import { CharacterAbilitySystem } from './CharacterAbilitySystem.js?build=20260826c';
-import { EnemySystem } from './EnemySystem.js?build=20260825r';
+import { EnemySystem } from './EnemySystem.js?build=20260826d';
 import { InputController } from './InputController.js?build=20260826b';
 import { LootSystem } from './LootSystem.js?build=20260825r';
 import { RunState } from './RunState.js?build=20260825r';
@@ -14,7 +15,7 @@ import { Spawner } from './Spawner.js?build=20260825r';
 import { SummonSystem } from './SummonSystem.js?build=20260825r';
 import { UpgradeEffectSystem } from './UpgradeEffectSystem.js?build=20260825r';
 import { WorldObstacleSystem } from './WorldObstacleSystem.js?build=20260826c';
-import { gameDeviceProfile } from './deviceProfile.js?build=20260825r';
+import { gameDeviceProfile } from './deviceProfile.js?build=20260826d';
 import { movementMultiplier } from './movement.js?build=20260825r';
 import {
   triggerShotFeedback, updateMovementFeedback, updateShotFeedback, updateWeaponCharge,
@@ -76,9 +77,9 @@ export class GameScene extends Phaser.Scene {
 
   createWorld() {
     this.physics.world.setBounds(-100000, -100000, 200000, 200000);
-    this.background = this.add.tileSprite(0, 0, this.scale.width, this.scale.height, 'ashen-map')
-      .setOrigin(0).setScrollFactor(0).setDepth(0);
-    this.onResize = (size) => this.background?.setSize(size.width, size.height);
+    const background = createCameraFittedBackground(this, 'ashen-map', this.performance.cameraZoom);
+    this.background = background.sprite;
+    this.onResize = background.resize;
     this.scale.on('resize', this.onResize);
   }
 

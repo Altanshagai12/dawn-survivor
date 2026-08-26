@@ -12,3 +12,8 @@ export function gameDeviceProfile({ coarse = false, width = 1024, cores = 8, mem
     vfxCap: constrained ? 22 : 32, dustInterval: .14, cameraZoom: .82, lightScale: .82,
   };
 }
+
+export function cameraCompensatedViewport(width, height, zoom = 1) {
+  const safeZoom = Number.isFinite(zoom) && zoom > 0 ? zoom : 1;
+  return { width: width / safeZoom, height: height / safeZoom };
+}
