@@ -1,5 +1,5 @@
 import { BOSS_ATLASES, ENEMY_ATLASES } from '../config/assets.js?build=20260825r';
-import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260825r';
+import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260826h';
 import { playDirectional } from './animations.js?build=20260825r';
 import { syncGroundShadow } from './VisualEffects.js?build=20260825r';
 
@@ -145,17 +145,25 @@ export class EnemySystem {
 
   armBoomer(enemy, now) {
     enemy.boomerExplodesAt = now + TEN_MINUTES_BALANCE.enemy.boomer.windupMs;
-    const ring = this.scene.add.circle(enemy.x, enemy.y, 36, 0xff5a52, .1)
-      .setDepth(18).setStrokeStyle(3, 0xff765e, .85);
+    const ring = this.scene.add.circle(
+      enemy.x, enemy.y, TEN_MINUTES_BALANCE.enemy.boomer.blastRadius, 0xff5a52, .08,
+    ).setDepth(18).setScale(.38).setStrokeStyle(3, 0xff765e, .85);
     enemy.boomerTell = ring;
-    this.scene.tweens.add({ targets: ring, scale: 1.8, alpha: 0, duration: TEN_MINUTES_BALANCE.enemy.boomer.windupMs,
+    this.scene.tweens.add({ targets: ring, scale: 1, alpha: .24, duration: TEN_MINUTES_BALANCE.enemy.boomer.windupMs,
       onComplete: () => ring.destroy() });
   }
 
   explodeBoomer(enemy) {
+    const blastRadius = TEN_MINUTES_BALANCE.enemy.boomer.blastRadius;
     if (Phaser.Math.Distance.Between(enemy.x, enemy.y, this.scene.player.x, this.scene.player.y) < 92) {
       this.damagePlayer(TEN_MINUTES_BALANCE.enemy.boomer.explosionDamage, DAMAGE_SOURCE.BOOMER);
     }
+    (this.scene.enemies?.getChildren?.() || []).forEach((nearby) => {
+      if (!nearby?.active || nearby === enemy || nearby.enemyDef?.boss) return;
+      if (Phaser.Math.Distance.Between(enemy.x, enemy.y, nearby.x, nearby.y) <= blastRadius) {
+        this.scene.combat.killEnemy(nearby, { explosion: true, friendlyFire: true });
+      }
+    });
     this.scene.flashEffect(enemy.x, enemy.y, 2, 1.3);
     this.scene.combat.killEnemy(enemy, { explosion: true });
   }

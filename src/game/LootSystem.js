@@ -1,3 +1,13 @@
+import { playerOuterLightRadius } from './VisualEffects.js?build=20260826h';
+
+export function xpAttractionRange(lightScale = 1, pickupMultiplier = 1) {
+  return playerOuterLightRadius(lightScale) * pickupMultiplier;
+}
+
+export function xpAttractionSpeed(distance, range) {
+  return 460 + Math.max(0, range - distance) * 4;
+}
+
 export class LootSystem {
   constructor(scene) {
     this.scene = scene;
@@ -18,9 +28,12 @@ export class LootSystem {
     if (!gem) return;
     gem.setDepth(12).setScale(value >= 5 ? 1.35 : 1);
     gem.xpValue = value;
+    gem.attracting = false;
     gem.body.setCircle(5);
     gem.setVelocity(Phaser.Math.Between(-45, 45), Phaser.Math.Between(-45, 45));
-    this.scene.time.delayedCall(180, () => gem.active && gem.setVelocity(0, 0));
+    this.scene.time.delayedCall(180, () => {
+      if (gem.active && !gem.attracting) gem.setVelocity(0, 0);
+    });
   }
 
   dropBossReward(x, y, rewardType = 'chest') {
@@ -32,13 +45,16 @@ export class LootSystem {
   }
 
   update() {
-    const pickupRange = 92 * this.scene.state.multiplierStats.pickup;
+    const pickupRange = xpAttractionRange(
+      this.scene.performance.lightScale,
+      this.scene.state.multiplierStats.pickup,
+    );
     this.scene.gems.getChildren().forEach((gem) => {
       if (!gem?.active) return;
       const distance = Phaser.Math.Distance.Between(gem.x, gem.y, this.scene.player.x, this.scene.player.y);
-      if (distance < pickupRange) {
-        const speed = 250 + Math.max(0, pickupRange - distance) * 3;
-        this.scene.physics.moveToObject(gem, this.scene.player, speed);
+      if (distance <= pickupRange) {
+        gem.attracting = true;
+        this.scene.physics.moveToObject(gem, this.scene.player, xpAttractionSpeed(distance, pickupRange));
       }
     });
   }

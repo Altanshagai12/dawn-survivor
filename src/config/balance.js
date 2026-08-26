@@ -18,7 +18,7 @@ export const TEN_MINUTES_BALANCE = {
     // Contact enemies stay just below the player's 50% firing-walk speed so
     // careful twin-stick kiting remains possible. Density supplies the ramp.
     tentacle: { speedRatio: 0.40 },
-    boomer: { speedRatio: 0.46, explosionDamage: 1, windupMs: 700 },
+    boomer: { speedRatio: 0.46, explosionDamage: 1, blastRadius: 112, windupMs: 700 },
     eye: { speedRatio: 0.34, preferredRange: 7 * WORLD_UNIT, projectileSpeed: 2.7 * WORLD_UNIT },
     elder: { speedRatio: 0.42 },
     shub: { speedRatio: 0.47, chargeRatio: 2.6, telegraphMs: 900, chargeMs: 700 },

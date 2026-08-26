@@ -109,6 +109,33 @@ test('a Boomer arms on contact and only damages when its windup explodes', () =>
   }
 });
 
+test('a Boomer explosion kills nearby regular enemies but spares bosses and distant troops', () => {
+  const source = { active: true, x: 0, y: 0, enemyDef: { id: 'boomer' } };
+  const nearby = { active: true, x: 80, y: 0, enemyDef: { id: 'tentacle' } };
+  const distant = { active: true, x: 140, y: 0, enemyDef: { id: 'tentacle' } };
+  const boss = { active: true, x: 40, y: 0, enemyDef: { id: 'elder', boss: true } };
+  const killed = [];
+  const previousPhaser = globalThis.Phaser;
+  globalThis.Phaser = { Math: { Distance: { Between: (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by) } } };
+  try {
+    const system = {
+      scene: {
+        player: { x: 500, y: 500 },
+        enemies: { getChildren: () => [source, nearby, distant, boss] },
+        combat: { killEnemy(enemy, detail) { killed.push({ enemy, detail }); } },
+        flashEffect() {},
+      },
+      damagePlayer() { throw new Error('player is outside the blast'); },
+    };
+    EnemySystem.prototype.explodeBoomer.call(system, source);
+    assert.deepEqual(killed.map(({ enemy }) => enemy), [nearby, source]);
+    assert.equal(killed[0].detail.friendlyFire, true);
+    assert.equal(killed.some(({ enemy }) => enemy === distant || enemy === boss), false);
+  } finally {
+    globalThis.Phaser = previousPhaser;
+  }
+});
+
 test('burn damage keeps a visible flame pulse on the affected enemy', () => {
   let damage = 0;
   const flashes = [];

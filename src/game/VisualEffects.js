@@ -1,3 +1,9 @@
+export const PLAYER_OUTER_LIGHT_DIAMETER = 720;
+
+export function playerOuterLightRadius(scale = 1) {
+  return PLAYER_OUTER_LIGHT_DIAMETER * .5 * scale;
+}
+
 function circleTexture(scene, key, color, radius) {
   if (scene.textures.exists(key)) return;
   const graphics = scene.make.graphics({ add: false });
@@ -93,7 +99,7 @@ export function createGameTextures(scene) {
     context.fill();
   });
 
-  radialTexture(scene, 'player-light-outer', 720, [
+  radialTexture(scene, 'player-light-outer', PLAYER_OUTER_LIGHT_DIAMETER, [
     [0, 'rgba(95,195,225,.14)'],
     [.42, 'rgba(70,145,190,.08)'],
     [1, 'rgba(35,80,125,0)'],
