@@ -39,3 +39,6 @@
 - Procedural obstacle balance needs density, cross-chunk separation, player-safe materialization, and a collider matching the visible ground footprint; spacing tests alone do not prevent clutter or characters entering the trunk.
 - Tree collision has two independent concerns: compensate the source-space body for sprite scale, then tune its world radius only to the solid central trunk/root. Treating decorative outer roots as solid makes contact trigger visibly too early.
 - A camera-fixed Phaser background is still transformed by camera zoom. Size and center the tile surface in inverse-zoom world units, or mobile zoom below 1 leaves a sharp black border on all four sides even when the canvas itself is full-bleed.
+- In a twin-stick game, movement abilities must consume the movement vector (or its last non-zero latch), never the aim vector; test with the two sticks held in opposite directions.
+- World-space combat progress should have one authoritative presentation near the player. Leaving a second fixed-corner meter makes the new feedback look broken or easy to miss.
+- Projectile visual scale and collision radius are separate balance controls. Increase render presence independently when improving weapon feel so the hitbox and authored range do not silently grow.

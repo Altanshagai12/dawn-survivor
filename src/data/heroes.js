@@ -23,7 +23,7 @@ export const HEROES = {
   hina: {
     id: 'hina', name: 'Hina', nameMn: 'Хина', hp: 2, speed: BASE_HERO_SPEED, size: 41,
     portrait: './assets/portraits/kage-anchor.webp', passive: 'dashClone',
-    passiveText: 'Dash toward aim and leave an attacking stationary clone.',
-    passiveMn: 'Ониолтын чиглэл рүү дайрч, бууддаг хөдөлгөөнгүй хуулбар үлдээнэ.',
+    passiveText: 'Dash toward movement and leave an attacking stationary clone.',
+    passiveMn: 'Хөдөлгөөний чиглэл рүү дайрч, бууддаг хөдөлгөөнгүй хуулбар үлдээнэ.',
   },
 };

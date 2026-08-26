@@ -4,11 +4,11 @@ import { handleSpecialKill } from './KillProgression.js?build=20260825r';
 import { shouldConsumeAmmo, upgradedProjectileCount } from './WeaponMechanics.js?build=20260825r';
 
 export function projectileScale(size = 7) {
-  return size / 8;
+  return size / 8 * 1.2;
 }
 
 export function projectileCollisionRadius(size = 7) {
-  return 4 * projectileScale(size);
+  return size / 2;
 }
 
 export class CombatSystem {

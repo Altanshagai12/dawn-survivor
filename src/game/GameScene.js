@@ -1,12 +1,12 @@
 import { HERO_ATLASES } from '../config/assets.js?build=20260825r';
 import { ENEMIES, RUN_SECONDS } from '../data/enemies.js?build=20260825r';
-import { HEROES } from '../data/heroes.js?build=20260826c';
+import { HEROES } from '../data/heroes.js?build=20260826e';
 import { TOMES, sampleUpgradeCards } from '../data/upgrades.js?build=20260826b';
 import { WEAPONS } from '../data/weapons.js?build=20260826d';
 import { createCameraFittedBackground } from './BackgroundSystem.js?build=20260826d';
-import { CombatSystem } from './CombatSystem.js?build=20260826d';
+import { CombatSystem } from './CombatSystem.js?build=20260826e';
 import { BossBarrierSystem } from './BossBarrierSystem.js?build=20260825r';
-import { CharacterAbilitySystem } from './CharacterAbilitySystem.js?build=20260826c';
+import { CharacterAbilitySystem } from './CharacterAbilitySystem.js?build=20260826e';
 import { EnemySystem } from './EnemySystem.js?build=20260826d';
 import { InputController } from './InputController.js?build=20260826b';
 import { LootSystem } from './LootSystem.js?build=20260825r';
@@ -25,7 +25,7 @@ import { scoreForRun } from './simulation.js?build=20260825r';
 import {
   attachGroundShadow, createGameTextures, createPlayerLights, createReloadIndicator,
   syncGroundShadow, syncPlayerLights, syncReloadIndicator,
-} from './VisualEffects.js?build=20260825r';
+} from './VisualEffects.js?build=20260826e';
 
 export class GameScene extends Phaser.Scene {
   constructor() { super('game'); }

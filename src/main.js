@@ -1,11 +1,11 @@
-import { HEROES } from './data/heroes.js?build=20260826c';
+import { HEROES } from './data/heroes.js?build=20260826e';
 import { WEAPONS } from './data/weapons.js?build=20260826d';
 import { BootScene } from './game/BootScene.js?build=20260825r';
-import { GameScene } from './game/GameScene.js?build=20260826d';
+import { GameScene } from './game/GameScene.js?build=20260826e';
 import { installVisibleResume } from './game/runtimeLifecycle.js?build=20260825r';
 import { defaultProfile, initPlatform } from './platform/usion.js?build=20260825r';
 import { createI18n } from './ui/i18n.js?build=20260825r';
-import { UIController } from './ui/UIController.js?build=20260825r';
+import { UIController } from './ui/UIController.js?build=20260826e';
 import { gameViewportSize, installAutoLandscape, requestLandscape } from './ui/orientation.js?build=20260826b';
 
 async function boot() {

@@ -88,7 +88,7 @@ export class UIController {
       'resume-button','quit-button','again-button','menu-button','choice-list','choice-kicker',
       'choice-title','choice-detail','choice-detail-icon','choice-detail-tree','choice-detail-name',
       'choice-detail-description','choice-detail-path','choice-confirm','reroll-button','hearts','timer','boss-bar','boss-name','boss-fill',
-      'xp-fill','level','ammo','reload-fill','reload-state','result-kicker','result-title','result-score',
+      'xp-fill','level','ammo','result-kicker','result-title','result-score',
       'result-kills','result-level','result-cause','friends-board','damage-source','toast',
     ];
     this.el = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
@@ -169,15 +169,6 @@ export class UIController {
     this.el['xp-fill'].style.width = `${Math.min(100, state.xp / state.xpNext * 100)}%`;
     this.el.level.textContent = `LV ${state.level}`;
     this.el.ammo.textContent = `${state.ammo} / ${state.magazine}`;
-    const reloadProgress = state.reloading
-      ? Math.min(1, state.reloadProgress / Math.max(1, state.reloadMs)) : 0;
-    const chargeProgress = state.weapon.chargeSeconds ? state.weaponCharge : 0;
-    const meterProgress = state.reloading ? reloadProgress : chargeProgress;
-    this.el['reload-fill'].style.width = `${meterProgress * 100}%`;
-    this.el['reload-fill'].classList.toggle('charged', !state.reloading && chargeProgress >= 1);
-    this.el['reload-state'].textContent = state.reloading
-      ? `RELOADING ${Math.round(reloadProgress * 100)}%`
-      : state.weapon.chargeSeconds ? `AIM CHARGE ${Math.round(chargeProgress * 100)}%` : '';
   }
 
   showBoss(boss) {

@@ -1,16 +1,27 @@
 import { HERO_ATLASES } from '../config/assets.js?build=20260825r';
 import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260826c';
 
+export function movementDashDirection(input, fallback = { x: 0, y: 1 }) {
+  const moveLength = Math.hypot(input.moveX || 0, input.moveY || 0);
+  if (moveLength > .08) return { x: input.moveX / moveLength, y: input.moveY / moveLength };
+  const fallbackLength = Math.hypot(fallback.x || 0, fallback.y || 0) || 1;
+  return { x: fallback.x / fallbackLength, y: fallback.y / fallbackLength };
+}
+
 export class CharacterAbilitySystem {
   constructor(scene) {
     this.scene = scene;
     this.dashUntil = 0;
     this.nextDashAt = 0;
+    this.lastMoveDirection = { x: 0, y: 1 };
     this.clones = [];
   }
 
   update(input) {
     const now = this.scene.time.now;
+    if (Math.hypot(input.moveX || 0, input.moveY || 0) > .08) {
+      this.lastMoveDirection = movementDashDirection(input, this.lastMoveDirection);
+    }
     if (input.ability && this.scene.state.hero.id === 'hina' && now >= this.nextDashAt) this.startDash(input);
     this.updateClones(now);
     if (now >= this.dashUntil) return false;
@@ -22,8 +33,7 @@ export class CharacterAbilitySystem {
 
   startDash(input) {
     const config = TEN_MINUTES_BALANCE.player.hina;
-    const length = Math.hypot(input.aimX, input.aimY) || 1;
-    this.dashVector = { x: input.aimX / length, y: input.aimY / length };
+    this.dashVector = movementDashDirection(input, this.lastMoveDirection);
     this.dashUntil = this.scene.time.now + config.dashDuration * 1000;
     this.nextDashAt = this.scene.time.now + config.cooldown * 1000;
     this.spawnClone();

@@ -141,11 +141,6 @@ export function createGameTextures(scene) {
     context.ellipse(40, 14, 39, 9, 0, 0, Math.PI * 2);
     context.fill();
   });
-  canvasTexture(scene, 'reload-ring', 72, 72, (context) => {
-    context.strokeStyle = 'rgba(101,230,255,.72)'; context.lineWidth = 3;
-    context.setLineDash([12, 8]); context.beginPath(); context.arc(36, 36, 29, 0, Math.PI * 2); context.stroke();
-  });
-
   if (!scene.textures.exists('ember')) {
     const graphics = scene.make.graphics({ add: false });
     graphics.fillStyle(0x71efff).fillTriangle(6, 0, 12, 6, 6, 13).fillTriangle(6, 0, 0, 6, 6, 13);
@@ -177,17 +172,34 @@ export function syncPlayerLights(lights, player) {
 }
 
 export function createReloadIndicator(scene, player) {
-  return scene.add.image(player.x, player.y, 'reload-ring')
-    .setDepth(23).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD);
+  const track = scene.add.rectangle(0, 0, 48, 7, 0x08090e, .84)
+    .setOrigin(.5).setStrokeStyle(1, 0x82979b, .72);
+  const fill = scene.add.rectangle(-22, 0, 44, 3, 0x65e6ff, 1).setOrigin(0, .5);
+  const container = scene.add.container(player.x, player.y, [track, fill])
+    .setDepth(38).setVisible(false);
+  return { container, fill };
 }
 
-export function syncReloadIndicator(indicator, player, state, deltaSeconds) {
-  if (!indicator?.active) return;
-  indicator.setPosition(player.x, player.y).setVisible(state.reloading);
-  if (!state.reloading) { indicator.setAlpha(0); return; }
-  const progress = Math.min(1, state.reloadProgress / Math.max(1, state.reloadMs));
-  indicator.setAlpha(.22 + progress * .58).setScale(.75 + progress * .2);
-  indicator.rotation += deltaSeconds * 2.8;
+export function reloadIndicatorState(player, state) {
+  const reloading = Boolean(state.reloading);
+  const charging = !reloading && Boolean(state.weapon?.chargeSeconds) && state.weaponCharge > .01;
+  const progress = reloading
+    ? Math.min(1, state.reloadProgress / Math.max(1, state.reloadMs))
+    : Math.min(1, state.weaponCharge || 0);
+  return {
+    visible: reloading || charging,
+    progress,
+    x: player.x,
+    y: player.y - player.displayHeight * .5 - 12,
+    color: reloading ? 0x65e6ff : 0xffd36c,
+  };
+}
+
+export function syncReloadIndicator(indicator, player, state) {
+  if (!indicator?.container?.active) return;
+  const visual = reloadIndicatorState(player, state);
+  indicator.container.setPosition(visual.x, visual.y).setVisible(visual.visible);
+  indicator.fill.setScale(visual.progress, 1).setFillStyle(visual.color, 1);
 }
 
 export function runDustOrigin(player, moveX, moveY) {
