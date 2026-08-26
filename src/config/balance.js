@@ -39,7 +39,7 @@ export const TEN_MINUTES_BALANCE = {
     maxTreesPerChunk: 3,
     minTreeSeparation: 9 * WORLD_UNIT,
     playerSafeRadius: 12 * WORLD_UNIT,
-    treeColliderRadius: 1.15 * WORLD_UNIT,
+    treeColliderRadius: 0.65 * WORLD_UNIT,
     treeHp: 45000,
   },
 };

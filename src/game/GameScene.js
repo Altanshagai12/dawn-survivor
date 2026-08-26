@@ -1,11 +1,11 @@
 import { HERO_ATLASES } from '../config/assets.js?build=20260825r';
 import { ENEMIES, RUN_SECONDS } from '../data/enemies.js?build=20260825r';
-import { HEROES } from '../data/heroes.js?build=20260826b';
+import { HEROES } from '../data/heroes.js?build=20260826c';
 import { TOMES, sampleUpgradeCards } from '../data/upgrades.js?build=20260826b';
 import { WEAPONS } from '../data/weapons.js?build=20260825r';
 import { CombatSystem } from './CombatSystem.js?build=20260825r';
 import { BossBarrierSystem } from './BossBarrierSystem.js?build=20260825r';
-import { CharacterAbilitySystem } from './CharacterAbilitySystem.js?build=20260825r';
+import { CharacterAbilitySystem } from './CharacterAbilitySystem.js?build=20260826c';
 import { EnemySystem } from './EnemySystem.js?build=20260825r';
 import { InputController } from './InputController.js?build=20260826b';
 import { LootSystem } from './LootSystem.js?build=20260825r';
@@ -13,7 +13,7 @@ import { RunState } from './RunState.js?build=20260825r';
 import { Spawner } from './Spawner.js?build=20260825r';
 import { SummonSystem } from './SummonSystem.js?build=20260825r';
 import { UpgradeEffectSystem } from './UpgradeEffectSystem.js?build=20260825r';
-import { WorldObstacleSystem } from './WorldObstacleSystem.js?build=20260826b';
+import { WorldObstacleSystem } from './WorldObstacleSystem.js?build=20260826c';
 import { gameDeviceProfile } from './deviceProfile.js?build=20260825r';
 import { movementMultiplier } from './movement.js?build=20260825r';
 import {

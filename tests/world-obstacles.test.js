@@ -25,7 +25,7 @@ test('trees are dormant hazards with a solid circular trunk and root collider', 
   assert.equal(TREE_CONTACT_DAMAGE, 1);
   assert.equal(TREE_ATTACKS, false);
   assert.equal(TREE_IDLE_FRAME, 0);
-  assert.ok(TREE_COLLIDER_RADIUS >= 40);
+  assert.ok(Math.abs(TREE_COLLIDER_RADIUS - 23.4) < 1e-9);
   assert.ok(TREE_MIN_SPACING >= 320);
 });
 

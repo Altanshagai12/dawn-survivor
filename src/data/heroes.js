@@ -1,4 +1,4 @@
-import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260826b';
+import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260826c';
 
 export const BASE_HERO_SPEED = TEN_MINUTES_BALANCE.player.baseRunSpeed;
 

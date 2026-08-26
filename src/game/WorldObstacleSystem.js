@@ -1,4 +1,4 @@
-import { TEN_MINUTES_BALANCE, WORLD_UNIT } from '../config/balance.js?build=20260826b';
+import { TEN_MINUTES_BALANCE, WORLD_UNIT } from '../config/balance.js?build=20260826c';
 import { attachGroundShadow, syncGroundShadow } from './VisualEffects.js?build=20260825r';
 import { DAMAGE_SOURCE } from './EnemySystem.js?build=20260825r';
 

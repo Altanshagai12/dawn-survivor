@@ -1,5 +1,5 @@
 import { HERO_ATLASES } from '../config/assets.js?build=20260825r';
-import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260825r';
+import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260826c';
 
 export class CharacterAbilitySystem {
   constructor(scene) {
