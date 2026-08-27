@@ -1,6 +1,7 @@
 import { clamp } from './simulation.js?build=20260825r';
 import { CombatEffects } from './CombatEffects.js?build=20260826f';
 import { handleSpecialKill } from './KillProgression.js?build=20260825r';
+import { resolveProjectileLaunchHits } from './ProjectileLaunchCollision.js?build=20260827c';
 import { shouldConsumeAmmo, upgradedProjectileCount } from './WeaponMechanics.js?build=20260825r';
 import { presentWeaponImpact, updateProjectilePresentation } from './WeaponPresentation.js?build=20260826g';
 
@@ -79,12 +80,21 @@ export class CombatSystem {
       const random = count === 1 ? Phaser.Math.FloatBetween(-.5, .5) : 0;
       const angle = baseAngle + Phaser.Math.DegToRad((centered + random * .3) * spread);
       shotAngles.push(angle);
-      this.spawnBullet(this.scene.player.x + aimX * 26, this.scene.player.y + aimY * 26, angle, shotSpec);
+      this.spawnBullet(this.scene.player.x + Math.cos(angle) * 26, this.scene.player.y + Math.sin(angle) * 26, angle, {
+        ...shotSpec,
+        launchOrigin: { x: this.scene.player.x, y: this.scene.player.y },
+      });
     }
     if (state.flags.backShot) {
-      this.spawnBullet(this.scene.player.x - aimX * 22, this.scene.player.y - aimY * 22, baseAngle + Math.PI, {
-        ...shotSpec,
-      });
+      const backAngle = baseAngle + Math.PI;
+      this.spawnBullet(
+        this.scene.player.x + Math.cos(backAngle) * 22,
+        this.scene.player.y + Math.sin(backAngle) * 22,
+        backAngle,
+        {
+          ...shotSpec, launchOrigin: { x: this.scene.player.x, y: this.scene.player.y },
+        },
+      );
     }
     state.shots += 1;
     const moving = Math.hypot(this.scene.lastInput?.moveX || 0, this.scene.lastInput?.moveY || 0) > .2;
@@ -127,7 +137,11 @@ export class CombatSystem {
     if (bullet.burnChance) bullet.setTint(0xffa34f).setBlendMode(Phaser.BlendModes.ADD);
     this.applyLens(bullet, angle);
     this.scene.physics.velocityFromRotation(angle, speed, bullet.body.velocity);
-    bullet.body.setCircle(projectileCollisionRadius(spec.size) / projectileScale(spec.size));
+    bullet.collisionRadius = projectileCollisionRadius(spec.size);
+    bullet.body.setCircle(bullet.collisionRadius / projectileScale(spec.size));
+    if (spec.launchOrigin) {
+      resolveProjectileLaunchHits(this, bullet, spec.launchOrigin.x, spec.launchOrigin.y, x, y);
+    }
     return bullet;
   }
 
@@ -243,8 +257,13 @@ export class CombatSystem {
 
   killEnemy(enemy, source = {}) {
     if (!enemy.active || enemy.dying) return;
-    enemy.dying = true;
     const definition = enemy.enemyDef;
+    if (definition.id === 'boomer' && !source.boomerExplosion && !enemy.boomerExplosionStarted
+      && this.scene.enemySystem?.explodeBoomer) {
+      this.scene.enemySystem.explodeBoomer(enemy);
+      return;
+    }
+    enemy.dying = true;
     if (definition.boss) {
       this.scene.state.bosses += 1;
       this.scene.loot.dropBossReward(enemy.x, enemy.y, definition.rewardType);

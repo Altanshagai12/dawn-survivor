@@ -154,6 +154,8 @@ export class EnemySystem {
   }
 
   explodeBoomer(enemy) {
+    if (!enemy?.active || enemy.boomerExplosionStarted) return;
+    enemy.boomerExplosionStarted = true;
     const blastRadius = TEN_MINUTES_BALANCE.enemy.boomer.blastRadius;
     if (Phaser.Math.Distance.Between(enemy.x, enemy.y, this.scene.player.x, this.scene.player.y) < 92) {
       this.damagePlayer(TEN_MINUTES_BALANCE.enemy.boomer.explosionDamage, DAMAGE_SOURCE.BOOMER);
@@ -165,7 +167,7 @@ export class EnemySystem {
       }
     });
     this.scene.flashEffect(enemy.x, enemy.y, 2, 1.3);
-    this.scene.combat.killEnemy(enemy, { explosion: true });
+    this.scene.combat.killEnemy(enemy, { explosion: true, boomerExplosion: true });
   }
 
   updateBoss(enemy, nx, ny, speed, now) {

@@ -130,6 +130,7 @@ test('a Boomer explosion kills nearby regular enemies but spares bosses and dist
     EnemySystem.prototype.explodeBoomer.call(system, source);
     assert.deepEqual(killed.map(({ enemy }) => enemy), [nearby, source]);
     assert.equal(killed[0].detail.friendlyFire, true);
+    assert.equal(killed[1].detail.boomerExplosion, true);
     assert.equal(killed.some(({ enemy }) => enemy === distant || enemy === boss), false);
   } finally {
     globalThis.Phaser = previousPhaser;

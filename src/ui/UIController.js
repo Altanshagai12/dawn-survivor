@@ -198,7 +198,7 @@ export class UIController {
     this.el['choice-kicker'].textContent = tome ? 'BOSS TOME' : chest ? 'BOSS CHEST' : 'LEVEL UP';
     this.el['choice-title'].textContent = tome ? 'Choose a forbidden Tome'
       : chest ? 'Claim one eligible upgrade' : this.i18n.t('chooseUpgrade');
-    let selectedIndex = 0;
+    let selectedIndex = -1;
     const copyFor = (card) => ({
       name: this.i18n.lang === 'mn' && card.nameMn ? card.nameMn : card.name,
       desc: this.i18n.lang === 'mn' && card.descMn ? card.descMn : card.desc,
@@ -208,11 +208,11 @@ export class UIController {
       const button = document.createElement('button');
       const { name, desc } = copyFor(card);
       button.type = 'button';
-      button.className = `choice-tab${index === 0 ? ' selected' : ''}`;
+      button.className = 'choice-tab';
       button.innerHTML = `${upgradeIconHtml(card)}<span>${name}</span>`;
       button.setAttribute('aria-label', `${name}. ${desc}`);
       button.setAttribute('role', 'tab');
-      button.setAttribute('aria-selected', index === 0 ? 'true' : 'false');
+      button.setAttribute('aria-selected', 'false');
       button.setAttribute('aria-posinset', String(index + 1));
       button.setAttribute('aria-setsize', String(cards.length));
       return button;
@@ -231,15 +231,23 @@ export class UIController {
       this.el['choice-detail-name'].textContent = name;
       this.el['choice-detail-description'].textContent = desc;
       this.el['choice-detail-path'].innerHTML = upgradePathHtml(card, owned);
+      this.el['choice-confirm'].disabled = false;
     };
     tabs.forEach((tab, index) => setFreshActivation(tab, () => renderSelection(index)));
     this.el['choice-list'].style?.setProperty('--choice-count', String(Math.max(1, Math.min(5, cards.length))));
     this.el['choice-list'].replaceChildren(...tabs);
-    renderSelection(0);
+    this.el['choice-detail-icon'].innerHTML = '';
+    this.el['choice-detail-tree'].textContent = this.i18n.lang === 'mn' ? 'СОНГОЛТ' : 'SELECTION';
+    this.el['choice-detail-name'].textContent = this.i18n.lang === 'mn'
+      ? 'Сайжруулалтаа сонгоно уу' : 'Select an upgrade';
+    this.el['choice-detail-description'].textContent = this.i18n.lang === 'mn'
+      ? 'Дээрх сонголтуудаас нэгийг эхлээд дарна уу.' : 'Choose one of the upgrades above first.';
+    this.el['choice-detail-path'].innerHTML = '';
     this.el['choice-modal'].classList.remove('hidden');
     this.el['reroll-button'].classList.toggle('hidden', !canReroll);
     this.el['choice-confirm'].textContent = rewardType === 'level'
       ? (this.i18n.lang === 'mn' ? 'СОНГОХ' : 'CHOOSE') : 'CLAIM';
+    this.el['choice-confirm'].disabled = true;
     return new Promise((resolve) => {
       let settled = false;
       const finish = (choice) => {
@@ -248,7 +256,10 @@ export class UIController {
         this.el['choice-modal'].classList.add('hidden');
         resolve(choice);
       };
-      setFreshActivation(this.el['choice-confirm'], () => finish({ card: cards[selectedIndex], reroll: false }));
+      setFreshActivation(this.el['choice-confirm'], () => {
+        if (selectedIndex < 0) return;
+        finish({ card: cards[selectedIndex], reroll: false });
+      });
       setFreshActivation(this.el['reroll-button'], () => finish({ card: null, reroll: true }));
     });
   }

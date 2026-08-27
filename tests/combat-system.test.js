@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { CombatSystem } from '../src/game/CombatSystem.js';
+import { launchSegmentHit, resolveProjectileLaunchHits } from '../src/game/ProjectileLaunchCollision.js';
 
 function makeScene() {
   return {
@@ -131,4 +132,47 @@ test('reaper rounds continue through a killed enemy', () => {
   assert.equal(enemy.active, false);
   assert.equal(bullet.active, true);
   assert.equal(bullet.pierce, 0);
+});
+
+test('the launch segment catches point-blank targets before the muzzle position', () => {
+  assert.equal(launchSegmentHit(0, 0, 26, 0, 10, 0, 12).hit, true);
+  assert.equal(launchSegmentHit(0, 0, 26, 0, 10, 18, 12).hit, false);
+
+  const scene = makeScene();
+  const close = makeEnemy();
+  close.x = 9;
+  close.y = 0;
+  close.enemyDef.radius = 10;
+  const missed = makeEnemy();
+  missed.spawnId = 8;
+  missed.x = 8;
+  missed.y = 30;
+  missed.enemyDef.radius = 10;
+  scene.enemies.getChildren = () => [close, missed];
+  const combat = new CombatSystem(scene);
+  const hits = [];
+  combat.hitEnemy = (_bullet, enemy) => hits.push(enemy);
+
+  resolveProjectileLaunchHits(combat, { active: true, collisionRadius: 4 }, 0, 0, 26, 0);
+
+  assert.deepEqual(hits, [close]);
+});
+
+test('a lethal projectile routes a Boomer through its explosion lifecycle', () => {
+  const scene = makeScene();
+  const combat = new CombatSystem(scene);
+  const boomer = makeEnemy();
+  boomer.enemyDef.id = 'boomer';
+  let exploded = null;
+  scene.enemySystem = {
+    explodeBoomer(enemy) {
+      exploded = enemy;
+      enemy.active = false;
+    },
+  };
+
+  combat.damageEnemy(boomer, boomer.hp, { bullet: {} });
+
+  assert.equal(exploded, boomer);
+  assert.equal(scene.state.kills, 0, 'the explosion owns the eventual kill accounting');
 });

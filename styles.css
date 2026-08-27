@@ -132,6 +132,7 @@ h2 { margin: 2px 0 18px; font-size: clamp(28px, 8vw, 44px); line-height: 1; }
 .choice-actions { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; margin-top: 13px; }
 .choice-actions button { margin: 0; }
 .choice-actions .primary { background: #ff596f; color: #211824; }
+.choice-actions .primary:disabled { opacity: .38; cursor: not-allowed; filter: saturate(.35); }
 .choice-actions .secondary { min-width: 130px; }
 .choice-card__icon { grid-row: 1 / 5; display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid rgba(101,230,255,.28); border-radius: 10px; background: radial-gradient(circle, rgba(101,230,255,.18), rgba(168,129,255,.08)); color: var(--cyan); font-size: 23px; line-height: 1; text-shadow: 0 0 12px rgba(101,230,255,.7); }
 .choice-card__icon--atlas { width: 48px; height: 48px; margin-left: -5px; border: 0; border-radius: 7px; background-image: url('./assets/ui/upgrade-icons.webp?build=20260825r'); background-size: 1000% 1000%; background-repeat: no-repeat; image-rendering: pixelated; box-shadow: 0 0 15px rgba(101,230,255,.13); }

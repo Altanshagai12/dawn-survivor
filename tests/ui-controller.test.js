@@ -106,7 +106,7 @@ test('upgrade choices use icon tabs, a localized detail panel, and explicit conf
       'choice-detail-name': { textContent: '' },
       'choice-detail-description': { textContent: '' },
       'choice-detail-path': { innerHTML: '' },
-      'choice-confirm': { textContent: '', onclick: null },
+      'choice-confirm': { textContent: '', onclick: null, disabled: false },
       'reroll-button': { classList: classList(), onclick: null },
     };
 
@@ -128,14 +128,21 @@ test('upgrade choices use icon tabs, a localized detail panel, and explicit conf
     assert.equal(list.style.values['--choice-count'], '2');
     assert.equal(list.children[1].attributes['aria-posinset'], '2');
     assert.equal(list.children[1].attributes['aria-setsize'], '2');
-    assert.equal(controller.el['choice-detail-tree'].textContent, 'ХҮЧ');
-    assert.equal(controller.el['choice-detail-name'].textContent, 'Хүчтэй сум');
+    assert.equal(list.children[0].attributes['aria-selected'], 'false');
+    assert.equal(list.children[1].attributes['aria-selected'], 'false');
+    assert.equal(controller.el['choice-detail-tree'].textContent, 'СОНГОЛТ');
+    assert.equal(controller.el['choice-detail-name'].textContent, 'Сайжруулалтаа сонгоно уу');
+    assert.equal(controller.el['choice-confirm'].disabled, true);
+    controller.el['choice-confirm'].onpointerdown({ pointerType: 'touch', preventDefault() {} });
+    let resolved = false;
+    result.then(() => { resolved = true; });
+    await Promise.resolve();
+    assert.equal(resolved, false);
     list.children[1].onpointerdown({ pointerType: 'touch', preventDefault() {} });
     assert.equal(controller.el['choice-detail-name'].textContent, 'Шуурхай');
     assert.equal(list.children[1].attributes['aria-selected'], 'true');
+    assert.equal(controller.el['choice-confirm'].disabled, false);
     controller.el['choice-confirm'].onclick({ detail: 1 });
-    let resolved = false;
-    result.then(() => { resolved = true; });
     await Promise.resolve();
     assert.equal(resolved, false);
     controller.el['choice-confirm'].onpointerdown({ pointerType: 'touch', preventDefault() {} });
