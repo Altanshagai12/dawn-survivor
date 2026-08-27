@@ -113,7 +113,7 @@ export class UIController {
       'resume-button','quit-button','again-button','menu-button','choice-list','choice-kicker',
       'choice-title','choice-detail','choice-detail-icon','choice-detail-tree','choice-detail-name',
       'choice-detail-description','choice-detail-path','choice-confirm','reroll-button','hearts','timer','boss-bar','boss-name','boss-fill',
-      'xp-fill','level','ammo','result-kicker','result-title','result-score','result-time',
+      'xp-fill','level','ammo','result-kicker','result-title','result-score',
       'result-kills','result-level','result-cause','friends-board','damage-source','toast',
     ];
     this.el = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
@@ -280,8 +280,7 @@ export class UIController {
     this.el['result-modal'].classList.remove('hidden');
     this.el['result-kicker'].textContent = result.won ? 'DAWN REACHED' : 'THE NIGHT CLAIMED YOU';
     this.el['result-title'].textContent = result.won ? 'You survived.' : 'Rise again.';
-    this.el['result-score'].textContent = Number(result.score || 0).toLocaleString();
-    this.el['result-time'].textContent = `⏱ ${formatSurvivalTime(result.survivalMs)}`;
+    this.el['result-score'].textContent = formatSurvivalTime(result.survivalMs);
     this.el['result-kills'].textContent = result.kills.toLocaleString();
     this.el['result-level'].textContent = result.level;
     const causePrefix = this.i18n.lang === 'mn' ? 'ЯЛАГДСАН ШАЛТГААН' : 'DEFEATED BY';
@@ -296,14 +295,9 @@ export class UIController {
       const record = document.createElement('span');
       record.className = 'friend-row__record';
       const score = document.createElement('strong');
-      score.textContent = Number(entry.score || 0).toLocaleString();
+      const durationMs = leaderboardDurationMs(entry) ?? Number(entry.score || 0);
+      score.textContent = formatSurvivalTime(durationMs);
       record.append(score);
-      const durationMs = leaderboardDurationMs(entry);
-      if (durationMs != null) {
-        const duration = document.createElement('small');
-        duration.textContent = `⏱ ${formatSurvivalTime(durationMs)}`;
-        record.append(duration);
-      }
       row.append(identity, record);
       return row;
     }));

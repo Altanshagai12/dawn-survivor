@@ -5,7 +5,7 @@ import { TOMES, sampleUpgradeCards } from '../data/upgrades.js?build=20260826b';
 import { WEAPONS } from '../data/weapons.js?build=20260826d';
 import { createCameraFittedBackground } from './BackgroundSystem.js?build=20260826d';
 import { CombatSystem } from './CombatSystem.js?build=20260826g';
-import { BossBarrierSystem } from './BossBarrierSystem.js?build=20260825r';
+import { BossBarrierSystem } from './BossBarrierSystem.js?build=20260827a';
 import { CharacterAbilitySystem } from './CharacterAbilitySystem.js?build=20260826e';
 import { EnemySystem } from './EnemySystem.js?build=20260826h';
 import { InputController } from './InputController.js?build=20260826b';
@@ -280,8 +280,8 @@ export class GameScene extends Phaser.Scene {
     this.profile.bestSurvivalMs = Math.max(this.profile.bestSurvivalMs || 0, survivalMs);
     await Promise.all([
       this.platform.saveProfile(this.profile),
-      this.platform.submitScore(score, {
-        metric: 'score', duration_ms: survivalMs, survivalMs,
+      this.platform.submitScore(survivalMs, {
+        metric: 'survival_ms', duration_ms: survivalMs, survivalMs,
         won, kills: result.kills, level: result.level,
       }),
     ]);
