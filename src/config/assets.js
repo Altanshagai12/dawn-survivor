@@ -1,5 +1,12 @@
 const base = './assets';
 
+export const WEAPON_ART = {
+  revolver: `${base}/ui/weapons/rune-revolver.webp?build=20260827b`,
+  shotgun: `${base}/ui/weapons/grave-shotgun.webp?build=20260827b`,
+  crossbow: `${base}/ui/weapons/night-crossbow.webp?build=20260827b`,
+  flame: `${base}/ui/weapons/ember-cannon.webp?build=20260827b`,
+};
+
 export const HERO_ATLASES = {
   shana: { key: 'hero-shana', file: `${base}/sprites/heroes/hero-nyra-move-8dir-6f-atlas-isolated.webp`, frameWidth: 181, frameHeight: 181 },
   diamond: { key: 'hero-diamond', file: `${base}/sprites/heroes/hero-varka-move-8dir-6f-atlas-isolated.webp`, frameWidth: 222, frameHeight: 148 },

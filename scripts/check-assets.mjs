@@ -6,6 +6,7 @@ import {
   ENEMY_ATLASES,
   HERO_ATLASES,
   STATIC_ASSETS,
+  WEAPON_ART,
 } from '../src/config/assets.js';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -55,6 +56,7 @@ for (const atlas of atlases) {
 }
 
 for (const file of Object.values(STATIC_ASSETS)) await assertFile(file);
+for (const file of Object.values(WEAPON_ART)) await assertFile(file);
 
 const generatedSizes = {
   [STATIC_ASSETS.upgradeIcons]: [960, 960],
@@ -69,4 +71,12 @@ for (const [file, expected] of Object.entries(generatedSizes)) {
   }
 }
 
-console.log(`Verified ${atlases.length} directional atlases and ${Object.keys(STATIC_ASSETS).length} static assets.`);
+for (const file of Object.values(WEAPON_ART)) {
+  const absolute = await assertFile(file);
+  const size = await imageSize(absolute);
+  if (size.width !== 768 || size.height !== 384) {
+    throw new Error(`${file}: expected normalized 768x384 weapon art, received ${size.width}x${size.height}`);
+  }
+}
+
+console.log(`Verified ${atlases.length} directional atlases, ${Object.keys(STATIC_ASSETS).length} static assets, and ${Object.keys(WEAPON_ART).length} weapon images.`);

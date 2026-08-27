@@ -54,3 +54,4 @@
 - Mobile sharpness is controlled by the canvas backing resolution independently of the logical Phaser viewport; cap device-pixel-ratio scaling for clarity without changing world scale or collision math.
 - Every collectible promised to use the player's light must share the same attraction helper and boundary; a boss chest with overlap-only pickup is inconsistent with XP, and its idle tween must stop before physics homing begins.
 - Exact rendered pickup boundaries need a tiny numeric tolerance because profile scale arithmetic such as `.82 + .08` can land infinitesimally below the visible whole-pixel radius and reject loot sitting on the edge.
+- A loadout's visual layout must preserve its decision order at every breakpoint: hero selection stays as one full-width upper band and weapon selection as one full-width lower band. Generated weapon art also needs a shared transparent canvas and optical scale before it enters equal card slots.

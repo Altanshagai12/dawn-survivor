@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no" />
     <meta name="theme-color" content="#09080d" />
     <title>Dawn Survivor</title>
-    <link rel="stylesheet" href="./styles.css?build=20260827a" />
+    <link rel="stylesheet" href="./styles.css?build=20260827b" />
     <script src="https://usions.com/usion-sdk.js"></script>
     <script src="https://usions.com/vendor/phaser/4.2.1/phaser.min.js"></script>
   </head>
@@ -21,16 +21,16 @@
       <section id="menu" class="screen hidden" aria-labelledby="game-title">
         <header class="menu__hero">
           <p class="eyebrow">10:00 SURVIVAL</p>
-          <h1 id="game-title">DAWN<br />SURVIVOR</h1>
+          <h1 id="game-title"><span>DAWN</span><span>SURVIVOR</span></h1>
           <p data-i18n="tagline">Aim. Build. Survive until dawn.</p>
         </header>
         <div class="selection">
-          <div class="selection__group">
+          <div class="selection__group selection__group--heroes" aria-label="Hero selection">
             <div class="section-title"><span data-i18n="hunter">Hunter</span><strong id="hero-stat"></strong></div>
             <div id="hero-list" class="card-strip"></div>
             <p id="hero-description" class="loadout-detail loadout-detail--passive"></p>
           </div>
-          <div class="selection__group">
+          <div class="selection__group selection__group--weapons" aria-label="Weapon selection">
             <div class="section-title"><span data-i18n="weapon">Weapon</span><strong id="weapon-stat"></strong></div>
             <div id="weapon-list" class="card-strip card-strip--weapons"></div>
             <p id="weapon-description" class="loadout-detail"></p>
@@ -112,6 +112,6 @@
       </div>
       <div id="toast" class="toast hidden"></div>
     </main>
-    <script type="module" src="./src/main.js?build=20260827a"></script>
+    <script type="module" src="./src/main.js?build=20260827b"></script>
   </body>
 </html>

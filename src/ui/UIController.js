@@ -54,17 +54,6 @@ export function setFreshActivation(element, activate) {
   };
 }
 
-const WEAPON_ICONS = {
-  revolver: '<path d="M4 10h18v5H4zm8 5h10l5 4h-9l-1 7h-6z"/>',
-  shotgun: '<path d="M3 8h25v4H3zm1 6h23v4H4zm15 4 7 6h-7l-6-6z"/>',
-  crossbow: '<path d="M4 16h24M16 5v22M7 9q9 13 18 0M7 9q9-7 18 0" fill="none" stroke="currentColor" stroke-width="3"/>',
-  flame: '<path d="M4 12h18v9H4zm18 2h6v5h-6zM8 21h11v5H8zM3 8c3-5 7-3 6 1-2-2-3 1-6-1z"/>',
-};
-
-export function weaponIconSvg(id) {
-  return `<svg viewBox="0 0 32 32" aria-hidden="true">${WEAPON_ICONS[id] || WEAPON_ICONS.revolver}</svg>`;
-}
-
 export function upgradeIconHtml(card) {
   if (!Number.isInteger(card.iconFrame)) {
     return `<b class="choice-card__icon" aria-hidden="true">${card.icon || '✦'}</b>`;
@@ -148,7 +137,7 @@ export class UIController {
       button.className = `select-card${weapon.id === this.selectedWeapon ? ' selected' : ''}`;
       button.dataset.weapon = weapon.id;
       button.title = weapon.description;
-      button.innerHTML = `<b>${weaponIconSvg(weapon.id)}</b><span>${this.i18n.lang === 'mn' ? weapon.nameMn : weapon.name}</span>`;
+      button.innerHTML = `<img class="weapon-art" src="${weapon.art}" alt=""/><span>${this.i18n.lang === 'mn' ? weapon.nameMn : weapon.name}</span>`;
       button.addEventListener('click', () => {
         this.selectedWeapon = weapon.id;
         this.renderLoadout();

@@ -2,8 +2,9 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   damageSourceLabel, formatSurvivalTime, heroPassiveCopy, leaderboardDurationMs, movementCopy, savedOrDefault,
-  setFreshActivation, UIController, upgradeIconHtml, upgradePathHtml, weaponIconSvg,
+  setFreshActivation, UIController, upgradeIconHtml, upgradePathHtml,
 } from '../src/ui/UIController.js';
+import { WEAPONS } from '../src/data/weapons.js';
 
 function classList() {
   return { add() {}, remove() {}, toggle() {} };
@@ -17,9 +18,10 @@ test('falls back from a removed saved loadout without blocking boot', () => {
   assert.equal(savedOrDefault(weapons, profile.selectedWeapon, 'revolver'), 'revolver');
 });
 
-test('every core weapon has a code-native selection icon', () => {
-  ['revolver', 'shotgun', 'crossbow', 'flame'].forEach((id) => {
-    assert.match(weaponIconSvg(id), /<svg[^>]*>.+<\/svg>/);
+test('every core weapon has normalized generated selection art', () => {
+  assert.deepEqual(Object.keys(WEAPONS), ['revolver', 'shotgun', 'crossbow', 'flame']);
+  Object.values(WEAPONS).forEach((weapon) => {
+    assert.match(weapon.art, /^\.\/assets\/ui\/weapons\/.+\.webp\?build=20260827b$/);
   });
 });
 

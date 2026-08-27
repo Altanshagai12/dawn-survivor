@@ -37,16 +37,20 @@ html.mobile-rotated #app {
   transform: translate(-50%, -50%) rotate(90deg);
   transform-origin: center;
 }
-html.mobile-rotated #menu { max-width: 100%; padding: 12px 20px; gap: 8px; }
+html.mobile-rotated #menu { max-width: 100%; padding: 8px 18px; gap: 5px; justify-content: center; }
 html.mobile-rotated .menu__hero { padding-top: 0; }
-html.mobile-rotated .menu__hero h1 { font-size: 38px; }
-html.mobile-rotated .menu__hero > p:last-child { margin-top: 6px; font-size: 11px; }
-html.mobile-rotated .selection { grid-template-columns: 1fr 1fr; gap: 12px; }
-html.mobile-rotated .select-card { height: 68px; }
+html.mobile-rotated .menu__hero .eyebrow { margin-bottom: 2px; font-size: 8px; }
+html.mobile-rotated .menu__hero h1 { display: flex; gap: .22em; font-size: 27px; line-height: 1; }
+html.mobile-rotated .menu__hero > p:last-child { display: none; }
+html.mobile-rotated .selection { grid-template-columns: minmax(0, 1fr); gap: 5px; }
+html.mobile-rotated .section-title { margin-bottom: 3px; font-size: 9px; }
+html.mobile-rotated .select-card { height: 58px; }
 html.mobile-rotated .card-strip--weapons .select-card { height: 54px; }
-html.mobile-rotated .loadout-detail { margin-top: 3px; }
-html.mobile-rotated .loadout-detail--movement { margin: -2px 2px; }
-html.mobile-rotated #start-button { min-height: 40px; }
+html.mobile-rotated .card-strip--weapons .weapon-art { padding: 2px 7px 14px; }
+html.mobile-rotated .select-card span { inset: auto 3px 3px; padding: 2px 4px; font-size: 7px; }
+html.mobile-rotated .loadout-detail { min-height: 9px; margin-top: 2px; overflow: hidden; font-size: 8px; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
+html.mobile-rotated .loadout-detail--movement { margin: 0 2px; font-size: 7px; }
+html.mobile-rotated #start-button { min-height: 32px; }
 html.mobile-rotated .controls-copy { display: none; }
 html.mobile-rotated .vignette { background: radial-gradient(circle at center, transparent 52%, rgba(0,0,0,.04) 78%, rgba(0,0,0,.12) 100%); }
 
@@ -59,9 +63,10 @@ html.mobile-rotated .vignette { background: radial-gradient(circle at center, tr
 .menu__hero { padding-top: 2vh; }
 .eyebrow { margin: 0 0 8px; color: var(--cyan); font-size: 11px; font-weight: 800; letter-spacing: .22em; }
 h1 { margin: 0; font-size: clamp(42px, 12vw, 82px); line-height: .82; letter-spacing: -.065em; }
+h1 span { display: block; }
 h2 { margin: 2px 0 18px; font-size: clamp(28px, 8vw, 44px); line-height: 1; }
 .menu__hero > p:last-child { margin: 14px 0 0; color: var(--muted); }
-.selection { display: grid; gap: 17px; }
+.selection { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
 .selection__group { min-width: 0; }
 .section-title { display: flex; justify-content: space-between; margin: 0 2px 8px; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .13em; }
 .section-title strong { color: var(--ink); }
@@ -72,11 +77,10 @@ h2 { margin: 2px 0 18px; font-size: clamp(28px, 8vw, 44px); line-height: 1; }
 .select-card span { position: absolute; inset: auto 5px 5px; padding: 4px 6px; border-radius: 6px; background: rgba(0,0,0,.74); font-size: 10px; font-weight: 800; text-transform: uppercase; }
 .select-card.selected { border-color: var(--cyan); box-shadow: 0 0 0 2px rgba(101,230,255,.22); }
 .select-card.selected img { filter: none; }
-.card-strip--weapons .select-card { height: 64px; display: grid; place-content: center; font-size: 25px; }
-.card-strip--weapons .select-card b { color: var(--cyan); text-shadow: 0 0 12px rgba(101,230,255,.5); }
-.card-strip--weapons .select-card b svg { display: block; width: 38px; height: 32px; margin: 0 auto; fill: currentColor; filter: drop-shadow(0 0 5px rgba(101,230,255,.4)); }
-.card-strip--weapons .select-card[data-weapon="flame"] b { color: #ff9b55; text-shadow: 0 0 12px rgba(255,90,30,.7); }
-.card-strip--weapons .select-card[data-weapon="crossbow"] b { transform: rotate(-8deg); }
+.card-strip--weapons .select-card { height: 92px; background: radial-gradient(circle at 50% 43%, rgba(56,49,76,.42), #14111c 72%); }
+.card-strip--weapons .weapon-art { width: 100%; height: 100%; padding: 5px 10px 22px; object-fit: contain; object-position: center; filter: saturate(.62) brightness(.72); }
+.card-strip--weapons .select-card.selected .weapon-art { filter: saturate(1.08) brightness(1.08); }
+.card-strip--weapons .select-card[data-weapon="flame"].selected { border-color: #ff9b55; box-shadow: 0 0 0 2px rgba(255,122,76,.24); }
 .loadout-detail { min-height: 16px; margin: 7px 2px 0; color: var(--muted); font-size: 10px; line-height: 1.4; }
 .loadout-detail--passive { color: #d9d0e5; }
 .loadout-detail--movement { margin: -8px 2px -4px; text-align: center; color: var(--cyan); font-size: 9px; letter-spacing: .04em; }
@@ -162,9 +166,10 @@ h2 { margin: 2px 0 18px; font-size: clamp(28px, 8vw, 44px); line-height: 1; }
 
 @media (min-width: 720px) {
   #menu { justify-content: center; }
-  .selection { grid-template-columns: 1fr 1fr; }
-  .card-strip { grid-template-columns: repeat(2, 1fr); }
-  .select-card { height: 122px; }
+  .selection { grid-template-columns: minmax(0, 1fr); }
+  .card-strip { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .select-card { height: 116px; }
+  .card-strip--weapons .select-card { height: 96px; }
 }
 
 @media (pointer: fine) { .touch-controls { display: none !important; } }
@@ -211,6 +216,23 @@ html.mobile-rotated .choice-detail__path { margin-top: 5px; }
 html.mobile-rotated .choice-actions { margin-top: 6px; }
 html.mobile-rotated .choice-actions button { min-height: 38px; }
 @media (max-height: 680px) { .menu__hero { padding-top: 0; } h1 { font-size: 44px; } .select-card { height: 82px; } }
+@media (max-height: 600px) and (orientation: landscape) {
+  #menu { justify-content: center; padding: 8px max(18px, env(safe-area-inset-left)); gap: 5px; }
+  .menu__hero .eyebrow { margin-bottom: 2px; font-size: 8px; }
+  .menu__hero h1 { display: flex; gap: .22em; font-size: 27px; line-height: 1; }
+  .menu__hero > p:last-child { display: none; }
+  .selection { gap: 5px; }
+  .section-title { margin-bottom: 3px; font-size: 9px; }
+  #weapon-stat { font-size: 7px; }
+  #menu .select-card { height: 58px; }
+  #menu .card-strip--weapons .select-card { height: 54px; }
+  .card-strip--weapons .weapon-art { padding: 2px 7px 14px; }
+  #menu .select-card span { inset: auto 3px 3px; padding: 2px 4px; font-size: 7px; }
+  #menu .loadout-detail { min-height: 9px; margin-top: 2px; overflow: hidden; font-size: 8px; line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
+  #menu .loadout-detail--movement { margin: 0 2px; font-size: 7px; }
+  #start-button { min-height: 32px; }
+  .controls-copy { display: none; }
+}
 @media (max-width: 440px) {
   .modal { padding: 12px; }
   .modal__panel { padding: 17px; }

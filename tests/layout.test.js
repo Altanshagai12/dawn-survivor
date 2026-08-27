@@ -15,3 +15,13 @@ test('upgrade choices use five equal icon tabs above one stable detail panel', a
   assert.doesNotMatch(css, /\.modal__panel\s+button\s*\+\s*button/);
   assert.match(css, /\.choice-detail\s*\{[^}]*min-height:\s*188px/);
 });
+
+test('loadout keeps heroes above weapons with four equal image cards per row', async () => {
+  const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+  const css = await readFile(new URL('../styles.css', import.meta.url), 'utf8');
+  assert.ok(html.indexOf('id="hero-list"') < html.indexOf('id="weapon-list"'));
+  assert.match(css, /\.selection\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
+  assert.match(css, /\.card-strip\s*\{[^}]*grid-template-columns:\s*repeat\(4,/);
+  assert.match(css, /html\.mobile-rotated \.selection\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
+  assert.match(css, /\.weapon-art\s*\{[^}]*object-fit:\s*contain/);
+});
