@@ -58,3 +58,4 @@
 - An enemy whose identity is defined by an on-death explosion must enter the same explosion lifecycle from timed, contact, burn, and projectile kills; handling only its armed timer silently removes friendly fire from ordinary kills.
 - A projectile spawned at a visual muzzle offset needs a collision sweep from the character to that muzzle along the projectile's real spread angle; otherwise point-blank targets can sit inside the skipped launch segment.
 - A two-step upgrade modal must begin with no selected card and a disabled confirm action; suppressing inherited clicks alone still lets a fresh but unintended confirm accept a default choice.
+- Character ability recharge must use one calibrated gameplay constant for both activation gating and its visible control state; testing only the dash animation duration does not catch a cooldown that feels too fast.

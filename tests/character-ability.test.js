@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { TEN_MINUTES_BALANCE } from '../src/config/balance.js';
-import { CharacterAbilitySystem, movementDashDirection } from '../src/game/CharacterAbilitySystem.js';
+import {
+  CharacterAbilitySystem, dashCooldownState, movementDashDirection,
+} from '../src/game/CharacterAbilitySystem.js';
 
 function cloneSprite(x, y) {
   return {
@@ -39,4 +41,47 @@ test('dash keeps the last movement-stick direction when the stick returns to cen
     movementDashDirection({ moveX: 0, moveY: 0, aimX: 1, aimY: 0 }, { x: 0, y: -1 }),
     { x: 0, y: -1 },
   );
+});
+
+test('Hina dash recharges on the original two-second cadence and not before', () => {
+  const clones = [];
+  const scene = {
+    time: { now: 1000 },
+    state: { hero: { id: 'hina' } },
+    player: { x: 20, y: 30, scaleX: .5, setVelocity() {} },
+    add: { sprite(x, y) { const clone = cloneSprite(x, y); clones.push(clone); return clone; } },
+    nearestEnemy: () => null,
+    flashEffect() {},
+  };
+  const system = new CharacterAbilitySystem(scene);
+  system.update({ ability: true, moveX: 1, moveY: 0 });
+  assert.equal(system.nextDashAt, 3000);
+  assert.equal(clones.length, 1);
+
+  scene.time.now = 2999;
+  system.update({ ability: true, moveX: 1, moveY: 0 });
+  assert.equal(clones.length, 1);
+  assert.deepEqual(system.getDashCooldownState(), {
+    ready: false,
+    remainingMs: 1,
+    progress: 0.9995,
+  });
+
+  scene.time.now = 3000;
+  system.update({ ability: true, moveX: 1, moveY: 0 });
+  assert.equal(clones.length, 2);
+  assert.equal(system.getDashCooldownState().progress, 0);
+});
+
+test('dash cooldown presentation starts ready and reaches half charge at one second', () => {
+  assert.deepEqual(dashCooldownState(0, 0, 2), {
+    ready: true,
+    remainingMs: 0,
+    progress: 1,
+  });
+  assert.deepEqual(dashCooldownState(2000, 3000, 2), {
+    ready: false,
+    remainingMs: 1000,
+    progress: .5,
+  });
 });

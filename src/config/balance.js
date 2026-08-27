@@ -8,7 +8,7 @@ export const TEN_MINUTES_BALANCE = {
     hina: {
       dashDistance: 4 * WORLD_UNIT,
       dashDuration: 0.16,
-      cooldown: 1,
+      cooldown: 2,
       cloneDuration: 4,
       cloneAttackInterval: 0.65,
       cloneRange: 7 * WORLD_UNIT,

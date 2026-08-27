@@ -6,7 +6,7 @@ import { WEAPONS } from '../data/weapons.js?build=20260827b';
 import { createCameraFittedBackground } from './BackgroundSystem.js?build=20260826d';
 import { CombatSystem } from './CombatSystem.js?build=20260827c';
 import { BossBarrierSystem } from './BossBarrierSystem.js?build=20260827a';
-import { CharacterAbilitySystem } from './CharacterAbilitySystem.js?build=20260826e';
+import { CharacterAbilitySystem } from './CharacterAbilitySystem.js?build=20260827d';
 import { EnemySystem } from './EnemySystem.js?build=20260827c';
 import { InputController } from './InputController.js?build=20260826b';
 import { LootSystem } from './LootSystem.js?build=20260826k';
@@ -72,7 +72,9 @@ export class GameScene extends Phaser.Scene {
     this.upgradeEffects = new UpgradeEffectSystem(this);
     this.bindUi();
     this.ui.showGame();
-    document.getElementById('ability-button')?.classList.toggle('hidden', this.state.hero.id !== 'hina');
+    this.abilityButton = document.getElementById('ability-button');
+    this.abilityButton?.classList.toggle('hidden', this.state.hero.id !== 'hina');
+    this.syncAbilityCooldown();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.cleanup());
   }
 
@@ -128,6 +130,7 @@ export class GameScene extends Phaser.Scene {
     this.lastInput = input;
     if (input.firing) this.aimHoldUntil = this.time.now + 850;
     const dashing = this.characterAbility.update(input);
+    this.syncAbilityCooldown();
     const firingPenalty = movementMultiplier(input.firing, (this.state.mods.walkSpeedMul || 0) >= 1);
     if (!dashing) this.player.setVelocity(
       input.moveX * this.state.moveSpeed * firingPenalty,
@@ -169,6 +172,17 @@ export class GameScene extends Phaser.Scene {
       if (distance < bestDistance) { best = enemy; bestDistance = distance; }
     });
     return best;
+  }
+
+  syncAbilityCooldown() {
+    if (!this.abilityButton || this.state.hero.id !== 'hina') return;
+    const cooldown = this.characterAbility.getDashCooldownState();
+    this.abilityButton.disabled = !cooldown.ready;
+    this.abilityButton.classList.toggle('cooling-down', !cooldown.ready);
+    this.abilityButton.style.setProperty('--ability-charge', `${cooldown.progress * 100}%`);
+    this.abilityButton.textContent = cooldown.ready
+      ? 'DASH'
+      : `${(cooldown.remainingMs / 1000).toFixed(1)}s`;
   }
 
   onShot(angle, { shotAngles } = {}) {

@@ -1,7 +1,7 @@
 import { HEROES } from './data/heroes.js?build=20260826e';
 import { WEAPONS } from './data/weapons.js?build=20260827b';
 import { BootScene } from './game/BootScene.js?build=20260825r';
-import { GameScene } from './game/GameScene.js?build=20260827c';
+import { GameScene } from './game/GameScene.js?build=20260827d';
 import { gameRenderResolution } from './game/deviceProfile.js?build=20260826j';
 import { installVisibleResume } from './game/runtimeLifecycle.js?build=20260825r';
 import { defaultProfile, initPlatform } from './platform/usion.js?build=20260826j';

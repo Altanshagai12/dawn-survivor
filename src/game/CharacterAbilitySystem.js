@@ -1,5 +1,15 @@
 import { HERO_ATLASES } from '../config/assets.js?build=20260825r';
-import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260826c';
+import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260827d';
+
+export function dashCooldownState(now, nextDashAt, cooldownSeconds) {
+  const durationMs = Math.max(1, cooldownSeconds * 1000);
+  const remainingMs = Math.max(0, nextDashAt - now);
+  return {
+    ready: remainingMs === 0,
+    remainingMs,
+    progress: Math.min(1, Math.max(0, 1 - remainingMs / durationMs)),
+  };
+}
 
 export function movementDashDirection(input, fallback = { x: 0, y: 1 }) {
   const moveLength = Math.hypot(input.moveX || 0, input.moveY || 0);
@@ -38,6 +48,14 @@ export class CharacterAbilitySystem {
     this.nextDashAt = this.scene.time.now + config.cooldown * 1000;
     this.spawnClone();
     this.scene.flashEffect(this.scene.player.x, this.scene.player.y, 6, .8);
+  }
+
+  getDashCooldownState(now = this.scene.time.now) {
+    return dashCooldownState(
+      now,
+      this.nextDashAt,
+      TEN_MINUTES_BALANCE.player.hina.cooldown,
+    );
   }
 
   spawnClone() {

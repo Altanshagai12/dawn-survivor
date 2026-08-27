@@ -162,7 +162,8 @@ h2 { margin: 2px 0 18px; font-size: clamp(28px, 8vw, 44px); line-height: 1; }
 .stick--aim { left: auto; right: max(30px, env(safe-area-inset-right)); border-color: rgba(101,230,255,.28); }
 .stick i { position: absolute; width: 50px; height: 50px; left: 33px; top: 33px; border-radius: 50%; background: rgba(255,255,255,.24); box-shadow: 0 5px 18px rgba(0,0,0,.28); }
 .stick--aim i { background: rgba(101,230,255,.28); }
-.ability-button { position: absolute; right: max(55px, calc(env(safe-area-inset-right) + 55px)); bottom: max(240px, calc(env(safe-area-inset-bottom) + 208px)); width: 68px; height: 68px; border: 1px solid rgba(168,129,255,.65); border-radius: 50%; background: rgba(65,38,94,.72); color: #eadcff; font-size: 10px; font-weight: 900; pointer-events: auto; box-shadow: 0 0 22px rgba(168,129,255,.28); }
+.ability-button { --ability-charge: 100%; position: absolute; right: max(55px, calc(env(safe-area-inset-right) + 55px)); bottom: max(240px, calc(env(safe-area-inset-bottom) + 208px)); width: 68px; height: 68px; border: 1px solid rgba(168,129,255,.65); border-radius: 50%; background: radial-gradient(circle, rgba(65,38,94,.94) 60%, transparent 63%), conic-gradient(#a881ff var(--ability-charge), rgba(67,54,82,.65) 0); color: #eadcff; font-size: 10px; font-weight: 900; pointer-events: auto; box-shadow: 0 0 22px rgba(168,129,255,.28); }
+.ability-button.cooling-down { color: rgba(234,220,255,.62); box-shadow: 0 0 10px rgba(168,129,255,.12); }
 .toast { position: fixed; z-index: 20; left: 50%; top: 17%; transform: translateX(-50%); padding: 10px 14px; border: 1px solid var(--line); border-radius: 9px; background: rgba(8,7,12,.9); font-size: 12px; }
 
 @media (min-width: 720px) {
