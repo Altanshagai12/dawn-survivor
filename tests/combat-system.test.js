@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { CombatSystem } from '../src/game/CombatSystem.js';
-import { launchSegmentHit, resolveProjectileLaunchHits } from '../src/game/ProjectileLaunchCollision.js';
+import {
+  launchSegmentHit, resolveProjectileLaunchHits, resolveProjectileTravelHits,
+} from '../src/game/ProjectileLaunchCollision.js';
 
 function makeScene() {
   return {
@@ -156,6 +158,47 @@ test('the launch segment catches point-blank targets before the muzzle position'
   resolveProjectileLaunchHits(combat, { active: true, collisionRadius: 4 }, 0, 0, 26, 0);
 
   assert.deepEqual(hits, [close]);
+});
+
+test('a fast crossbow travel segment cannot tunnel over an enemy between frames', () => {
+  const scene = makeScene();
+  const enemy = makeEnemy();
+  enemy.x = 25;
+  enemy.y = 0;
+  enemy.enemyDef.radius = 10;
+  scene.enemies.getChildren = () => [enemy];
+  const combat = new CombatSystem(scene);
+  const hits = [];
+  combat.hitEnemy = (_bullet, target) => hits.push(target);
+
+  const bullet = { active: true, collisionRadius: 4, trajectoryRevision: 0 };
+  resolveProjectileTravelHits(combat, bullet, 0, 0, 50, 0);
+
+  assert.deepEqual(hits, [enemy]);
+});
+
+test('a ricochet stops resolving candidates from the projectile previous trajectory', () => {
+  const scene = makeScene();
+  const first = makeEnemy();
+  first.x = 15;
+  first.y = 0;
+  const second = makeEnemy();
+  second.spawnId = 8;
+  second.x = 35;
+  second.y = 0;
+  scene.enemies.getChildren = () => [first, second];
+  const combat = new CombatSystem(scene);
+  const hits = [];
+  combat.hitEnemy = (bullet, target) => {
+    hits.push(target);
+    bullet.trajectoryRevision += 1;
+  };
+
+  resolveProjectileTravelHits(combat, {
+    active: true, collisionRadius: 4, trajectoryRevision: 0,
+  }, 0, 0, 50, 0);
+
+  assert.deepEqual(hits, [first]);
 });
 
 test('a lethal projectile routes a Boomer through its explosion lifecycle', () => {

@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   damageSourceLabel, formatSurvivalTime, heroPassiveCopy, leaderboardDurationMs, movementCopy, savedOrDefault,
   setFreshActivation, UIController, upgradeIconHtml, upgradePathHtml,
+  survivalLeaderboardEntries,
 } from '../src/ui/UIController.js';
 import { WEAPONS } from '../src/data/weapons.js';
 
@@ -61,6 +62,18 @@ test('leaderboard duration is optional and never inferred from a legacy score', 
   assert.equal(leaderboardDurationMs({ score: 900, metadata: { duration_ms: 315_840 } }), 315_840);
   assert.equal(leaderboardDurationMs({ score: 315_840, metadata: { metric: 'survival_ms' } }), 315_840);
   assert.equal(leaderboardDurationMs({ score: 900 }), null);
+});
+
+test('the result leaderboard excludes legacy score-only records', () => {
+  const entries = survivalLeaderboardEntries([
+    { name: 'Legacy', score: 900 },
+    { name: 'Timed', score: 315_840, metadata: { metric: 'survival_ms' } },
+  ]);
+
+  assert.deepEqual(entries, [{
+    entry: { name: 'Timed', score: 315_840, metadata: { metric: 'survival_ms' } },
+    durationMs: 315_840,
+  }]);
 });
 
 test('modal actions ignore an inherited pointer click and require a fresh press', () => {

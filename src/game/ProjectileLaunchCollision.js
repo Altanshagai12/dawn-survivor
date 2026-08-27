@@ -12,7 +12,7 @@ export function launchSegmentHit(fromX, fromY, toX, toY, targetX, targetY, radiu
   return { hit: distanceSquared <= radius ** 2, projection };
 }
 
-export function resolveProjectileLaunchHits(combat, bullet, fromX, fromY, toX, toY) {
+export function resolveProjectileSegmentHits(combat, bullet, fromX, fromY, toX, toY) {
   const candidates = [];
   (combat.scene.enemies?.getChildren?.() || []).forEach((enemy) => {
     if (!enemy?.active || enemy.dying) return;
@@ -24,8 +24,18 @@ export function resolveProjectileLaunchHits(combat, bullet, fromX, fromY, toX, t
     if (intersection.hit) candidates.push({ enemy, projection: intersection.projection });
   });
   candidates.sort((a, b) => a.projection - b.projection);
+  const trajectoryRevision = Number(bullet.trajectoryRevision || 0);
   for (const { enemy } of candidates) {
     if (!bullet.active) break;
     combat.hitEnemy(bullet, enemy);
+    if (Number(bullet.trajectoryRevision || 0) !== trajectoryRevision) break;
   }
+}
+
+export function resolveProjectileLaunchHits(combat, bullet, fromX, fromY, toX, toY) {
+  resolveProjectileSegmentHits(combat, bullet, fromX, fromY, toX, toY);
+}
+
+export function resolveProjectileTravelHits(combat, bullet, fromX, fromY, toX, toY) {
+  resolveProjectileSegmentHits(combat, bullet, fromX, fromY, toX, toY);
 }

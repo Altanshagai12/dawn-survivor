@@ -1,7 +1,7 @@
 import { clamp } from './simulation.js?build=20260825r';
 import { CombatEffects } from './CombatEffects.js?build=20260826f';
 import { handleSpecialKill } from './KillProgression.js?build=20260825r';
-import { resolveProjectileLaunchHits } from './ProjectileLaunchCollision.js?build=20260827c';
+import { resolveProjectileLaunchHits, resolveProjectileTravelHits } from './ProjectileLaunchCollision.js?build=20260827e';
 import { shouldConsumeAmmo, upgradedProjectileCount } from './WeaponMechanics.js?build=20260825r';
 import { presentWeaponImpact, updateProjectilePresentation } from './WeaponPresentation.js?build=20260826g';
 
@@ -40,6 +40,12 @@ export class CombatSystem {
         const angle = Phaser.Math.Angle.Between(bullet.x, bullet.y, bullet.homingTarget.x, bullet.homingTarget.y);
         this.scene.physics.velocityFromRotation(angle, bullet.speed, bullet.body.velocity);
       }
+      if (bullet.sweptCollision) {
+        resolveProjectileTravelHits(this, bullet, bullet.previousX, bullet.previousY, bullet.x, bullet.y);
+        if (!bullet.active) return;
+      }
+      bullet.previousX = bullet.x;
+      bullet.previousY = bullet.y;
       updateProjectilePresentation(this.scene, bullet);
       if (this.scene.time.now >= bullet.expiresAt) bullet.destroy();
     });
@@ -131,6 +137,10 @@ export class CombatSystem {
     bullet.fireball = Boolean(spec.fireball);
     bullet.summon = Boolean(spec.summon);
     bullet.weaponId = spec.weaponId || null;
+    bullet.sweptCollision = bullet.weaponId === 'crossbow';
+    bullet.previousX = x;
+    bullet.previousY = y;
+    bullet.trajectoryRevision = 0;
     bullet.speed = speed;
     bullet.expiresAt = this.scene.time.now + (spec.life || 1) * 1000;
     bullet.hitTargets = new Set();
@@ -219,6 +229,7 @@ export class CombatSystem {
     if (!target) return false;
     bullet.bounces -= 1;
     bullet.damage *= 1.12;
+    bullet.trajectoryRevision = Number(bullet.trajectoryRevision || 0) + 1;
     const angle = Phaser.Math.Angle.Between(bullet.x, bullet.y, target.x, target.y);
     bullet.setRotation(angle);
     this.scene.physics.velocityFromRotation(angle, bullet.speed, bullet.body.velocity);

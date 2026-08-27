@@ -59,3 +59,5 @@
 - A projectile spawned at a visual muzzle offset needs a collision sweep from the character to that muzzle along the projectile's real spread angle; otherwise point-blank targets can sit inside the skipped launch segment.
 - A two-step upgrade modal must begin with no selected card and a disabled confirm action; suppressing inherited clicks alone still lets a fresh but unintended confirm accept a default choice.
 - Character ability recharge must use one calibrated gameplay constant for both activation gating and its visible control state; testing only the dash animation duration does not catch a cooldown that feels too fast.
+- A high-speed projectile needs swept collision across its previous and current positions; discrete overlap can miss a target completely on a slow mobile frame even when the tracer visibly crosses it.
+- A duration-only leaderboard must reject score-only legacy rows at every game-owned render boundary, and the registered service metric must also be `duration`; changing only submitted metadata leaves older mobile hosts displaying raw numbers.

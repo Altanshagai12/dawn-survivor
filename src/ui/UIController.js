@@ -43,6 +43,13 @@ export function leaderboardDurationMs(entry) {
   return Number.isFinite(value) && value >= 0 ? Math.round(value) : null;
 }
 
+export function survivalLeaderboardEntries(entries = []) {
+  return entries.flatMap((entry) => {
+    const durationMs = leaderboardDurationMs(entry);
+    return durationMs == null ? [] : [{ entry, durationMs }];
+  });
+}
+
 export function setFreshActivation(element, activate) {
   element.onpointerdown = (event) => {
     if (event?.pointerType !== 'touch' && event?.button != null && event.button !== 0) return;
@@ -287,7 +294,7 @@ export class UIController {
     this.el['result-cause'].textContent = !result.won && result.damageSource
       ? `${causePrefix} · ${damageSourceLabel(result.damageSource, this.i18n.lang)}` : '';
     this.el['result-cause'].classList.toggle('hidden', !this.el['result-cause'].textContent);
-    this.el['friends-board'].replaceChildren(...friends.map((entry) => {
+    this.el['friends-board'].replaceChildren(...survivalLeaderboardEntries(friends).map(({ entry, durationMs }) => {
       const row = document.createElement('div');
       row.className = 'friend-row';
       const identity = document.createElement('span');
@@ -295,7 +302,6 @@ export class UIController {
       const record = document.createElement('span');
       record.className = 'friend-row__record';
       const score = document.createElement('strong');
-      const durationMs = leaderboardDurationMs(entry) ?? Number(entry.score || 0);
       score.textContent = formatSurvivalTime(durationMs);
       record.append(score);
       row.append(identity, record);
