@@ -3,7 +3,8 @@ import { CombatEffects } from './CombatEffects.js?build=20260826f';
 import { handleSpecialKill } from './KillProgression.js?build=20260825r';
 import { resolveProjectileLaunchHits, resolveProjectileTravelHits } from './ProjectileLaunchCollision.js?build=20260827e';
 import { shouldConsumeAmmo, upgradedProjectileCount } from './WeaponMechanics.js?build=20260825r';
-import { presentWeaponImpact, updateProjectilePresentation } from './WeaponPresentation.js?build=20260826g';
+import { presentWeaponImpact, updateProjectilePresentation } from './WeaponPresentation.js?build=20260828a';
+import { skinProjectileTint } from '../data/skins.js?build=20260828b';
 
 export const PROJECTILE_RENDER_MULTIPLIER = 1.45;
 
@@ -137,6 +138,7 @@ export class CombatSystem {
     bullet.fireball = Boolean(spec.fireball);
     bullet.summon = Boolean(spec.summon);
     bullet.weaponId = spec.weaponId || null;
+    bullet.skin = spec.skin === undefined && bullet.weaponId ? this.scene.state.skin : (spec.skin || null);
     bullet.sweptCollision = bullet.weaponId === 'crossbow';
     bullet.previousX = x;
     bullet.previousY = y;
@@ -145,6 +147,8 @@ export class CombatSystem {
     bullet.expiresAt = this.scene.time.now + (spec.life || 1) * 1000;
     bullet.hitTargets = new Set();
     if (bullet.burnChance) bullet.setTint(0xffa34f).setBlendMode(Phaser.BlendModes.ADD);
+    const premiumTint = skinProjectileTint(bullet.skin, bullet.weaponId);
+    if (premiumTint) bullet.setTint(premiumTint).setBlendMode(Phaser.BlendModes.ADD);
     this.applyLens(bullet, angle);
     this.scene.physics.velocityFromRotation(angle, speed, bullet.body.velocity);
     bullet.collisionRadius = projectileCollisionRadius(spec.size);

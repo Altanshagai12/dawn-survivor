@@ -7,8 +7,17 @@ export const WEAPON_EFFECT_PROFILES = Object.freeze({
   flame: Object.freeze({ color: 0xffa13d, tracer: 42, shake: .0012, duration: 165, visualScale: 1.38 }),
 });
 
-export function weaponEffectProfile(weaponId) {
-  return WEAPON_EFFECT_PROFILES[weaponId] || WEAPON_EFFECT_PROFILES.revolver;
+export function weaponEffectProfile(weaponId, skin = null) {
+  const base = WEAPON_EFFECT_PROFILES[weaponId] || WEAPON_EFFECT_PROFILES.revolver;
+  if (!skin) return base;
+  return {
+    ...base,
+    color: weaponId === 'flame' ? skin.secondary : weaponId === 'crossbow' ? skin.impact : skin.primary,
+    accent: skin.secondary,
+    visualScale: base.visualScale * 1.16,
+    duration: base.duration * 1.08,
+    motif: skin.motif,
+  };
 }
 
 export function weaponShotAngles(weapon, baseAngle) {
@@ -68,10 +77,28 @@ function flameBlob(scene, x, y, angle, index, smoke = false, scale = 1) {
   });
 }
 
+function premiumMotif(scene, x, y, angle, skin, impact = false) {
+  if (!skin) return;
+  const count = skin.motif === 'moon' ? 3 : skin.motif === 'star' ? 6 : 5;
+  for (let index = 0; index < count; index += 1) {
+    const offset = (index - (count - 1) / 2) * .28;
+    const petalAngle = angle + offset + (impact ? Math.PI : 0);
+    const length = (skin.motif === 'feather' ? 15 : skin.motif === 'lotus' ? 11 : 9) * (impact ? 1.22 : 1);
+    const mote = scene.add.ellipse(x, y, length, skin.motif === 'moon' ? 3 : 2, index % 2 ? skin.secondary : skin.primary, .85)
+      .setRotation(petalAngle).setDepth(37).setBlendMode(Phaser.BlendModes.ADD);
+    track(scene, mote, {
+      x: x + Math.cos(petalAngle) * (impact ? 30 : 22),
+      y: y + Math.sin(petalAngle) * (impact ? 30 : 22),
+      alpha: 0, scaleX: 1.5, scaleY: .35, duration: 135 + index * 10, ease: 'Quad.Out',
+    });
+  }
+}
+
 export function presentWeaponShot(scene, angle, authoredAngles = null) {
   if (!scene?.player || !scene?.state?.weapon) return;
   const weapon = scene.state.weapon;
-  const profile = weaponEffectProfile(weapon.id);
+  const skin = scene.state.skin;
+  const profile = weaponEffectProfile(weapon.id, skin);
   const x = scene.player.x + Math.cos(angle) * 27;
   const y = scene.player.y + Math.sin(angle) * 27;
   const angles = authoredAngles?.length ? authoredAngles : weaponShotAngles(weapon, angle);
@@ -90,14 +117,16 @@ export function presentWeaponShot(scene, angle, authoredAngles = null) {
     sparkBurst(scene, x + Math.cos(angle) * 7, y + Math.sin(angle) * 7,
       angle, profile.color, 4, profile.visualScale);
   }
+  premiumMotif(scene, x, y, angle, skin);
   triggerShotFeedback(scene, angle);
-  scene.weaponAudio?.play(weapon.id);
+  scene.weaponAudio?.play(weapon.id, skin);
   scene.cameras.main.shake(60, profile.shake * (scene.performance?.mobile ? 1.18 : 1));
 }
 
 export function presentWeaponImpact(scene, bullet, x, y) {
   if (!bullet?.weaponId || !scene?.add?.rectangle) return;
-  const profile = weaponEffectProfile(bullet.weaponId);
+  const skin = bullet.skin || null;
+  const profile = weaponEffectProfile(bullet.weaponId, skin);
   const angle = bullet.rotation || 0;
   pulse(scene, x, y, profile.color, profile.visualScale);
   if (bullet.weaponId === 'flame') {
@@ -111,6 +140,7 @@ export function presentWeaponImpact(scene, bullet, x, y) {
     sparkBurst(scene, x, y, angle + Math.PI, profile.color,
       bullet.weaponId === 'shotgun' ? 4 : 6, profile.visualScale);
   }
+  premiumMotif(scene, x, y, angle, skin, true);
 }
 
 export function updateProjectilePresentation(scene, bullet) {
@@ -119,7 +149,7 @@ export function updateProjectilePresentation(scene, bullet) {
   const angle = bullet.rotation || 0;
   const x = bullet.x - Math.cos(angle) * 12;
   const y = bullet.y - Math.sin(angle) * 12;
-  const scale = weaponEffectProfile('flame').visualScale;
+  const scale = weaponEffectProfile('flame', bullet.skin || null).visualScale;
   flameBlob(scene, x, y, angle + Math.PI, 1, false, scale);
   if (!scene.performance?.mobile) flameBlob(scene, x, y, angle + Math.PI, 1, true, scale);
 }

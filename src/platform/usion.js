@@ -19,6 +19,8 @@ function localAdapter() {
       return { success: true, score, best, rank: null, updated: score > previous };
     },
     async friends() { return []; },
+    async hasCredits() { return false; },
+    async requestPayment() { throw new Error('Usion wallet is unavailable outside the host'); },
     releaseBack() {},
   };
 }
@@ -42,6 +44,12 @@ export async function initPlatform() {
       async friends() {
         try { return await window.Usion.leaderboard.friends({ limit: 5 }); } catch { return []; }
       },
+      async hasCredits(amount) {
+        try { return await window.Usion.wallet.hasCredits(amount); } catch { return false; }
+      },
+      async requestPayment(amount, reason, options) {
+        return window.Usion.wallet.requestPayment(amount, reason, options);
+      },
       releaseBack() { window.Usion.releaseBackButton?.(); },
     };
   } catch {
@@ -52,6 +60,6 @@ export async function initPlatform() {
 export function defaultProfile() {
   return {
     selectedHero: 'shana', selectedWeapon: 'revolver', best: 0, bestSurvivalMs: 0,
-    runs: 0, wins: 0, totalKills: 0,
+    runs: 0, wins: 0, totalKills: 0, ownedSkins: [], equippedSkins: {}, pendingSkinPurchase: null,
   };
 }

@@ -11,11 +11,19 @@ test('loads the official Usion SDK before the exact supported Phaser build', asy
   assert.ok(html.indexOf(sdk) < html.indexOf(phaser));
 });
 
-test('deployment remains a static client-only game', async () => {
+test('deployment keeps static gameplay, free-preview gating, and a dormant settlement boundary', async () => {
   const vercel = JSON.parse(await readFile(new URL('../vercel.json', import.meta.url), 'utf8'));
   assert.equal(vercel.cleanUrls, true);
   assert.equal(vercel.trailingSlash, false);
   assert.ok(!('builds' in vercel));
+  const purchaseApi = await readFile(new URL('../api/purchase-skin.js', import.meta.url), 'utf8');
+  assert.match(purchaseApi, /wallet\/receipt\/\$\{path\}/);
+  assert.match(purchaseApi, /verify-pending/);
+  assert.match(purchaseApi, /already_settled/);
+  const skins = await readFile(new URL('../src/data/skins.js', import.meta.url), 'utf8');
+  const main = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
+  assert.match(skins, /SKIN_ACCESS_MODE = 'free-preview'/);
+  assert.match(main, /if \(SKIN_ACCESS_MODE === 'paid'\)/);
 });
 
 test('runtime uses Phaser 4 group iteration and real Usion SDK calls', async () => {
@@ -49,7 +57,8 @@ test('mobile boots directly into automatic landscape with dedicated Hina ability
   assert.match(css, /html\.mobile-rotated #app/);
   assert.match(css, /rotate\(90deg\)/);
   assert.match(css, /#game canvas[^}]*width:\s*100%\s*!important[^}]*height:\s*100%\s*!important/s);
-  assert.match(main, /GameScene\.js\?build=20260827e/);
+  assert.match(main, /GameScene\.js\?build=20260828a/);
+  assert.match(html, /main\.js\?build=20260828b/);
   assert.match(main, /resolution:\s*gameRenderResolution\(window\.devicePixelRatio\)/);
   assert.match(html, /minimum-scale=1,maximum-scale=1/);
   assert.match(css, /-webkit-touch-callout:\s*none/);

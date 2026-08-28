@@ -1,54 +1,13 @@
-import { FIRING_MOVE_MULTIPLIER } from '../game/movement.js?build=20260825r';
+import { SkinShopController } from './SkinShopController.js?build=20260828b';
+import {
+  damageSourceLabel, formatSurvivalTime, heroPassiveCopy, movementCopy, savedOrDefault,
+  survivalLeaderboardEntries,
+} from './uiFormatters.js?build=20260828a';
 
-const DAMAGE_SOURCE_LABELS = {
-  'enemy-contact': { en: 'ENEMY CONTACT', mn: 'ДАЙСНЫ МӨРГӨЛТ' },
-  'enemy-projectile': { en: 'ENEMY SHOT', mn: 'ДАЙСНЫ СУМ' },
-  'bomber-contact': { en: 'BOMBER', mn: 'ТЭСРЭГЧ ДАЙСАН' },
-  'tree-contact': { en: 'TREE ROOT', mn: 'МОДНЫ ҮНДЭС' },
-  'barrier-contact': { en: 'ELECTRIC BARRIER', mn: 'ЦАХИЛГААН ХААЛТ' },
-  unknown: { en: 'UNKNOWN', mn: 'ҮЛ МЭДЭГДЭХ' },
-};
-
-export function damageSourceLabel(source, language = 'en') {
-  return (DAMAGE_SOURCE_LABELS[source] || DAMAGE_SOURCE_LABELS.unknown)[language === 'mn' ? 'mn' : 'en'];
-}
-
-export function savedOrDefault(collection, saved, fallback) {
-  return collection[saved] ? saved : fallback;
-}
-
-export function heroPassiveCopy(hero, language = 'en') {
-  const passive = language === 'mn' ? hero.passiveMn : hero.passiveText;
-  return `${language === 'mn' ? 'ХУВИЙН ЧАДВАР' : 'PERSONAL SKILL'} · ${passive}`;
-}
-
-export function movementCopy(language = 'en') {
-  const firingPercent = Math.round(FIRING_MOVE_MULTIPLIER * 100);
-  return language === 'mn'
-    ? `ХӨДӨЛГӨӨН · Энгийн гүйлт 100% · Буудаж гүйх ${firingPercent}% · Run and Gun авбал 100%`
-    : `MOVEMENT · Running 100% · Running while firing ${firingPercent}% · Run and Gun restores 100%`;
-}
-
-export function formatSurvivalTime(milliseconds) {
-  const totalSeconds = Math.max(0, Math.floor((Number(milliseconds) || 0) / 1000));
-  return `${String(Math.floor(totalSeconds / 60)).padStart(2, '0')}:${String(totalSeconds % 60).padStart(2, '0')}`;
-}
-
-export function leaderboardDurationMs(entry) {
-  const metadata = entry?.metadata || {};
-  const candidate = entry?.duration_ms ?? metadata.duration_ms ?? metadata.survivalMs
-    ?? (metadata.metric === 'survival_ms' ? entry?.score : null);
-  if (candidate == null || typeof candidate === 'boolean') return null;
-  const value = Number(candidate);
-  return Number.isFinite(value) && value >= 0 ? Math.round(value) : null;
-}
-
-export function survivalLeaderboardEntries(entries = []) {
-  return entries.flatMap((entry) => {
-    const durationMs = leaderboardDurationMs(entry);
-    return durationMs == null ? [] : [{ entry, durationMs }];
-  });
-}
+export {
+  damageSourceLabel, formatSurvivalTime, heroPassiveCopy, leaderboardDurationMs, movementCopy,
+  savedOrDefault, survivalLeaderboardEntries,
+} from './uiFormatters.js?build=20260828a';
 
 export function setFreshActivation(element, activate) {
   element.onpointerdown = (event) => {
@@ -86,7 +45,7 @@ export function upgradePathHtml(card, owned = new Set()) {
 }
 
 export class UIController {
-  constructor({ heroes, weapons, i18n, profile }) {
+  constructor({ heroes, weapons, i18n, profile, platform, commerce }) {
     this.heroes = heroes;
     this.weapons = weapons;
     this.i18n = i18n;
@@ -98,13 +57,14 @@ export class UIController {
     this.onResume = null;
     this.onQuit = null;
     this.cacheElements();
+    this.skinShop = new SkinShopController({ profile, i18n, platform, commerce });
     this.bindButtons();
     this.renderLoadout();
   }
 
   cacheElements() {
     const ids = [
-      'boot','menu','hud','choice-modal','pause-modal','result-modal','touch-controls',
+      'boot','menu','hud','choice-modal','pause-modal','result-modal','touch-controls','skin-modal',
       'hero-list','weapon-list','hero-stat','hero-description','weapon-stat','weapon-description','movement-description','start-button','pause-button',
       'resume-button','quit-button','again-button','menu-button','choice-list','choice-kicker',
       'choice-title','choice-detail','choice-detail-icon','choice-detail-tree','choice-detail-name',
@@ -125,7 +85,11 @@ export class UIController {
   }
 
   selection() {
-    return { heroId: this.selectedHero, weaponId: this.selectedWeapon };
+    return {
+      heroId: this.selectedHero,
+      weaponId: this.selectedWeapon,
+      skinId: this.skinShop.selection(this.selectedHero),
+    };
   }
 
   renderLoadout() {
@@ -159,10 +123,11 @@ export class UIController {
     this.el['weapon-description'].textContent = this.i18n.lang === 'mn'
       ? weapon.descriptionMn : weapon.description;
     this.el['movement-description'].textContent = movementCopy(this.i18n.lang);
+    this.skinShop.render(this.selectedHero);
   }
 
   hideAll() {
-    ['boot','menu','hud','choice-modal','pause-modal','result-modal','touch-controls']
+    ['boot','menu','hud','choice-modal','pause-modal','result-modal','touch-controls','skin-modal']
       .forEach((id) => this.el[id].classList.add('hidden'));
   }
 

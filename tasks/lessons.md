@@ -61,3 +61,5 @@
 - Character ability recharge must use one calibrated gameplay constant for both activation gating and its visible control state; testing only the dash animation duration does not catch a cooldown that feels too fast.
 - A high-speed projectile needs swept collision across its previous and current positions; discrete overlap can miss a target completely on a slow mobile frame even when the tracer visibly crosses it.
 - A duration-only leaderboard must reject score-only legacy rows at every game-owned render boundary, and the registered service metric must also be `duration`; changing only submitted metadata leaves older mobile hosts displaying raw numbers.
+- Every overlay added to a shared hide/show list must also be registered in the UI element cache; a missing modal reference can stop the entire boot scene after asset loading.
+- A premium preview modal must be tested at low landscape height even with a fine pointer; tying fit rules only to `pointer: coarse` hides overflow until a real WebView or compact desktop window exposes it.

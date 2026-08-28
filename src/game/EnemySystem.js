@@ -1,6 +1,7 @@
 import { BOSS_ATLASES, ENEMY_ATLASES } from '../config/assets.js?build=20260825r';
 import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260826h';
 import { playDirectional } from './animations.js?build=20260825r';
+import { restoreHeroSkin } from './SkinPresentation.js?build=20260828a';
 import { syncGroundShadow } from './VisualEffects.js?build=20260825r';
 
 export const PLAYER_INVULNERABILITY_MS = TEN_MINUTES_BALANCE.player.hitIFramesMs;
@@ -235,7 +236,8 @@ export class EnemySystem {
       onComplete: () => this.scene.player?.active && this.scene.player.setAlpha(1),
     });
     this.scene.player.setTint(result.blocked ? 0x65e6ff : 0xffffff).setTintMode(Phaser.TintModes.FILL);
-    this.scene.time.delayedCall(110, () => this.scene.player?.active && this.scene.player.clearTint());
+    this.scene.time.delayedCall(110, () => restoreHeroSkin(this.scene));
+    if (!result.blocked) this.scene.weaponAudio?.playVoice('hurt', this.scene.state.skin);
     this.scene.cameras.main.shake(150, result.blocked ? .003 : .008);
     if (result.dead) this.scene.endRun(false);
     return true;

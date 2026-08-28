@@ -48,6 +48,7 @@ export class CharacterAbilitySystem {
     this.nextDashAt = this.scene.time.now + config.cooldown * 1000;
     this.spawnClone();
     this.scene.flashEffect(this.scene.player.x, this.scene.player.y, 6, .8);
+    this.scene.weaponAudio?.playVoice('dash', this.scene.state.skin);
   }
 
   getDashCooldownState(now = this.scene.time.now) {
@@ -62,7 +63,8 @@ export class CharacterAbilitySystem {
     const config = TEN_MINUTES_BALANCE.player.hina;
     const atlas = HERO_ATLASES.hina;
     const clone = this.scene.add.sprite(this.scene.player.x, this.scene.player.y, atlas.key, 24)
-      .setDepth(23).setScale(this.scene.player.scaleX).setAlpha(.58).setTint(0xaa70ff);
+      .setDepth(23).setScale(this.scene.player.scaleX).setAlpha(.58)
+      .setTint(this.scene.state.skin?.primary || 0xaa70ff);
     clone.expiresAt = this.scene.time.now + config.cloneDuration * 1000;
     clone.nextAttackAt = this.scene.time.now + 120;
     this.clones.push(clone);

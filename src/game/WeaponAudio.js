@@ -17,8 +17,15 @@ export const WEAPON_SOUND_PROFILES = Object.freeze({
   }),
 });
 
-export function weaponSoundProfile(weaponId) {
-  return WEAPON_SOUND_PROFILES[weaponId] || WEAPON_SOUND_PROFILES.revolver;
+export function weaponSoundProfile(weaponId, skin = null) {
+  const base = WEAPON_SOUND_PROFILES[weaponId] || WEAPON_SOUND_PROFILES.revolver;
+  if (!skin) return base;
+  const pitch = skin.weaponPitch || 1;
+  return {
+    tone: { ...base.tone, from: base.tone.from * pitch, to: base.tone.to * pitch, gain: base.tone.gain * 1.08 },
+    noise: { ...base.noise, frequency: base.noise.frequency * pitch, gain: base.noise.gain * .92 },
+    premium: { from: 420 * pitch, to: 760 * pitch, duration: .11, gain: .045 },
+  };
 }
 
 function envelope(parameter, now, gain, duration) {
@@ -32,10 +39,19 @@ export class WeaponAudio {
     this.host = environment.window || environment;
     this.AudioContext = environment.AudioContext || environment.webkitAudioContext
       || this.host.AudioContext || this.host.webkitAudioContext;
+    this.Audio = environment.Audio || this.host.Audio;
     this.context = null;
     this.master = null;
     this.noiseBuffer = null;
-    this.unlockFromGesture = () => { this.unlock(); };
+    this.pendingVoice = null;
+    this.lastVoiceAt = 0;
+    this.unlockFromGesture = () => {
+      if (this.unlock() && this.pendingVoice) {
+        const pending = this.pendingVoice;
+        this.pendingVoice = null;
+        this.playVoice(pending.event, pending.skin);
+      }
+    };
     this.host.addEventListener?.('pointerdown', this.unlockFromGesture, { capture: true, once: true });
     this.host.addEventListener?.('keydown', this.unlockFromGesture, { capture: true, once: true });
   }
@@ -56,14 +72,75 @@ export class WeaponAudio {
     }
   }
 
-  play(weaponId) {
+  play(weaponId, skin = null) {
     const context = this.context;
     if (!context || context.state !== 'running' || !this.master) return false;
-    const profile = weaponSoundProfile(weaponId);
+    const profile = weaponSoundProfile(weaponId, skin);
     const now = context.currentTime;
     this.playTone(profile.tone, now);
     this.playNoise(profile.noise, now);
+    if (profile.premium) this.playPremiumTone(profile.premium, now);
     return true;
+  }
+
+  queueVoice(event, skin) {
+    if (!skin) return false;
+    this.pendingVoice = { event, skin };
+    if (this.context?.state === 'running') {
+      this.pendingVoice = null;
+      return this.playVoice(event, skin);
+    }
+    return false;
+  }
+
+  playVoice(event, skin) {
+    if (!skin) return false;
+    const nowMs = Date.now();
+    if (event !== 'intro' && nowMs - this.lastVoiceAt < 650) return false;
+    this.lastVoiceAt = nowMs;
+    if (event === 'intro' && this.Audio && skin.voice) {
+      try {
+        const voice = new this.Audio(skin.voice);
+        voice.volume = .58;
+        voice.playbackRate = Math.min(1.12, Math.max(.9, skin.voicePitch || 1));
+        voice.play().catch(() => { this.pendingVoice = { event, skin }; });
+        return true;
+      } catch { /* fall through to the synthesized cue */ }
+    }
+    if (!this.context || this.context.state !== 'running' || !this.master) return false;
+    const base = event === 'dash' ? 190 : event === 'hurt' ? 125 : 165;
+    const pitch = skin.voicePitch || 1;
+    this.playVocalCue(base * pitch, event === 'hurt' ? .16 : .22, event === 'hurt' ? .085 : .06);
+    return true;
+  }
+
+  playPremiumTone(profile, now) {
+    const oscillator = this.context.createOscillator();
+    const gain = this.context.createGain();
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(profile.from, now);
+    oscillator.frequency.exponentialRampToValueAtTime(profile.to, now + profile.duration);
+    envelope(gain.gain, now, profile.gain, profile.duration);
+    oscillator.connect(gain).connect(this.master);
+    oscillator.start(now);
+    oscillator.stop(now + profile.duration + .01);
+  }
+
+  playVocalCue(frequency, duration, gainValue) {
+    const now = this.context.currentTime;
+    const oscillator = this.context.createOscillator();
+    const filter = this.context.createBiquadFilter();
+    const gain = this.context.createGain();
+    oscillator.type = 'sawtooth';
+    oscillator.frequency.setValueAtTime(frequency, now);
+    oscillator.frequency.exponentialRampToValueAtTime(frequency * .68, now + duration);
+    filter.type = 'bandpass';
+    filter.frequency.value = frequency * 4.4;
+    filter.Q.value = 1.4;
+    envelope(gain.gain, now, gainValue, duration);
+    oscillator.connect(filter).connect(gain).connect(this.master);
+    oscillator.start(now);
+    oscillator.stop(now + duration + .01);
   }
 
   playTone(profile, now) {
@@ -111,5 +188,6 @@ export class WeaponAudio {
     this.host.removeEventListener?.('keydown', this.unlockFromGesture, true);
     this.context?.close?.().catch(() => {});
     this.context = null;
+    this.pendingVoice = null;
   }
 }

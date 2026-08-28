@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no" />
     <meta name="theme-color" content="#09080d" />
     <title>Dawn Survivor</title>
-    <link rel="stylesheet" href="./styles.css?build=20260827d" />
+    <link rel="stylesheet" href="./styles.css?build=20260828a" />
+    <link rel="stylesheet" href="./skin-shop.css?build=20260828c" />
     <script src="https://usions.com/usion-sdk.js"></script>
     <script src="https://usions.com/vendor/phaser/4.2.1/phaser.min.js"></script>
   </head>
@@ -29,6 +30,10 @@
             <div class="section-title"><span data-i18n="hunter">Hunter</span><strong id="hero-stat"></strong></div>
             <div id="hero-list" class="card-strip"></div>
             <p id="hero-description" class="loadout-detail loadout-detail--passive"></p>
+            <div class="skin-selection">
+              <div class="section-title section-title--skin"><span id="skin-section-title">PREMIUM SKIN</span></div>
+              <div id="skin-list" class="skin-strip"></div>
+            </div>
           </div>
           <div class="selection__group selection__group--weapons" aria-label="Weapon selection">
             <div class="section-title"><span data-i18n="weapon">Weapon</span><strong id="weapon-stat"></strong></div>
@@ -39,6 +44,21 @@
         <p id="movement-description" class="loadout-detail loadout-detail--movement"></p>
         <button id="start-button" class="primary" data-i18n="begin">ENTER THE NIGHT</button>
         <p class="controls-copy" data-i18n="controls">WASD + mouse · dual touch sticks</p>
+      </section>
+
+      <section id="skin-modal" class="modal hidden" aria-labelledby="skin-name">
+        <div class="modal__panel skin-panel">
+          <img id="skin-preview" class="skin-panel__preview" alt="Premium hero, weapon, and projectile skin pack" />
+          <div class="skin-panel__copy">
+            <p class="eyebrow">COSMETIC PACK · FREE PREVIEW</p>
+            <h2 id="skin-name"></h2>
+            <p id="skin-description"></p>
+            <strong id="skin-price" class="skin-panel__price"></strong>
+            <p id="skin-status" class="skin-panel__status" aria-live="polite"></p>
+            <button id="skin-action" class="primary" type="button"></button>
+            <button id="skin-close" class="secondary" type="button">CLOSE</button>
+          </div>
+        </div>
       </section>
 
       <section id="hud" class="hud hidden" aria-live="polite">
@@ -112,6 +132,6 @@
       </div>
       <div id="toast" class="toast hidden"></div>
     </main>
-    <script type="module" src="./src/main.js?build=20260827e"></script>
+    <script type="module" src="./src/main.js?build=20260828b"></script>
   </body>
 </html>

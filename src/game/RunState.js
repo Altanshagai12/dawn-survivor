@@ -6,9 +6,10 @@ const ADDITIVE_KEYS = new Set([
 ]);
 
 export class RunState {
-  constructor(hero, weapon) {
+  constructor(hero, weapon, skin = null) {
     this.hero = hero;
     this.weapon = weapon;
+    this.skin = skin;
     this.elapsed = 0;
     this.level = 1;
     this.xp = 0;
