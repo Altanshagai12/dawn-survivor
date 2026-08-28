@@ -1,6 +1,6 @@
 import { BOSS_ATLASES, ENEMY_ATLASES } from '../config/assets.js?build=20260825r';
-import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260828f';
-import { BOSSES, ENEMY_SPAWN_SESSIONS } from '../data/enemies.js?build=20260825r';
+import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260828h';
+import { BOSSES, ENEMY_SPAWN_SESSIONS } from '../data/enemies.js?build=20260828h';
 import { playDirectional } from './animations.js?build=20260828g';
 import { attachGroundShadow } from './VisualEffects.js?build=20260825r';
 
@@ -33,6 +33,19 @@ export function shubArenaLayout(player, definition, random = Math.random) {
     center,
     boss: { x: center.x + Math.cos(angle) * distance, y: center.y + Math.sin(angle) * distance },
   };
+}
+
+export function lateRunEnemyHp(baseHp, elapsed, equivalentHitDamage) {
+  const config = TEN_MINUTES_BALANCE.enemy.lateRun;
+  const hp = Math.max(1, Number(baseHp) || 0);
+  if (elapsed < config.startsAt) return hp;
+  const hitDamage = Math.max(1, Number(equivalentHitDamage) || 0);
+  return hp + hitDamage * config.extraEquivalentHits;
+}
+
+export function currentEquivalentHitDamage(state) {
+  return Math.max(1, (Number(state?.weapon?.damage) || 0)
+    * (Number(state?.multiplierStats?.damage) || 1));
 }
 
 export class Spawner {
@@ -139,7 +152,11 @@ export class Spawner {
     const spawn = point || this.spawnPoint();
     const atlas = ENEMY_ATLASES[definition.id];
     const sprite = this.acquire(atlas, spawn.x, spawn.y);
-    return sprite ? this.setupSprite(sprite, definition, atlas, session?.hp || definition.hp, session?.id) : null;
+    const baseHp = session?.hp ?? definition.hp;
+    const hp = lateRunEnemyHp(
+      baseHp, this.scene.state.elapsed, currentEquivalentHitDamage(this.scene.state),
+    );
+    return sprite ? this.setupSprite(sprite, definition, atlas, hp, session?.id) : null;
   }
 
   spawnBoss(definition) {

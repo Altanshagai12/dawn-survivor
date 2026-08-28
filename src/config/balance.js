@@ -23,6 +23,7 @@ export const TEN_MINUTES_BALANCE = {
     eye: { speedRatio: 0.34, preferredRange: 7 * WORLD_UNIT, projectileSpeed: 2.7 * WORLD_UNIT },
     elder: { speedRatio: 0.42 },
     shub: { speedRatio: 0.47, chargeRatio: 2.6, telegraphMs: 900, chargeMs: 700 },
+    lateRun: { startsAt: 8 * 60, extraEquivalentHits: 1 },
   },
   barrier: {
     startWidth: 18 * WORLD_UNIT,

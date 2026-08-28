@@ -161,7 +161,7 @@ h2 { margin: 2px 0 18px; font-size: clamp(28px, 8vw, 44px); line-height: 1; }
 .friend-row__record small { margin-top: 2px; color: var(--muted); font-size: 9px; }
 
 .touch-controls { position: fixed; inset: 0; z-index: 6; pointer-events: none; }
-.stick { position: absolute; left: max(30px, env(safe-area-inset-left)); bottom: max(72px, calc(env(safe-area-inset-bottom) + 38px)); width: 118px; height: 118px; border: 1px solid rgba(255,255,255,.16); border-radius: 50%; background: rgba(255,255,255,.035); box-shadow: inset 0 0 28px rgba(0,0,0,.3); pointer-events: auto; }
+.stick { position: absolute; left: max(30px, env(safe-area-inset-left)); bottom: max(72px, calc(env(safe-area-inset-bottom) + 38px)); width: 118px; height: 118px; border: 1px solid rgba(255,255,255,.16); border-radius: 50%; background: rgba(255,255,255,.035); box-shadow: inset 0 0 28px rgba(0,0,0,.3); pointer-events: auto; will-change: transform; }
 .stick--aim { left: auto; right: max(30px, env(safe-area-inset-right)); border-color: rgba(101,230,255,.28); }
 .stick i { position: absolute; width: 50px; height: 50px; left: 33px; top: 33px; border-radius: 50%; background: rgba(255,255,255,.24); box-shadow: 0 5px 18px rgba(0,0,0,.28); }
 .stick--aim i { background: rgba(101,230,255,.28); }

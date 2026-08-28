@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { directionalPose, facingVector, playDirectional } from '../src/game/animations.js';
 import {
-  aimFromClientPoint, gameVectorFromClient, PointerFireLatch, radialDeadZone,
-  smoothDirection, smoothStick, surfacePointFromClient,
+  aimFromClientPoint, anchoredStickVector, gameVectorFromClient, InputController, PointerFireLatch, radialDeadZone,
+  smoothDirection, smoothStick, stickOriginOffset, surfacePointFromClient, usesCanvasFire,
 } from '../src/game/InputController.js';
 
 test('maps a host-offset client point through the canvas and live camera', () => {
@@ -100,4 +100,64 @@ test('mobile sticks remove center noise and ease movement without losing aim', (
   assert.deepEqual(moved, { x: .46, y: 0 });
   assert.deepEqual(smoothDirection({ x: 1, y: 0 }, { x: -1, y: 0 }, .5), { x: -1, y: 0 });
   assert.deepEqual(smoothDirection({ x: 0, y: -1 }, { x: 0, y: 0 }), { x: 0, y: -1 });
+});
+
+test('mobile aim starts from the touched point and requires a deliberate drag', () => {
+  const origin = { clientX: 730, clientY: 310 };
+  assert.deepEqual(anchoredStickVector(origin, origin, 32, false, .16), {
+    raw: { x: 0, y: 0 }, adjusted: { x: 0, y: 0 },
+  });
+  const drag = anchoredStickVector({ clientX: 746, clientY: 310 }, origin, 32, false, .16);
+  assert.equal(drag.raw.x, .5);
+  assert.equal(drag.raw.y, 0);
+  assert.ok(drag.adjusted.x > .4 && drag.adjusted.y === 0);
+  assert.deepEqual(stickOriginOffset(origin, { left: 670, top: 250, width: 96, height: 96 }), { x: 12, y: 12 });
+});
+
+test('mobile canvas taps do not bypass the aim stick while desktop mouse fire remains enabled', () => {
+  assert.equal(usesCanvasFire('touch'), false);
+  assert.equal(usesCanvasFire('pen'), false);
+  assert.equal(usesCanvasFire('mouse'), true);
+});
+
+test('aim-stick binding visually re-centers on touch and fires only after drag', () => {
+  const previousDocument = globalThis.document;
+  const listeners = {};
+  const knob = { style: {} };
+  const element = {
+    style: {},
+    querySelector: () => knob,
+    getBoundingClientRect: () => ({ left: 670, top: 250, width: 96, height: 96 }),
+    setPointerCapture() {},
+    addEventListener(type, listener) { listeners[type] = listener; },
+    removeEventListener() {},
+  };
+  globalThis.document = {
+    documentElement: { classList: { contains: () => false } },
+    getElementById: () => element,
+  };
+  try {
+    const controller = {
+      cleanups: [], pointerPoint: { clientX: 1, clientY: 1 },
+      touchAimActive: false, touchAimFiring: false,
+    };
+    const target = { x: 0, y: 0 };
+    InputController.prototype.bindStick.call(controller, 'aim-stick', target, true);
+    const event = (clientX, clientY) => ({
+      pointerId: 7, clientX, clientY, stopPropagation() {}, preventDefault() {},
+    });
+    listeners.pointerdown(event(730, 310));
+    assert.deepEqual(target, { x: 0, y: 0 });
+    assert.equal(controller.touchAimFiring, false);
+    assert.equal(element.style.transform, 'translate(12px, 12px)');
+    assert.equal(knob.style.transform, 'translate(0px, 0px)');
+    listeners.pointermove(event(746, 310));
+    assert.ok(target.x > .35);
+    assert.equal(controller.touchAimFiring, true);
+    listeners.pointerup(event(746, 310));
+    assert.deepEqual(target, { x: 0, y: 0 });
+    assert.equal(element.style.transform, '');
+  } finally {
+    globalThis.document = previousDocument;
+  }
 });

@@ -16,7 +16,7 @@ test('ships the exact original ten-minute roster', () => {
   assert.ok(Object.values(HEROES).every(({ speed }) => speed === BASE_HERO_SPEED));
   assert.deepEqual(Object.keys(ENEMIES), ['tentacle', 'boomer', 'eye']);
   assert.deepEqual(Object.keys(BOSSES), ['elder', 'shub']);
-  assert.deepEqual(Object.values(BOSSES).map(({ spawnAt, hp }) => [spawnAt, hp]), [[180, 1000], [300, 2500]]);
+  assert.deepEqual(Object.values(BOSSES).map(({ spawnAt, hp }) => [spawnAt, hp]), [[180, 1000], [300, 3200]]);
 });
 
 test('every shipped upgrade name points at its authored icon family', () => {
@@ -78,6 +78,7 @@ test('spawn sessions preserve the authored ten-minute schedule', () => {
     maxAlive: 600, count: 16, interval: 1,
   });
   assert.equal(TEN_MINUTES_BALANCE.enemy.shub.chargeRatio, 2.6);
+  assert.deepEqual(TEN_MINUTES_BALANCE.enemy.lateRun, { startsAt: 480, extraEquivalentHits: 1 });
 });
 
 test('contact enemies remain kiteable while the player is firing', () => {

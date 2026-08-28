@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { Spawner, followedCameraView, rectangularEdgeSpawn, shubArenaLayout } from '../src/game/Spawner.js';
+import {
+  Spawner, currentEquivalentHitDamage, followedCameraView, lateRunEnemyHp,
+  rectangularEdgeSpawn, shubArenaLayout,
+} from '../src/game/Spawner.js';
 
 const view = { x: 100, y: 200, right: 900, bottom: 650, width: 800, height: 450 };
 
@@ -78,4 +81,21 @@ test('encounter scheduler reaches Elder, Shub, and the final 16-enemy wave', () 
   scene.state.elapsed = 480;
   spawner.update(0);
   assert.equal(waves.filter((id) => id === 'tentacle-final').length, 16);
+});
+
+test('the final two minutes add exactly one current equivalent hit to normal enemy HP', () => {
+  assert.equal(lateRunEnemyHp(100, 479.99, 42), 100);
+  assert.equal(lateRunEnemyHp(100, 480, 42), 142);
+  assert.equal(Math.ceil(lateRunEnemyHp(100, 480, 42) / 42), Math.ceil(100 / 42) + 1);
+  assert.equal(currentEquivalentHitDamage({ weapon: { damage: 20 }, multiplierStats: { damage: 1.5 } }), 30);
+
+  let spawnedHp = 0;
+  const scene = {
+    state: { elapsed: 520, weapon: { damage: 20 }, multiplierStats: { damage: 1.5 } },
+  };
+  const spawner = new Spawner(scene);
+  spawner.acquire = () => ({});
+  spawner.setupSprite = (_sprite, _definition, _atlas, hp) => { spawnedHp = hp; return {}; };
+  spawner.spawnEnemy({ id: 'tentacle', hp: 100 }, { x: 0, y: 0 }, { id: 'final', hp: 100 });
+  assert.equal(spawnedHp, 130);
 });

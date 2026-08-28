@@ -1,4 +1,4 @@
-import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260828f';
+import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260828h';
 import { DAMAGE_SOURCE } from './EnemySystem.js?build=20260828f';
 
 export class BossBarrierSystem {

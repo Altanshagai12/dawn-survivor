@@ -65,6 +65,28 @@ export function smoothDirection(current, target, amount = .5) {
   return { x: x / length, y: y / length };
 }
 
+export function anchoredStickVector(point, origin, travel, rotated = false, deadZone = .08) {
+  if (!point || !origin || !Number.isFinite(travel) || travel <= 0) {
+    return { raw: { x: 0, y: 0 }, adjusted: { x: 0, y: 0 } };
+  }
+  let { x, y } = gameVectorFromClient({
+    x: (point.clientX - origin.clientX) / travel,
+    y: (point.clientY - origin.clientY) / travel,
+  }, rotated);
+  const length = Math.hypot(x, y) || 1;
+  if (length > 1) { x /= length; y /= length; }
+  return { raw: { x, y }, adjusted: radialDeadZone({ x, y }, deadZone) };
+}
+
+export function stickOriginOffset(point, rect, rotated = false) {
+  return gameVectorFromClient({
+    x: point.clientX - (rect.left + rect.width / 2),
+    y: point.clientY - (rect.top + rect.height / 2),
+  }, rotated);
+}
+
+export function usesCanvasFire(pointerType) { return !pointerType || pointerType === 'mouse'; }
+
 export class PointerFireLatch {
   constructor() {
     this.down = false;
@@ -120,12 +142,14 @@ export class InputController {
         event.preventDefault();
         return;
       }
+      if (!usesCanvasFire(event.pointerType)) return;
       if (!this.pointerFire.press(event.pointerId)) return;
       this.pointerPoint = { clientX: event.clientX, clientY: event.clientY };
       try { this.canvas.setPointerCapture?.(event.pointerId); } catch { /* Window fallback handles release. */ }
       event.preventDefault();
     };
     this.onPointerMove = (event) => {
+      if (!usesCanvasFire(event.pointerType)) return;
       if (event.pointerType !== 'mouse' && !this.pointerFire.owns(event.pointerId)) return;
       this.pointerPoint = { clientX: event.clientX, clientY: event.clientY };
     };
@@ -165,40 +189,47 @@ export class InputController {
     const element = document.getElementById(id);
     const knob = element.querySelector('i');
     let pointerId = null;
+    let origin = null;
     const reset = (event) => {
       if (event && pointerId !== event.pointerId) return;
       pointerId = null;
+      origin = null;
       target.x = 0;
       target.y = 0;
       if (isAim) {
         this.touchAimActive = false;
         this.touchAimFiring = false;
       }
+      element.style.transform = '';
       knob.style.transform = '';
     };
     const update = (event) => {
       if (pointerId !== event.pointerId) return;
       const rect = element.getBoundingClientRect();
-      const clientVector = {
-        x: (event.clientX - (rect.left + rect.width / 2)) / (rect.width * .34),
-        y: (event.clientY - (rect.top + rect.height / 2)) / (rect.height * .34),
-      };
-      let { x, y } = gameVectorFromClient(clientVector, isRotatedMobileFallback());
-      const length = Math.hypot(x, y) || 1;
-      if (length > 1) { x /= length; y /= length; }
-      const adjusted = radialDeadZone({ x, y }, isAim ? .045 : .08);
+      const travel = Math.min(rect.width, rect.height) * .34;
+      const { raw, adjusted } = anchoredStickVector(
+        event, origin, travel, isRotatedMobileFallback(), isAim ? .16 : .08,
+      );
       target.x = adjusted.x;
       target.y = adjusted.y;
       if (isAim) {
         this.touchAimActive = true;
-        if (Math.hypot(adjusted.x, adjusted.y) > .035) this.touchAimFiring = true;
+        if (Math.hypot(adjusted.x, adjusted.y) > .06) this.touchAimFiring = true;
       }
-      knob.style.transform = `translate(${x * 30}px, ${y * 30}px)`;
+      knob.style.transform = `translate(${raw.x * 30}px, ${raw.y * 30}px)`;
     };
     const down = (event) => {
       pointerId = event.pointerId;
       element.setPointerCapture(pointerId);
-      if (isAim) this.pointerPoint = null;
+      const rect = element.getBoundingClientRect();
+      if (isAim) {
+        this.pointerPoint = null;
+        origin = { clientX: event.clientX, clientY: event.clientY };
+        const offset = stickOriginOffset(event, rect, isRotatedMobileFallback());
+        element.style.transform = `translate(${offset.x}px, ${offset.y}px)`;
+      } else {
+        origin = { clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2 };
+      }
       update(event);
       event.stopPropagation();
       event.preventDefault();
