@@ -1,4 +1,4 @@
-import { hasSkinAccess, selectedSkin, SKIN_ACCESS_MODE, SKIN_BY_HERO } from '../data/skins.js?build=20260828e';
+import { hasSkinAccess, selectedSkin, SKIN_ACCESS_MODE, SKIN_BY_HERO } from '../data/skins.js?build=20260828g';
 
 const COPY = {
   en: {
@@ -25,11 +25,12 @@ function errorCopy(copy, code) {
 }
 
 export class SkinShopController {
-  constructor({ profile, i18n, platform, commerce }) {
+  constructor({ profile, i18n, platform, commerce, onSelectionChange = null }) {
     this.profile = profile;
     this.i18n = i18n;
     this.platform = platform;
     this.commerce = commerce;
+    this.onSelectionChange = onSelectionChange;
     this.heroId = 'shana';
     this.openSkin = null;
     this.busy = false;
@@ -44,8 +45,10 @@ export class SkinShopController {
   get copy() { return COPY[this.i18n.lang === 'mn' ? 'mn' : 'en']; }
 
   selection(heroId = this.heroId) {
-    return selectedSkin(this.profile, heroId)?.id || null;
+    return this.selected(heroId)?.id || null;
   }
+
+  selected(heroId = this.heroId) { return selectedSkin(this.profile, heroId); }
 
   render(heroId) {
     this.heroId = heroId;
@@ -124,6 +127,7 @@ export class SkinShopController {
     else delete this.profile.equippedSkins[this.heroId];
     await this.platform.saveProfile(this.profile);
     this.render(this.heroId);
+    this.onSelectionChange?.(this.heroId, skinId);
     if (this.openSkin) this.syncAction();
   }
 }

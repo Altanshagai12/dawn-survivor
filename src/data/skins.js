@@ -1,4 +1,11 @@
 const base = './assets/skins/premium';
+const weaponIds = Object.freeze(['revolver', 'shotgun', 'crossbow', 'flame']);
+
+function skinWeaponArt(skinId) {
+  return Object.freeze(Object.fromEntries(weaponIds.map((weaponId) => [
+    weaponId, `${base}/weapons/${skinId}/${weaponId}.webp?build=20260828g`,
+  ])));
+}
 
 export const SKIN_CATALOG_VERSION = 'premium-v1';
 export const SKIN_PURCHASE_ENDPOINT = 'https://dawn-survivor.vercel.app/api/purchase-skin';
@@ -11,6 +18,7 @@ export const PREMIUM_SKINS = Object.freeze({
     description: 'Crystal starlight remixes every weapon, impact, trail, and voice cue.',
     descriptionMn: 'Бүх буу, сум, мөргөлт, мөр болон дууг одон талстын хувилбарт оруулна.',
     packArt: `${base}/shana-astral-warden-pack.webp?build=20260828a`,
+    weaponArt: skinWeaponArt('shana-astral-warden'),
     spriteTint: 0x9defff, primary: 0x56efff, secondary: 0xffd56a, impact: 0xe8ffff,
     motif: 'star', weaponPitch: 1.18, voicePitch: 1.15,
     voice: `${base}/voice/shana-astral-warden.wav?build=20260828a`,
@@ -23,6 +31,7 @@ export const PREMIUM_SKINS = Object.freeze({
     description: 'Crimson lunar force gives every weapon a heavier report and moon-scar impact.',
     descriptionMn: 'Бүх бууг хүнд цохилт, цусан сарын сум, сарны сорвит мөргөлттэй болгоно.',
     packArt: `${base}/diamond-bloodmoon-regent-pack.webp?build=20260828a`,
+    weaponArt: skinWeaponArt('diamond-bloodmoon-regent'),
     spriteTint: 0xffa0a0, primary: 0xff334f, secondary: 0xd8a84b, impact: 0xffd3c7,
     motif: 'moon', weaponPitch: .82, voicePitch: .78,
     voice: `${base}/voice/diamond-bloodmoon-regent.wav?build=20260828a`,
@@ -35,6 +44,7 @@ export const PREMIUM_SKINS = Object.freeze({
     description: 'Forged feathers turn every shot into a bright phoenix-grade spectacle.',
     descriptionMn: 'Бүх сумыг хайлмаг алт, галт өд, галт шувууны хүчтэй effect-тэй болгоно.',
     packArt: `${base}/scarlett-sunforge-phoenix-pack.webp?build=20260828a`,
+    weaponArt: skinWeaponArt('scarlett-sunforge-phoenix'),
     spriteTint: 0xffd08a, primary: 0xff8a24, secondary: 0xffe37a, impact: 0xfff2c4,
     motif: 'feather', weaponPitch: 1.04, voicePitch: 1.02,
     voice: `${base}/voice/scarlett-sunforge-phoenix.wav?build=20260828a`,
@@ -47,6 +57,7 @@ export const PREMIUM_SKINS = Object.freeze({
     description: 'Spectral petals reshape every projectile and give the dash a voiced void echo.',
     descriptionMn: 'Бүх сумыг сүнслэг дэлбээтэй болгож, dash-д хоосны voice echo нэмнэ.',
     packArt: `${base}/hina-void-lotus-pack.webp?build=20260828a`,
+    weaponArt: skinWeaponArt('hina-void-lotus'),
     spriteTint: 0xc48cff, primary: 0xb83cff, secondary: 0x67e0ff, impact: 0xf2d8ff,
     motif: 'lotus', weaponPitch: 1.28, voicePitch: 1.3,
     voice: `${base}/voice/hina-void-lotus.wav?build=20260828a`,
@@ -89,4 +100,8 @@ export function skinProjectileTint(skin, weaponId) {
   if (weaponId === 'flame') return skin.secondary;
   if (weaponId === 'crossbow') return skin.impact;
   return skin.primary;
+}
+
+export function weaponArtForSkin(skin, weapon) {
+  return skin?.weaponArt?.[weapon.id] || weapon.art;
 }

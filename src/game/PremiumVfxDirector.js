@@ -8,6 +8,8 @@ const SPECIAL_FRAMES = Object.freeze({
   ice: 13, fireball: 12, glare: 14, gale: 15, blazing: 12, shield: 14,
   scythe: 10, shatter: 13,
 });
+export const PREMIUM_PROJECTILE_RENDER_BOOST = 1.15;
+export const PREMIUM_SHOT_EFFECT_BOOST = 1.12;
 
 function easeOut(value) { return 1 - (1 - value) ** 3; }
 
@@ -144,10 +146,11 @@ export class PremiumVfxDirector {
     if (!bullet || !this.skin) return;
     const recipe = activePresentationRecipe(this.scene.state);
     const base = weaponId === 'crossbow' ? .085 : weaponId === 'shotgun' ? .045 : .062;
+    const scale = base * Math.max(.72, size / 8) * recipe.powerScale * PREMIUM_PROJECTILE_RENDER_BOOST;
     bullet.setTexture(this.skin.vfxKey, this.projectileFrame(weaponId))
-      .setScale(base * Math.max(.72, size / 8) * recipe.powerScale)
+      .setScale(scale)
       .setBlendMode(Phaser.BlendModes.ADD);
-    bullet.premiumVfxScale = base * Math.max(.72, size / 8) * recipe.powerScale;
+    bullet.premiumVfxScale = scale;
   }
 
   shot(angle, authoredAngles = []) {
@@ -156,20 +159,26 @@ export class PremiumVfxDirector {
     const x = this.scene.player.x + Math.cos(angle) * 27;
     const y = this.scene.player.y + Math.sin(angle) * 27;
     this.emit(WEAPON_FRAMES[weapon.id] ?? 1, x, y, {
-      rotation: angle, scale: weapon.id === 'shotgun' ? .2 : .15, endScale: .28,
+      rotation: angle, scale: (weapon.id === 'shotgun' ? .2 : .15) * PREMIUM_SHOT_EFFECT_BOOST,
+      endScale: .28 * PREMIUM_SHOT_EFFECT_BOOST,
       duration: weapon.id === 'flame' ? 240 : 155, priority: 3,
     });
     const tracerAngles = authoredAngles.length ? authoredAngles : [angle];
     tracerAngles.forEach((shotAngle) => this.emit(6, x, y, {
-      rotation: shotAngle, scaleX: weapon.id === 'crossbow' ? .34 : weapon.id === 'shotgun' ? .2 : .23,
-      scaleY: weapon.id === 'flame' ? .085 : .035, endScaleX: weapon.id === 'crossbow' ? .48 : .34,
-      endScaleY: .018, duration: weapon.id === 'crossbow' ? 170 : 120, alpha: .86, priority: 2,
+      rotation: shotAngle,
+      scaleX: (weapon.id === 'crossbow' ? .34 : weapon.id === 'shotgun' ? .2 : .23) * PREMIUM_SHOT_EFFECT_BOOST,
+      scaleY: (weapon.id === 'flame' ? .085 : .035) * PREMIUM_SHOT_EFFECT_BOOST,
+      endScaleX: (weapon.id === 'crossbow' ? .48 : .34) * PREMIUM_SHOT_EFFECT_BOOST,
+      endScaleY: .018 * PREMIUM_SHOT_EFFECT_BOOST,
+      duration: weapon.id === 'crossbow' ? 170 : 120, alpha: .86, priority: 2,
     }));
     if (recipe.multiTier || authoredAngles.length > 1) this.emit(11, x, y, {
-      rotation: angle, scale: .11, endScale: .26 + recipe.multiTier * .02, duration: 190, priority: 2,
+      rotation: angle, scale: .11 * PREMIUM_SHOT_EFFECT_BOOST,
+      endScale: (.26 + recipe.multiTier * .02) * PREMIUM_SHOT_EFFECT_BOOST, duration: 190, priority: 2,
     });
     if (recipe.powerScale > 1.1) this.emit(10, x, y, {
-      rotation: angle, scale: .08, endScale: .2 * recipe.powerScale, duration: 175,
+      rotation: angle, scale: .08 * PREMIUM_SHOT_EFFECT_BOOST,
+      endScale: .2 * recipe.powerScale * PREMIUM_SHOT_EFFECT_BOOST, duration: 175,
     });
   }
 
@@ -188,7 +197,10 @@ export class PremiumVfxDirector {
 
   impact(bullet, x, y) {
     const recipe = activePresentationRecipe(this.scene.state);
-    this.emit(7, x, y, { scale: .1 * recipe.powerScale, endScale: .3 * recipe.powerScale, duration: 235, priority: 2 });
+    this.emit(7, x, y, {
+      scale: .1 * recipe.powerScale * PREMIUM_SHOT_EFFECT_BOOST,
+      endScale: .3 * recipe.powerScale * PREMIUM_SHOT_EFFECT_BOOST, duration: 235, priority: 2,
+    });
     if (bullet?.burnChance || recipe.fire) this.status('burn', x, y, .08);
     if (bullet?.freezeChance || recipe.frost) this.status('freeze', x, y, .075);
     if (recipe.electric) this.status('lightning', x, y, .065);

@@ -1,7 +1,7 @@
 import { BOSS_ATLASES, ENEMY_ATLASES } from '../config/assets.js?build=20260825r';
 import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260828f';
 import { BOSSES, ENEMY_SPAWN_SESSIONS } from '../data/enemies.js?build=20260825r';
-import { playDirectional } from './animations.js?build=20260825r';
+import { playDirectional } from './animations.js?build=20260828g';
 import { attachGroundShadow } from './VisualEffects.js?build=20260825r';
 
 export function rectangularEdgeSpawn(view, random = Math.random, minMargin = 36, maxMargin = 108) {

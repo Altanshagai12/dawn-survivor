@@ -7,12 +7,13 @@ import sharp from 'sharp';
 import { SkinCommerce } from '../src/commerce/SkinCommerce.js';
 import {
   hasSkinAccess, normalizeSkinProfile, PREMIUM_SKINS, selectedSkin, SKIN_ACCESS_MODE,
-  SKIN_BY_HERO, SKIN_CATALOG_VERSION,
+  SKIN_BY_HERO, SKIN_CATALOG_VERSION, weaponArtForSkin,
 } from '../src/data/skins.js';
 import { ALL_UPGRADES } from '../src/data/upgrades.js';
 import { activePresentationRecipe, presentationCoverage } from '../src/game/UpgradePresentationProfiles.js';
 import { AUDIO_BANK_EVENTS } from '../src/game/WeaponAudioProfiles.js';
 import { PremiumWeaponAudio, weaponSoundProfile } from '../src/game/PremiumWeaponAudio.js';
+import { PREMIUM_PROJECTILE_RENDER_BOOST, PREMIUM_SHOT_EFFECT_BOOST } from '../src/game/PremiumVfxDirector.js';
 import { weaponEffectProfile } from '../src/game/WeaponPresentation.js';
 import { decodeReceiptClaims, settleSkinPurchase } from '../api/purchase-skin.js';
 
@@ -43,6 +44,15 @@ test('ships one complete premium hero, weapon, projectile, and voice pack per hu
       const url = new URL(path, import.meta.url);
       await access(url);
       assert.ok((await stat(url)).size > 1024);
+    }
+    assert.deepEqual(Object.keys(skin.weaponArt), ['revolver', 'shotgun', 'crossbow', 'flame']);
+    for (const asset of Object.values(skin.weaponArt)) {
+      const path = asset.split('?')[0].replace(/^\.\//, '../');
+      const url = new URL(path, import.meta.url);
+      await access(url);
+      assert.ok((await stat(url)).size > 1024);
+      const metadata = await sharp(fileURLToPath(url)).metadata();
+      assert.deepEqual([metadata.width, metadata.height, metadata.hasAlpha], [768, 384, true]);
     }
     const vfxPath = skin.vfxAtlas.split('?')[0].replace(/^\.\//, '../');
     const metadata = await sharp(fileURLToPath(new URL(vfxPath, import.meta.url))).metadata();
@@ -170,6 +180,8 @@ test('free preview exposes every skin without granting durable paid ownership', 
 });
 
 test('each premium skin remixes all core weapon visuals and audio without changing damage stats', () => {
+  assert.ok(PREMIUM_PROJECTILE_RENDER_BOOST > 1);
+  assert.ok(PREMIUM_SHOT_EFFECT_BOOST > 1);
   for (const skin of Object.values(PREMIUM_SKINS)) {
     for (const weaponId of ['revolver', 'shotgun', 'crossbow', 'flame']) {
       const baseVisual = weaponEffectProfile(weaponId);
@@ -181,8 +193,20 @@ test('each premium skin remixes all core weapon visuals and audio without changi
       assert.equal(premiumVisual.motif, skin.motif);
       assert.notDeepEqual(premiumAudio, baseAudio);
       assert.ok(premiumAudio.premium);
+      assert.equal(weaponArtForSkin(skin, { id: weaponId, art: 'base.webp' }), skin.weaponArt[weaponId]);
     }
   }
+  assert.equal(weaponArtForSkin(null, { id: 'revolver', art: 'base.webp' }), 'base.webp');
+});
+
+test('skin selection refreshes the loadout weapon cards after equip and reset', async () => {
+  const controller = await import('node:fs/promises').then(({ readFile }) => readFile(
+    new URL('../src/ui/SkinShopController.js', import.meta.url), 'utf8'));
+  const ui = await import('node:fs/promises').then(({ readFile }) => readFile(
+    new URL('../src/ui/UIController.js', import.meta.url), 'utf8'));
+  assert.match(controller, /onSelectionChange\?\.\(this\.heroId, skinId\)/);
+  assert.match(ui, /weaponArtForSkin\(loadoutSkin, weapon\)/);
+  assert.match(ui, /onSelectionChange: \(\) => this\.renderLoadout\(\)/);
 });
 
 test('wallet purchase starts only on explicit purchase and persists entitlement after settlement', async () => {

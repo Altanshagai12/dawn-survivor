@@ -80,6 +80,9 @@ h2 { margin: 2px 0 18px; font-size: clamp(28px, 8vw, 44px); line-height: 1; }
 .card-strip--weapons .select-card { height: 92px; background: radial-gradient(circle at 50% 43%, rgba(56,49,76,.42), #14111c 72%); }
 .card-strip--weapons .weapon-art { width: 100%; height: 100%; padding: 5px 10px 22px; object-fit: contain; object-position: center; filter: saturate(.62) brightness(.72); }
 .card-strip--weapons .select-card.selected .weapon-art { filter: saturate(1.08) brightness(1.08); }
+.card-strip--weapons .select-card--skin-weapon { background: radial-gradient(circle at 50% 43%, rgba(139,82,212,.3), #100d18 74%); }
+.card-strip--weapons .weapon-art--skin { padding: 1px 5px 20px; object-fit: contain; filter: saturate(.9) brightness(.86); }
+.card-strip--weapons .select-card.selected .weapon-art--skin { filter: saturate(1.15) brightness(1.08) drop-shadow(0 0 7px rgba(180,105,255,.32)); }
 .card-strip--weapons .select-card[data-weapon="flame"].selected { border-color: #ff9b55; box-shadow: 0 0 0 2px rgba(255,122,76,.24); }
 .loadout-detail { min-height: 16px; margin: 7px 2px 0; color: var(--muted); font-size: 10px; line-height: 1.4; }
 .loadout-detail--passive { color: #d9d0e5; }

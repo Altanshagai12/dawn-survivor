@@ -1,4 +1,5 @@
-import { SkinShopController } from './SkinShopController.js?build=20260828e';
+import { weaponArtForSkin } from '../data/skins.js?build=20260828g';
+import { SkinShopController } from './SkinShopController.js?build=20260828g';
 import {
   damageSourceLabel, formatSurvivalTime, heroPassiveCopy, movementCopy, savedOrDefault,
   survivalLeaderboardEntries,
@@ -57,7 +58,10 @@ export class UIController {
     this.onResume = null;
     this.onQuit = null;
     this.cacheElements();
-    this.skinShop = new SkinShopController({ profile, i18n, platform, commerce });
+    this.skinShop = new SkinShopController({
+      profile, i18n, platform, commerce,
+      onSelectionChange: () => this.renderLoadout(),
+    });
     this.bindButtons();
     this.renderLoadout();
   }
@@ -93,6 +97,7 @@ export class UIController {
   }
 
   renderLoadout() {
+    const loadoutSkin = this.skinShop.selected(this.selectedHero);
     this.el['hero-list'].replaceChildren(...Object.values(this.heroes).map((hero) => {
       const button = document.createElement('button');
       button.className = `select-card${hero.id === this.selectedHero ? ' selected' : ''}`;
@@ -105,10 +110,11 @@ export class UIController {
     }));
     this.el['weapon-list'].replaceChildren(...Object.values(this.weapons).map((weapon) => {
       const button = document.createElement('button');
-      button.className = `select-card${weapon.id === this.selectedWeapon ? ' selected' : ''}`;
+      button.className = `select-card${weapon.id === this.selectedWeapon ? ' selected' : ''}${loadoutSkin ? ' select-card--skin-weapon' : ''}`;
       button.dataset.weapon = weapon.id;
       button.title = weapon.description;
-      button.innerHTML = `<img class="weapon-art" src="${weapon.art}" alt=""/><span>${this.i18n.lang === 'mn' ? weapon.nameMn : weapon.name}</span>`;
+      const art = weaponArtForSkin(loadoutSkin, weapon);
+      button.innerHTML = `<img class="weapon-art${loadoutSkin ? ' weapon-art--skin' : ''}" src="${art}" alt=""/><span>${this.i18n.lang === 'mn' ? weapon.nameMn : weapon.name}</span>`;
       button.addEventListener('click', () => {
         this.selectedWeapon = weapon.id;
         this.renderLoadout();

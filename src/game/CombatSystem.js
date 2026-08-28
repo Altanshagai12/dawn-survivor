@@ -3,10 +3,10 @@ import { CombatEffects } from './CombatEffects.js?build=20260828e';
 import { handleSpecialKill } from './KillProgression.js?build=20260825r';
 import { resolveProjectileLaunchHits, resolveProjectileTravelHits } from './ProjectileLaunchCollision.js?build=20260827e';
 import { shouldConsumeAmmo, upgradedProjectileCount } from './WeaponMechanics.js?build=20260825r';
-import { presentWeaponImpact, updateProjectilePresentation } from './WeaponPresentation.js?build=20260828e';
-import { skinProjectileTint } from '../data/skins.js?build=20260828e';
+import { presentWeaponImpact, updateProjectilePresentation } from './WeaponPresentation.js?build=20260828g';
+import { skinProjectileTint } from '../data/skins.js?build=20260828g';
 
-export const PROJECTILE_RENDER_MULTIPLIER = 1.45;
+export const PROJECTILE_RENDER_MULTIPLIER = 1.6;
 
 export function projectileScale(size = 7) {
   return size / 8 * PROJECTILE_RENDER_MULTIPLIER;

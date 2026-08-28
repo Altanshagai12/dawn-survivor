@@ -3,7 +3,7 @@ import test from 'node:test';
 import { projectileTravelDistance, WEAPONS } from '../src/data/weapons.js';
 import { UPGRADES } from '../src/data/upgrades.js';
 import {
-  CombatSystem, projectileBodyRadius, projectileCollisionRadius, projectileScale,
+  CombatSystem, PROJECTILE_RENDER_MULTIPLIER, projectileBodyRadius, projectileCollisionRadius, projectileScale,
 } from '../src/game/CombatSystem.js';
 import { shouldConsumeAmmo, upgradedProjectileCount } from '../src/game/WeaponMechanics.js';
 import { nextWeaponCharge } from '../src/game/PlayerFeedback.js';
@@ -35,12 +35,13 @@ test('weapons preserve their authored near-to-far projectile travel roles', () =
 
 test('Big Shot enlarges both projectile rendering and its collision footprint', () => {
   const bigShotSize = WEAPONS.revolver.bulletSize * 1.4;
-  assert.ok(Math.abs(projectileScale(bigShotSize) - 2.03) < 1e-9);
+  assert.ok(Math.abs(projectileScale(bigShotSize) - 2.24) < 1e-9);
   assert.ok(Math.abs(projectileCollisionRadius(bigShotSize) - 5.6) < 1e-9);
 });
 
-test('base projectiles render 45% larger without silently widening their hit radius', () => {
-  assert.equal(projectileScale(WEAPONS.revolver.bulletSize), 1.45);
+test('base projectiles render larger without silently widening their hit radius', () => {
+  assert.equal(PROJECTILE_RENDER_MULTIPLIER, 1.6);
+  assert.equal(projectileScale(WEAPONS.revolver.bulletSize), 1.6);
   assert.equal(projectileCollisionRadius(WEAPONS.revolver.bulletSize), 4);
 });
 

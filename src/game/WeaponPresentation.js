@@ -1,10 +1,10 @@
 import { triggerShotFeedback } from './PlayerFeedback.js?build=20260826f';
 
 export const WEAPON_EFFECT_PROFILES = Object.freeze({
-  revolver: Object.freeze({ color: 0xffead8, tracer: 60, shake: .00105, duration: 105, visualScale: 1.28 }),
-  shotgun: Object.freeze({ color: 0xffe2c8, tracer: 54, shake: .0017, duration: 120, visualScale: 1.22 }),
-  crossbow: Object.freeze({ color: 0xfff1df, tracer: 170, shake: .0008, duration: 140, visualScale: 1.32 }),
-  flame: Object.freeze({ color: 0xffa13d, tracer: 42, shake: .0012, duration: 165, visualScale: 1.38 }),
+  revolver: Object.freeze({ color: 0xffead8, tracer: 60, shake: .00105, duration: 105, visualScale: 1.4 }),
+  shotgun: Object.freeze({ color: 0xffe2c8, tracer: 54, shake: .0017, duration: 120, visualScale: 1.34 }),
+  crossbow: Object.freeze({ color: 0xfff1df, tracer: 170, shake: .0008, duration: 140, visualScale: 1.46 }),
+  flame: Object.freeze({ color: 0xffa13d, tracer: 42, shake: .0012, duration: 165, visualScale: 1.52 }),
 });
 
 export function weaponEffectProfile(weaponId, skin = null) {

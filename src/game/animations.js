@@ -22,13 +22,20 @@ export function facingVector(input, fallback = { x: 0, y: 1 }, holdAim = false) 
   return { ...fallback };
 }
 
-export function playDirectional(sprite, key, x, y, moving = true) {
+export function directionalPose(x, y, mirrorLeft = false) {
   const row = directionRowFromVector(x, y);
-  const direction = DIRECTION_ROWS[row];
-  if (moving) sprite.play(`${key}-${direction}`, true);
+  const flipX = mirrorLeft && row >= 5;
+  const frameRow = flipX ? 8 - row : row;
+  return { row, frameRow, direction: DIRECTION_ROWS[frameRow], flipX };
+}
+
+export function playDirectional(sprite, key, x, y, moving = true, { mirrorLeft = false } = {}) {
+  const pose = directionalPose(x, y, mirrorLeft);
+  sprite.setFlipX?.(pose.flipX);
+  if (moving) sprite.play(`${key}-${pose.direction}`, true);
   else {
     sprite.stop();
-    sprite.setFrame(row * 6);
+    sprite.setFrame(pose.frameRow * 6);
   }
-  sprite.directionRow = row;
+  sprite.directionRow = pose.row;
 }

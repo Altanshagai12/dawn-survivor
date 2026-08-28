@@ -1,4 +1,4 @@
-import { PREMIUM_SKINS, SKIN_CATALOG_VERSION, SKIN_PURCHASE_ENDPOINT } from '../data/skins.js?build=20260828e';
+import { PREMIUM_SKINS, SKIN_CATALOG_VERSION, SKIN_PURCHASE_ENDPOINT } from '../data/skins.js?build=20260828g';
 
 function purchaseError(code, cause = null) {
   const error = new Error(code, cause ? { cause } : undefined);

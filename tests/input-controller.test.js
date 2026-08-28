@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { facingVector } from '../src/game/animations.js';
+import { directionalPose, facingVector, playDirectional } from '../src/game/animations.js';
 import {
   aimFromClientPoint, gameVectorFromClient, PointerFireLatch, radialDeadZone,
   smoothDirection, smoothStick, surfacePointFromClient,
@@ -64,6 +64,27 @@ test('faces toward aim while firing and movement otherwise', () => {
   const moving = { moveX: -1, moveY: 0, aimX: 0, aimY: -1, firing: false };
   assert.deepEqual(facingVector(moving), { x: -1, y: 0 });
   assert.deepEqual(facingVector({ ...moving, firing: true }), { x: 0, y: -1 });
+});
+
+test('player left octants mirror known-good right-facing animation rows', () => {
+  assert.deepEqual(directionalPose(-1, 0, true), {
+    row: 6, frameRow: 2, direction: 'e', flipX: true,
+  });
+  assert.deepEqual(directionalPose(-1, -1, true), {
+    row: 7, frameRow: 1, direction: 'ne', flipX: true,
+  });
+  assert.deepEqual(directionalPose(1, 0, true), {
+    row: 2, frameRow: 2, direction: 'e', flipX: false,
+  });
+
+  const calls = [];
+  const sprite = {
+    setFlipX(value) { calls.push(['flip', value]); },
+    play(key, repeat) { calls.push(['play', key, repeat]); },
+  };
+  playDirectional(sprite, 'hero', -1, 0, true, { mirrorLeft: true });
+  assert.deepEqual(calls, [['flip', true], ['play', 'hero-e', true]]);
+  assert.equal(sprite.directionRow, 6);
 });
 
 test('holds the last shot direction through idle and reload frames', () => {
