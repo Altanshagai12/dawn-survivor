@@ -12,6 +12,10 @@ test('mobile preserves the same enemy difficulty while reducing only visual cost
   assert.equal(mobile.enemyCap, desktop.enemyCap);
   assert.equal(mobile.enemyCap, 620);
   assert.ok(mobile.vfxCap < desktop.vfxCap);
+  assert.ok(mobile.premiumVfxCap < desktop.premiumVfxCap);
+  assert.ok(mobile.audioVoiceCap < desktop.audioVoiceCap);
+  assert.ok(mobile.premiumVfxCap <= 48);
+  assert.ok(mobile.audioVoiceCap <= 10);
   assert.ok(mobile.cameraZoom < desktop.cameraZoom);
 });
 

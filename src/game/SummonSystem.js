@@ -18,6 +18,7 @@ export class SummonSystem {
     if (!image?.active) {
       image = this.scene.add.image(this.scene.player.x, this.scene.player.y, 'upgrade-icons', frame)
         .setDepth(29).setScale(scale).setBlendMode(Phaser.BlendModes.ADD);
+      if (this.scene.state.skin) image.setTint(this.scene.state.skin.secondary).setAlpha(.88);
       this.objects.set(key, image);
     }
     return image.setFrame(frame).setScale(scale).setVisible(true);
@@ -93,11 +94,14 @@ export class SummonSystem {
       const bullet = this.scene.combat.spawnBullet(source.x, source.y,
         angle + (index - (count - 1) / 2) * .13, {
           damage: damage * this.scene.state.multiplierStats.summonDamage,
-          speed: 470, life: 1.2, size: 8, summon: true, texture: 'bullet-spirit', ...options,
+          speed: 470, life: 1.2, size: 8, summon: true, texture: 'bullet-spirit',
+          weaponId: this.scene.state.weapon.id, skin: this.scene.state.skin,
+          sourceType: 'summon', ...options,
         });
       if (!first) first = bullet;
     }
     this.scene.flashEffect(source.x, source.y, 7, .25);
+    this.scene.premiumVfx?.specialVolley('summon', angle);
     return first;
   }
 
@@ -108,6 +112,8 @@ export class SummonSystem {
       if (Phaser.Math.Distance.Between(source.x, source.y, enemy.x, enemy.y) > radius) return;
       enemy.setData(`${key}HitAt`, now + 430);
       this.scene.combat.damageEnemy(enemy, damage, { summon: true });
+      this.scene.premiumVfx?.specialAt('scythe', enemy.x, enemy.y, source.rotation || 0, .09);
+      this.scene.weaponAudio?.playSpecial?.('scythe', this.scene.state.skin, this.scene.state);
     });
   }
 

@@ -1,10 +1,10 @@
 import { clamp } from './simulation.js?build=20260825r';
-import { CombatEffects } from './CombatEffects.js?build=20260826f';
+import { CombatEffects } from './CombatEffects.js?build=20260828e';
 import { handleSpecialKill } from './KillProgression.js?build=20260825r';
 import { resolveProjectileLaunchHits, resolveProjectileTravelHits } from './ProjectileLaunchCollision.js?build=20260827e';
 import { shouldConsumeAmmo, upgradedProjectileCount } from './WeaponMechanics.js?build=20260825r';
-import { presentWeaponImpact, updateProjectilePresentation } from './WeaponPresentation.js?build=20260828a';
-import { skinProjectileTint } from '../data/skins.js?build=20260828b';
+import { presentWeaponImpact, updateProjectilePresentation } from './WeaponPresentation.js?build=20260828e';
+import { skinProjectileTint } from '../data/skins.js?build=20260828e';
 
 export const PROJECTILE_RENDER_MULTIPLIER = 1.45;
 
@@ -14,6 +14,10 @@ export function projectileScale(size = 7) {
 
 export function projectileCollisionRadius(size = 7) {
   return size / 2;
+}
+
+export function projectileBodyRadius(size = 7, renderScale = projectileScale(size)) {
+  return projectileCollisionRadius(size) / Math.max(.001, Math.abs(renderScale));
 }
 
 export class CombatSystem {
@@ -99,9 +103,11 @@ export class CombatSystem {
         this.scene.player.y + Math.sin(backAngle) * 22,
         backAngle,
         {
-          ...shotSpec, launchOrigin: { x: this.scene.player.x, y: this.scene.player.y },
+          ...shotSpec, sourceType: 'rear', launchOrigin: { x: this.scene.player.x, y: this.scene.player.y },
         },
       );
+      this.scene.premiumVfx?.specialVolley('rear', backAngle);
+      this.scene.weaponAudio?.playSpecial?.('rear', state.skin, state);
     }
     state.shots += 1;
     const moving = Math.hypot(this.scene.lastInput?.moveX || 0, this.scene.lastInput?.moveY || 0) > .2;
@@ -137,6 +143,7 @@ export class CombatSystem {
     bullet.explosionDamage = spec.explosionDamage || 0;
     bullet.fireball = Boolean(spec.fireball);
     bullet.summon = Boolean(spec.summon);
+    bullet.sourceType = spec.sourceType || (bullet.summon ? 'summon' : 'weapon');
     bullet.weaponId = spec.weaponId || null;
     bullet.skin = spec.skin === undefined && bullet.weaponId ? this.scene.state.skin : (spec.skin || null);
     bullet.sweptCollision = bullet.weaponId === 'crossbow';
@@ -149,10 +156,11 @@ export class CombatSystem {
     if (bullet.burnChance) bullet.setTint(0xffa34f).setBlendMode(Phaser.BlendModes.ADD);
     const premiumTint = skinProjectileTint(bullet.skin, bullet.weaponId);
     if (premiumTint) bullet.setTint(premiumTint).setBlendMode(Phaser.BlendModes.ADD);
+    this.scene.premiumVfx?.styleProjectile(bullet, spec.size || 7, bullet.weaponId);
     this.applyLens(bullet, angle);
     this.scene.physics.velocityFromRotation(angle, speed, bullet.body.velocity);
     bullet.collisionRadius = projectileCollisionRadius(spec.size);
-    bullet.body.setCircle(bullet.collisionRadius / projectileScale(spec.size));
+    bullet.body.setCircle(projectileBodyRadius(spec.size, bullet.scaleX));
     if (spec.launchOrigin) {
       resolveProjectileLaunchHits(this, bullet, spec.launchOrigin.x, spec.launchOrigin.y, x, y);
     }
@@ -164,6 +172,8 @@ export class CombatSystem {
     if (state.reloading || state.ammo >= state.magazine) return;
     state.reloading = true;
     state.reloadProgress = 0;
+    this.scene.premiumVfx?.reload('start');
+    this.scene.weaponAudio?.playReload?.('start', state.weapon.id, state.skin, state);
   }
 
   finishReload() {
@@ -173,13 +183,17 @@ export class CombatSystem {
     state.ammo = state.magazine;
     if (state.flags.freshClip) state.freshUntil = state.elapsed + 1;
     state.killClipStacks = 0;
+    this.scene.premiumVfx?.reload('complete');
+    this.scene.weaponAudio?.playReload?.('complete', state.weapon.id, state.skin, state);
   }
 
   fanFire(spec) {
+    this.scene.premiumVfx?.specialVolley('fan');
+    this.scene.weaponAudio?.playSpecial?.('fan', this.scene.state.skin, this.scene.state);
     for (let index = 0; index < 10; index += 1) {
       this.spawnBullet(this.scene.player.x, this.scene.player.y, index / 10 * Math.PI * 2, {
         ...spec, damage: spec.damage * .15, speed: spec.speed * .82,
-        life: Math.min(.8, spec.life), pierce: 0, size: Math.max(5, spec.size * .72),
+        life: Math.min(.8, spec.life), pierce: 0, size: Math.max(5, spec.size * .72), sourceType: 'fan',
       });
     }
     this.scene.flashEffect(this.scene.player.x, this.scene.player.y, 0, .8);
@@ -217,7 +231,10 @@ export class CombatSystem {
 
   finishBulletHit(bullet) {
     if (!bullet?.active) return;
-    if (bullet.pierce > 0) bullet.pierce -= 1;
+    if (bullet.pierce > 0) {
+      bullet.pierce -= 1;
+      this.scene.weaponAudio?.playSpecial?.('pierce', bullet.skin, this.scene.state);
+    }
     else if (!this.redirectRicochet(bullet)) bullet.destroy();
   }
 
@@ -238,6 +255,8 @@ export class CombatSystem {
     bullet.setRotation(angle);
     this.scene.physics.velocityFromRotation(angle, bullet.speed, bullet.body.velocity);
     bullet.expiresAt = Math.max(bullet.expiresAt, this.scene.time.now + 420);
+    this.scene.premiumVfx?.ricochet(bullet);
+    this.scene.weaponAudio?.playSpecial?.('ricochet', bullet.skin, this.scene.state);
     this.scene.flashEffect(bullet.x, bullet.y, 4, .24);
     return true;
   }
@@ -294,10 +313,13 @@ export class CombatSystem {
       for (let index = 0; index < 3; index += 1) this.spawnBullet(enemy.x, enemy.y, Math.random() * Math.PI * 2, {
         damage: this.scene.state.weapon.damage * .15, speed: 430, life: .55,
         size: 5, texture: this.scene.state.weapon.projectileTexture,
+        weaponId: this.scene.state.weapon.id, skin: this.scene.state.skin, sourceType: 'splinter',
       });
+      this.scene.premiumVfx?.specialVolley('splinter');
+      this.scene.weaponAudio?.playSpecial?.('splinter', this.scene.state.skin, this.scene.state);
     }
     if (enemy.status.freezeUntil > this.scene.time.now && this.scene.state.flags.shatter) {
-      this.effects.explode(enemy.x, enemy.y, enemy.maxHp * .25, 85);
+      this.effects.explode(enemy.x, enemy.y, enemy.maxHp * .25, 85, { shatter: true });
     }
     this.scene.flashEffect(enemy.x, enemy.y, 1, definition.boss ? 1.8 : .65);
     enemy.boomerTell?.destroy();

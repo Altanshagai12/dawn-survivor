@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { WEAPONS } from '../src/data/weapons.js';
-import { WeaponAudio, weaponSoundProfile } from '../src/game/WeaponAudio.js';
+import { PremiumWeaponAudio, weaponSoundProfile } from '../src/game/PremiumWeaponAudio.js';
 import { weaponEffectProfile, weaponShotAngles } from '../src/game/WeaponPresentation.js';
 
 test('all four weapons have distinct visual and sound identities', () => {
@@ -33,7 +33,7 @@ test('every weapon profile has a deliberately amplified visual footprint', () =>
 });
 
 test('weapon audio fails safely when Web Audio is unavailable', () => {
-  const audio = new WeaponAudio({});
+  const audio = new PremiumWeaponAudio({});
   assert.equal(audio.unlock(), false);
   assert.equal(audio.play('revolver'), false);
   assert.doesNotThrow(() => audio.destroy());

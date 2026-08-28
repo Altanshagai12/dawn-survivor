@@ -34,11 +34,20 @@ Phaser runtime, starts after `Usion.init`, stores progression with
 ## Premium skin preview
 
 Each hunter has one original premium cosmetic pack. A pack changes the loadout
-art, hero tint/aura, every core weapon's projectile/tracer/impact motif, weapon
-timbre, and hero intro/hit/ability voice cues. The current production trial uses
+art, animated hero aura and movement wake, every core weapon's muzzle/projectile/
+trail/impact/reload motif, weapon timbre, and hero intro/hit/ability voice cues.
+All 51 upgrades feed an authored presentation recipe, including rear/fan fire,
+splinters, ricochets, piercing, summons, elemental statuses, and Tomes. The current production trial uses
 `SKIN_ACCESS_MODE = 'free-preview'`: every pack can be equipped without a wallet
 request, while the choice is saved with `Usion.storage` across devices. Free
 preview does not grant a durable paid entitlement.
+
+Gameplay VFX use generated transparent 4×4 atlases rendered through the existing
+Phaser 4.2.1 WebGL pipeline. Effects are pooled and capped separately from base
+combat VFX; mobile uses lower particle and audio-polyphony budgets. Only the
+equipped atlas and its 24-file layered WAV bank are loaded for a run. Three.js is
+intentionally not loaded because Usion supports one game engine per service and
+mixing a second renderer would break the platform runtime contract.
 
 The dormant paid path fails closed: the game checks the receipt service before it opens the
 Usions confirmation dialog. `Usion.wallet.requestPayment` creates the escrow;

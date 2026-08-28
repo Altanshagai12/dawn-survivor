@@ -1,4 +1,4 @@
-import { SkinShopController } from './SkinShopController.js?build=20260828b';
+import { SkinShopController } from './SkinShopController.js?build=20260828e';
 import {
   damageSourceLabel, formatSurvivalTime, heroPassiveCopy, movementCopy, savedOrDefault,
   survivalLeaderboardEntries,

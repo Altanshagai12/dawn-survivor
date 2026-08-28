@@ -4,12 +4,15 @@ export function gameDeviceProfile({ coarse = false, width = 1024, cores = 8, mem
   if (!mobile) return {
     mobile: false, enemyCap: 620, enemyGroup: 660, bulletCap: 420,
     enemyBulletCap: 180, gemCap: 320, treeChunkRadius: 2, treeCap: 220,
-    vfxCap: 72, dustInterval: .09, cameraZoom: 1.05, lightScale: 1,
+    vfxCap: 72, premiumVfxCap: 96, audioVoiceCap: 16,
+    dustInterval: .09, cameraZoom: 1.05, lightScale: 1,
   };
   return {
     mobile: true, enemyCap: 620, enemyGroup: 660, bulletCap: constrained ? 260 : 340,
     enemyBulletCap: 110, gemCap: constrained ? 170 : 220, treeChunkRadius: 2, treeCap: 180,
-    vfxCap: constrained ? 22 : 32, dustInterval: .14, cameraZoom: .82, lightScale: .82,
+    vfxCap: constrained ? 22 : 32, premiumVfxCap: constrained ? 34 : 48,
+    audioVoiceCap: constrained ? 8 : 10,
+    dustInterval: .14, cameraZoom: .82, lightScale: .82,
   };
 }
 

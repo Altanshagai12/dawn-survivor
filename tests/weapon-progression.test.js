@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { projectileTravelDistance, WEAPONS } from '../src/data/weapons.js';
 import { UPGRADES } from '../src/data/upgrades.js';
-import { CombatSystem, projectileCollisionRadius, projectileScale } from '../src/game/CombatSystem.js';
+import {
+  CombatSystem, projectileBodyRadius, projectileCollisionRadius, projectileScale,
+} from '../src/game/CombatSystem.js';
 import { shouldConsumeAmmo, upgradedProjectileCount } from '../src/game/WeaponMechanics.js';
 import { nextWeaponCharge } from '../src/game/PlayerFeedback.js';
 import { RunState } from '../src/game/RunState.js';
@@ -40,6 +42,12 @@ test('Big Shot enlarges both projectile rendering and its collision footprint', 
 test('base projectiles render 45% larger without silently widening their hit radius', () => {
   assert.equal(projectileScale(WEAPONS.revolver.bulletSize), 1.45);
   assert.equal(projectileCollisionRadius(WEAPONS.revolver.bulletSize), 4);
+});
+
+test('a premium atlas scale preserves the authored world collision radius', () => {
+  const premiumScale = .085;
+  const localBodyRadius = projectileBodyRadius(9, premiumScale);
+  assert.ok(Math.abs(localBodyRadius * premiumScale - projectileCollisionRadius(9)) < 1e-9);
 });
 
 test('crossbow charge grows while still and resets on movement', () => {

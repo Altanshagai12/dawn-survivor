@@ -14,6 +14,8 @@ export const PREMIUM_SKINS = Object.freeze({
     spriteTint: 0x9defff, primary: 0x56efff, secondary: 0xffd56a, impact: 0xe8ffff,
     motif: 'star', weaponPitch: 1.18, voicePitch: 1.15,
     voice: `${base}/voice/shana-astral-warden.wav?build=20260828a`,
+    vfxKey: 'skin-vfx-astral', vfxAtlas: `${base}/vfx/astral-vfx-atlas-v3.webp?build=20260828e`,
+    audioBank: `${base}/audio/astral`,
   }),
   'diamond-bloodmoon-regent': Object.freeze({
     id: 'diamond-bloodmoon-regent', heroId: 'diamond', priceCredits: 250,
@@ -24,6 +26,8 @@ export const PREMIUM_SKINS = Object.freeze({
     spriteTint: 0xffa0a0, primary: 0xff334f, secondary: 0xd8a84b, impact: 0xffd3c7,
     motif: 'moon', weaponPitch: .82, voicePitch: .78,
     voice: `${base}/voice/diamond-bloodmoon-regent.wav?build=20260828a`,
+    vfxKey: 'skin-vfx-bloodmoon', vfxAtlas: `${base}/vfx/bloodmoon-vfx-atlas-v3.webp?build=20260828e`,
+    audioBank: `${base}/audio/bloodmoon`,
   }),
   'scarlett-sunforge-phoenix': Object.freeze({
     id: 'scarlett-sunforge-phoenix', heroId: 'scarlett', priceCredits: 260,
@@ -34,6 +38,8 @@ export const PREMIUM_SKINS = Object.freeze({
     spriteTint: 0xffd08a, primary: 0xff8a24, secondary: 0xffe37a, impact: 0xfff2c4,
     motif: 'feather', weaponPitch: 1.04, voicePitch: 1.02,
     voice: `${base}/voice/scarlett-sunforge-phoenix.wav?build=20260828a`,
+    vfxKey: 'skin-vfx-sunforge', vfxAtlas: `${base}/vfx/sunforge-vfx-atlas-v3.webp?build=20260828e`,
+    audioBank: `${base}/audio/sunforge`,
   }),
   'hina-void-lotus': Object.freeze({
     id: 'hina-void-lotus', heroId: 'hina', priceCredits: 270,
@@ -44,6 +50,8 @@ export const PREMIUM_SKINS = Object.freeze({
     spriteTint: 0xc48cff, primary: 0xb83cff, secondary: 0x67e0ff, impact: 0xf2d8ff,
     motif: 'lotus', weaponPitch: 1.28, voicePitch: 1.3,
     voice: `${base}/voice/hina-void-lotus.wav?build=20260828a`,
+    vfxKey: 'skin-vfx-void-lotus', vfxAtlas: `${base}/vfx/void-lotus-vfx-atlas-v3.webp?build=20260828e`,
+    audioBank: `${base}/audio/void-lotus`,
   }),
 });
 

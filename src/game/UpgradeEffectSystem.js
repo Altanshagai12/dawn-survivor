@@ -24,6 +24,8 @@ export class UpgradeEffectSystem {
       onComplete: () => icon.destroy(),
     });
     this.scene.flashEffect(this.scene.player.x, this.scene.player.y, upgrade.tree === 'holy' ? 5 : 7, .85);
+    this.scene.premiumVfx?.upgradeAcquired(upgrade);
+    this.scene.weaponAudio?.playUpgrade?.(upgrade, this.scene.state.skin);
   }
 
   update(delta, input) {
@@ -47,6 +49,8 @@ export class UpgradeEffectSystem {
     const radius = 210 * state.multiplierStats.vision;
     const damage = state.flags.intenseGlare ? 30 : 15;
     this.ring(radius, 0x8cecff, .3);
+    this.scene.premiumVfx?.specialVolley('glare');
+    this.scene.weaponAudio?.playSpecial?.('lightning', state.skin, state);
     this.eachEnemy(radius, (enemy) => {
       this.scene.combat.damageEnemy(enemy, damage, { glare: true });
       if (!enemy.active || !state.flags.sightMagic) return;
@@ -63,6 +67,8 @@ export class UpgradeEffectSystem {
     if (state.flags.galeMoveScale) damage *= state.multiplierStats.moveSpeed;
     const radius = state.flags.eyeStorm ? 185 : 145;
     this.ring(radius, 0xa8efff, .55);
+    this.scene.premiumVfx?.specialVolley('gale');
+    this.scene.weaponAudio?.playSpecial?.('gale', state.skin, state);
     this.eachEnemy(radius, (enemy, distance) => {
       const multiplier = state.flags.eyeStorm && distance < 90 ? 2 : 1;
       this.scene.combat.damageEnemy(enemy, damage * multiplier, { gale: true });
@@ -74,6 +80,7 @@ export class UpgradeEffectSystem {
     const interval = .32 / Math.max(.5, this.scene.state.multiplierStats.moveSpeed);
     if (!this.advance('blazing', delta, interval)) return;
     const { x, y } = this.scene.player;
+    this.scene.premiumVfx?.specialAt('blazing', x, y + 20, 0, .09);
     const ember = this.scene.add.sprite(x, y + 25, 'combat-vfx', 12)
       .setDepth(23).setScale(.23).setAlpha(.72).setBlendMode(Phaser.BlendModes.ADD);
     ember.play('combat-vfx-2');
@@ -84,7 +91,10 @@ export class UpgradeEffectSystem {
   updateShieldWrath(delta) {
     if (!this.advance('wrath', delta, 1)) return;
     const target = this.scene.nearestEnemy(this.scene.player.x, this.scene.player.y, 430);
-    if (target) this.scene.combat.effects.lightning(target, { smite: true });
+    if (target) {
+      this.scene.premiumVfx?.specialAt('shield', target.x, target.y, 0, .12);
+      this.scene.combat.effects.lightning(target, { smite: true });
+    }
   }
 
   eachEnemy(radius, callback) {

@@ -102,6 +102,13 @@ export function presentWeaponShot(scene, angle, authoredAngles = null) {
   const x = scene.player.x + Math.cos(angle) * 27;
   const y = scene.player.y + Math.sin(angle) * 27;
   const angles = authoredAngles?.length ? authoredAngles : weaponShotAngles(weapon, angle);
+  scene.premiumVfx?.shot(angle, angles);
+  if (skin) {
+    triggerShotFeedback(scene, angle);
+    scene.weaponAudio?.play(weapon.id, skin, scene.state);
+    scene.cameras.main.shake(60, profile.shake * (scene.performance?.mobile ? 1.18 : 1));
+    return;
+  }
   pulse(scene, x, y, profile.color, profile.visualScale * .8);
   if (weapon.id === 'shotgun') {
     angles.forEach((shotAngle) => tracer(scene, x, y, shotAngle, profile.tracer,
@@ -119,7 +126,7 @@ export function presentWeaponShot(scene, angle, authoredAngles = null) {
   }
   premiumMotif(scene, x, y, angle, skin);
   triggerShotFeedback(scene, angle);
-  scene.weaponAudio?.play(weapon.id, skin);
+  scene.weaponAudio?.play(weapon.id, skin, scene.state);
   scene.cameras.main.shake(60, profile.shake * (scene.performance?.mobile ? 1.18 : 1));
 }
 
@@ -128,6 +135,9 @@ export function presentWeaponImpact(scene, bullet, x, y) {
   const skin = bullet.skin || null;
   const profile = weaponEffectProfile(bullet.weaponId, skin);
   const angle = bullet.rotation || 0;
+  scene.premiumVfx?.impact(bullet, x, y);
+  scene.weaponAudio?.playImpact?.(bullet, scene.state);
+  if (skin) return;
   pulse(scene, x, y, profile.color, profile.visualScale);
   if (bullet.weaponId === 'flame') {
     for (let index = 0; index < 3; index += 1) {
@@ -144,6 +154,8 @@ export function presentWeaponImpact(scene, bullet, x, y) {
 }
 
 export function updateProjectilePresentation(scene, bullet) {
+  scene.premiumVfx?.trail(bullet);
+  if (bullet?.skin) return;
   if (bullet?.weaponId !== 'flame' || scene.time.now < (bullet.nextTrailAt || 0)) return;
   bullet.nextTrailAt = scene.time.now + (scene.performance?.mobile ? 92 : 62);
   const angle = bullet.rotation || 0;

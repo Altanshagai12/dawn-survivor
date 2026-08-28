@@ -1,14 +1,14 @@
 import { HEROES } from './data/heroes.js?build=20260826e';
-import { normalizeSkinProfile, SKIN_ACCESS_MODE } from './data/skins.js?build=20260828b';
+import { normalizeSkinProfile, SKIN_ACCESS_MODE } from './data/skins.js?build=20260828e';
 import { WEAPONS } from './data/weapons.js?build=20260827b';
-import { BootScene } from './game/BootScene.js?build=20260825r';
-import { GameScene } from './game/GameScene.js?build=20260828a';
+import { BootScene } from './game/BootScene.js?build=20260828e';
+import { GameScene } from './game/GameScene.js?build=20260828e';
 import { gameRenderResolution } from './game/deviceProfile.js?build=20260826j';
 import { installVisibleResume } from './game/runtimeLifecycle.js?build=20260825r';
 import { defaultProfile, initPlatform } from './platform/usion.js?build=20260828a';
 import { createI18n } from './ui/i18n.js?build=20260826l';
 import { installInteractionGuards } from './ui/interactionGuards.js?build=20260826h';
-import { UIController } from './ui/UIController.js?build=20260828b';
+import { UIController } from './ui/UIController.js?build=20260828e';
 import { gameViewportSize, installAutoLandscape, requestLandscape } from './ui/orientation.js?build=20260826b';
 
 async function boot() {
@@ -19,7 +19,7 @@ async function boot() {
   const profile = normalizeSkinProfile({ ...defaultProfile(), ...(stored || {}) });
   let commerce = null;
   if (SKIN_ACCESS_MODE === 'paid') {
-    const { SkinCommerce } = await import('./commerce/SkinCommerce.js?build=20260828b');
+    const { SkinCommerce } = await import('./commerce/SkinCommerce.js?build=20260828e');
     commerce = new SkinCommerce({ platform, profile });
     await commerce.recoverPending().catch((error) => console.warn('Skin delivery recovery pending', error));
   }

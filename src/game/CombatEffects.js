@@ -8,6 +8,7 @@ export class CombatEffects {
     enemy.status.burnUntil = Math.max(enemy.status.burnUntil, this.scene.time.now + 4000);
     enemy.status.burnDamage = burnDps * .5 * this.scene.state.multiplierStats.burnDamage;
     this.scene.flashEffect(enemy.x, enemy.y, 2, .26);
+    this.scene.premiumVfx?.status('burn', enemy.x, enemy.y, .08);
     if (this.scene.state.flags.burnHealChance && Math.random() < this.scene.state.flags.burnHealChance) {
       this.scene.state.heal(1);
       this.scene.flashEffect(this.scene.player.x, this.scene.player.y, 5, .55);
@@ -25,6 +26,7 @@ export class CombatEffects {
     }
     enemy.setTint(0x8eeeff);
     this.scene.flashEffect(enemy.x, enemy.y, 3, .32);
+    this.scene.premiumVfx?.status('freeze', enemy.x, enemy.y, .09);
   }
 
   applyCurse(enemy, bulletDamage) {
@@ -34,6 +36,7 @@ export class CombatEffects {
     enemy.status.curseDamage = bulletDamage * multiplier;
     enemy.setTint(0xb05cff);
     this.scene.flashEffect(enemy.x, enemy.y, 6, .28);
+    this.scene.premiumVfx?.status('curse', enemy.x, enemy.y, .07);
   }
 
   lightning(enemy, source = {}) {
@@ -43,6 +46,8 @@ export class CombatEffects {
     const radius = 52 * state.multiplierStats.lightningArea;
     this.combat.damageEnemy(enemy, damage, { ...source, lightning: true });
     this.scene.flashEffect(enemy.x, enemy.y, 4, .72 + radius / 180);
+    this.scene.premiumVfx?.status('lightning', enemy.x, enemy.y, .13 + radius / 900);
+    this.scene.weaponAudio?.playSpecial?.('lightning', state.skin, state);
     this.scene.enemies.getChildren().forEach((nearby) => {
       if (!nearby?.active || nearby === enemy) return;
       if (Phaser.Math.Distance.Between(enemy.x, enemy.y, nearby.x, nearby.y) <= radius) {
@@ -55,6 +60,10 @@ export class CombatEffects {
   explode(x, y, damage, radius = 90, source = {}) {
     const actualRadius = radius * this.scene.state.multiplierStats.explosionRadius;
     this.scene.flashEffect(x, y, 2, actualRadius / 55);
+    const status = source.shatter ? 'freeze' : 'burn';
+    this.scene.premiumVfx?.status(status, x, y, Math.min(.28, actualRadius / 620));
+    if (source.shatter) this.scene.premiumVfx?.specialAt('shatter', x, y, 0, .14);
+    this.scene.weaponAudio?.playSpecial?.(source.shatter ? 'ice' : 'explosion', this.scene.state.skin, this.scene.state);
     this.scene.enemies.getChildren().forEach((enemy) => {
       if (enemy?.active && Phaser.Math.Distance.Between(x, y, enemy.x, enemy.y) <= actualRadius) {
         this.combat.damageEnemy(enemy, damage * this.scene.state.multiplierStats.explosionDamage, source);
@@ -85,9 +94,15 @@ export class CombatEffects {
       this.scene.player.x,
       this.scene.player.y,
       angle + offset,
-      { damage: 8, speed: 500, life: .85, size: 9, freezeChance: 1, texture: 'bullet-spirit' },
+      {
+        damage: 8, speed: 500, life: .85, size: 9, freezeChance: 1,
+        texture: 'bullet-spirit', weaponId: this.scene.state.weapon.id,
+        skin: this.scene.state.skin, sourceType: 'ice-shard',
+      },
     ));
     this.scene.flashEffect(this.scene.player.x, this.scene.player.y, 3, .6);
+    this.scene.premiumVfx?.specialVolley('ice', angle);
+    this.scene.weaponAudio?.playSpecial?.('ice', this.scene.state.skin, this.scene.state);
   }
 
   fireball(angle) {
@@ -96,5 +111,7 @@ export class CombatEffects {
       fireball: true, texture: 'bullet-flame', weaponId: 'flame',
     });
     this.scene.flashEffect(this.scene.player.x, this.scene.player.y, 2, .75);
+    this.scene.premiumVfx?.specialVolley('fireball', angle);
+    this.scene.weaponAudio?.playSpecial?.('fireball', this.scene.state.skin, this.scene.state);
   }
 }

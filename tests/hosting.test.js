@@ -38,6 +38,7 @@ test('runtime uses Phaser 4 group iteration and real Usion SDK calls', async () 
   assert.match(gameCode, /submitScore\(survivalMs/);
   assert.match(gameCode, /duration_ms:\s*survivalMs/);
   assert.ok(!gameCode.includes('input.activePointer'));
+  assert.doesNotMatch(gameCode, /three(?:\.min)?\.js|from ['\"]three['\"]/i);
   assert.ok(!/Usion\.(ready|user\.info)|Usion\.game\.emit/.test(platformCode));
 });
 
@@ -46,7 +47,7 @@ test('mobile boots directly into automatic landscape with dedicated Hina ability
   const main = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
   const orientation = await readFile(new URL('../src/ui/orientation.js', import.meta.url), 'utf8');
   const input = await readFile(new URL('../src/game/InputController.js', import.meta.url), 'utf8');
-  const weaponAudio = await readFile(new URL('../src/game/WeaponAudio.js', import.meta.url), 'utf8');
+  const weaponAudio = await readFile(new URL('../src/game/PremiumWeaponAudio.js', import.meta.url), 'utf8');
   const css = await readFile(new URL('../styles.css', import.meta.url), 'utf8');
   assert.doesNotMatch(html, /orientation-gate|ROTATE TO LANDSCAPE/);
   assert.match(html, /id="ability-button"/);
@@ -57,8 +58,8 @@ test('mobile boots directly into automatic landscape with dedicated Hina ability
   assert.match(css, /html\.mobile-rotated #app/);
   assert.match(css, /rotate\(90deg\)/);
   assert.match(css, /#game canvas[^}]*width:\s*100%\s*!important[^}]*height:\s*100%\s*!important/s);
-  assert.match(main, /GameScene\.js\?build=20260828a/);
-  assert.match(html, /main\.js\?build=20260828b/);
+  assert.match(main, /GameScene\.js\?build=20260828e/);
+  assert.match(html, /main\.js\?build=20260828e/);
   assert.match(main, /resolution:\s*gameRenderResolution\(window\.devicePixelRatio\)/);
   assert.match(html, /minimum-scale=1,maximum-scale=1/);
   assert.match(css, /-webkit-touch-callout:\s*none/);
