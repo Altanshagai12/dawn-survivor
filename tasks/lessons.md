@@ -64,3 +64,4 @@
 - Every overlay added to a shared hide/show list must also be registered in the UI element cache; a missing modal reference can stop the entire boot scene after asset loading.
 - A premium preview modal must be tested at low landscape height even with a fine pointer; tying fit rules only to `pointer: coarse` hides overflow until a real WebView or compact desktop window exposes it.
 - A premium cosmetic cannot stop at sprite tint plus a generic aura. Treat the paid/free-preview promise as a complete presentation contract across hero silhouette, movement, ability, every weapon phase, upgrade mutations, audio layers, hit confirmation, and mobile performance; verify the full cross-product before shipping.
+- Player i-frames and their blink presentation must use the same authoritative clock and end on the same frame. If blinking outlasts immunity, the player can visibly appear protected while stacked contact, projectile, tree, or barrier damage removes another heart.

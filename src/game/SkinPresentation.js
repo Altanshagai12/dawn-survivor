@@ -23,6 +23,13 @@ export function restoreHeroSkin(scene) {
   else scene.player.clearTint();
 }
 
+export function setHeroSkinVisibility(aura, multiplier = 1) {
+  if (!aura) return;
+  aura.visibility = Math.max(0, Math.min(1, multiplier));
+  aura.crest?.setAlpha(.34 * aura.visibility);
+  aura.weapon?.setAlpha(.62 * aura.visibility);
+}
+
 export function syncHeroSkin(aura, player, deltaSeconds = 0) {
   if (!aura || !player?.active) return;
   aura.phase += deltaSeconds * 2.4;

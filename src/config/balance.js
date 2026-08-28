@@ -4,7 +4,8 @@ export const TEN_MINUTES_BALANCE = {
   player: {
     baseRunSpeed: 5 * WORLD_UNIT,
     shootWalkRatio: 0.5,
-    hitIFramesMs: 500,
+    hitIFramesMs: 900,
+    hitBlinkMs: 75,
     hina: {
       dashDistance: 4 * WORLD_UNIT,
       dashDuration: 0.16,

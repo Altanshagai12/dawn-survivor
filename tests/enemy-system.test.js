@@ -1,12 +1,16 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  DAMAGE_SOURCE, EnemySystem, PLAYER_INVULNERABILITY_MS,
+  DAMAGE_SOURCE, EnemySystem, PLAYER_INVULNERABILITY_BLINK_MS, PLAYER_INVULNERABILITY_MS,
 } from '../src/game/EnemySystem.js';
+
+function makeAlphaNode(alpha) {
+  return { alpha, setAlpha(value) { this.alpha = value; return this; } };
+}
 
 function makeScene() {
   let damageCalls = 0;
-  let tweenConfig = null;
+  let premiumVisibility = 1;
   const player = {
     active: true,
     alpha: 1,
@@ -19,24 +23,22 @@ function makeScene() {
   };
   return {
     get damageCalls() { return damageCalls; },
-    get tweenConfig() { return tweenConfig; },
+    get premiumVisibility() { return premiumVisibility; },
     physics: { add: { overlap() {} } },
     player,
     enemies: {},
     enemyBullets: {},
     ended: false,
+    skinAura: { crest: makeAlphaNode(.34), weapon: makeAlphaNode(.62) },
+    premiumVfx: { setPlayerVisibility(value) { premiumVisibility = value; } },
     lastInput: { moveX: 0, moveY: 0 },
     state: {
       flags: {},
+      isInvincible: false,
       takeDamage() { damageCalls += 1; return { blocked: false, dead: false }; },
     },
     time: { now: 1000, delayedCall() {} },
-    tweens: {
-      add(config) {
-        tweenConfig = config;
-        return { stop() {} };
-      },
-    },
+    tweens: { add() { return { stop() {} }; } },
     cameras: { main: { shake() {} } },
     combat: { explode() {} },
     ui: { toast() {} },
@@ -44,7 +46,7 @@ function makeScene() {
   };
 }
 
-test('damage grants a visible immunity window that blocks stacked hits', () => {
+test('one hit grants synchronized i-frames that block every stacked damage source', () => {
   const previousPhaser = globalThis.Phaser;
   globalThis.Phaser = { TintModes: { FILL: 1 } };
   try {
@@ -55,16 +57,36 @@ test('damage grants a visible immunity window that blocks stacked hits', () => {
     assert.equal(system.playerInvulnerableUntil, 1000 + PLAYER_INVULNERABILITY_MS);
     assert.equal(system.lastDamageSource, DAMAGE_SOURCE.PROJECTILE);
     assert.equal(scene.damageCalls, 1);
-    assert.ok((scene.tweenConfig.repeat + 1) * scene.tweenConfig.duration * 2
-      >= PLAYER_INVULNERABILITY_MS);
+    assert.equal(scene.state.isInvincible, true);
+    assert.equal(scene.player.alpha, .28);
+    assert.equal(scene.premiumVisibility, .28);
+    assert.ok(Math.abs(scene.skinAura.crest.alpha - .34 * .28) < 1e-10);
+    assert.ok(Math.abs(scene.skinAura.weapon.alpha - .62 * .28) < 1e-10);
 
-    scene.time.now += PLAYER_INVULNERABILITY_MS - 1;
+    assert.equal(system.damagePlayer(1, DAMAGE_SOURCE.ENEMY), false);
+    assert.equal(system.damagePlayer(1, DAMAGE_SOURCE.BARRIER), false);
+    assert.equal(scene.damageCalls, 1);
+
+    scene.time.now += PLAYER_INVULNERABILITY_BLINK_MS;
+    system.updatePlayerInvulnerability();
+    assert.equal(scene.state.isInvincible, true);
+    assert.equal(scene.player.alpha, 1);
+    assert.equal(scene.skinAura.crest.alpha, .34);
+    assert.equal(scene.skinAura.weapon.alpha, .62);
+
+    scene.time.now += PLAYER_INVULNERABILITY_MS - PLAYER_INVULNERABILITY_BLINK_MS - 1;
     assert.equal(system.damagePlayer(1), false);
     assert.equal(scene.damageCalls, 1);
 
     scene.time.now += 1;
     assert.equal(system.damagePlayer(1), true);
     assert.equal(scene.damageCalls, 2);
+
+    scene.time.now += PLAYER_INVULNERABILITY_MS;
+    system.updatePlayerInvulnerability();
+    assert.equal(scene.state.isInvincible, false);
+    assert.equal(scene.player.alpha, 1);
+    assert.equal(scene.premiumVisibility, 1);
   } finally {
     globalThis.Phaser = previousPhaser;
   }

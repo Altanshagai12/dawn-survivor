@@ -37,6 +37,7 @@ export class RunState {
     this.regenerationTimer = 0;
     this.weaponCharge = 0;
     this.soulHearts = 0;
+    this.isInvincible = false;
   }
 
   get multiplierStats() {
@@ -117,6 +118,7 @@ export class RunState {
   }
 
   takeDamage(amount) {
+    if (this.isInvincible) return { blocked: true, dead: false, invulnerable: true };
     if (this.shieldReady) {
       this.shieldReady = false;
       this.shieldCooldown = this.flags.stalwartShield ? 60 : 120;

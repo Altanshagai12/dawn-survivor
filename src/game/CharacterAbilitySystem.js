@@ -1,5 +1,5 @@
 import { HERO_ATLASES } from '../config/assets.js?build=20260825r';
-import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260827d';
+import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260828f';
 
 export function dashCooldownState(now, nextDashAt, cooldownSeconds) {
   const durationMs = Math.max(1, cooldownSeconds * 1000);

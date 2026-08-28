@@ -26,13 +26,22 @@ export class PremiumVfxDirector {
   createAura() {
     const back = this.scene.add.image(0, 0, this.skin.vfxKey, 0)
       .setDepth(21).setBlendMode(Phaser.BlendModes.ADD).setAlpha(.42);
+    back.premiumBaseAlpha = .42;
     const front = this.scene.add.image(0, 0, this.skin.vfxKey, 0)
       .setDepth(34).setBlendMode(Phaser.BlendModes.ADD).setAlpha(.17);
+    front.premiumBaseAlpha = .17;
     this.aura.push(back, front);
     for (let index = 0; index < 3; index += 1) {
-      this.aura.push(this.scene.add.image(0, 0, this.skin.vfxKey, 6)
-        .setDepth(33).setBlendMode(Phaser.BlendModes.ADD).setAlpha(.72));
+      const mote = this.scene.add.image(0, 0, this.skin.vfxKey, 6)
+        .setDepth(33).setBlendMode(Phaser.BlendModes.ADD).setAlpha(.72);
+      mote.premiumBaseAlpha = .72;
+      this.aura.push(mote);
     }
+  }
+
+  setPlayerVisibility(multiplier = 1) {
+    const visibility = Phaser.Math.Clamp(multiplier, 0, 1);
+    this.aura.forEach((node) => node.setAlpha((node.premiumBaseAlpha ?? 1) * visibility));
   }
 
   obtain() {

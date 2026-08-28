@@ -74,6 +74,13 @@ test('Regeneration heals one HP every 90 simulation seconds', () => {
   assert.equal(state.hp, 4);
 });
 
+test('RunState rejects direct damage while its i-frame state is active', () => {
+  const state = new RunState(HEROES.shana, WEAPONS.revolver);
+  state.isInvincible = true;
+  assert.deepEqual(state.takeDamage(1), { blocked: true, dead: false, invulnerable: true });
+  assert.equal(state.hp, state.maxHp);
+});
+
 test('experience can grant multiple queued levels', () => {
   const state = new RunState(HEROES.scarlett, WEAPONS.flame);
   assert.equal(state.gainXp(20), 2);

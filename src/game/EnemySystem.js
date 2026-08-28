@@ -1,10 +1,11 @@
 import { BOSS_ATLASES, ENEMY_ATLASES } from '../config/assets.js?build=20260825r';
-import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260826h';
+import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260828f';
 import { playDirectional } from './animations.js?build=20260825r';
-import { restoreHeroSkin } from './SkinPresentation.js?build=20260828a';
+import { restoreHeroSkin, setHeroSkinVisibility } from './SkinPresentation.js?build=20260828f';
 import { syncGroundShadow } from './VisualEffects.js?build=20260825r';
 
 export const PLAYER_INVULNERABILITY_MS = TEN_MINUTES_BALANCE.player.hitIFramesMs;
+export const PLAYER_INVULNERABILITY_BLINK_MS = TEN_MINUTES_BALANCE.player.hitBlinkMs;
 export const DAMAGE_SOURCE = Object.freeze({
   BOOMER: 'bomber-contact',
   ENEMY: 'enemy-contact',
@@ -18,6 +19,7 @@ export class EnemySystem {
   constructor(scene) {
     this.scene = scene;
     this.playerInvulnerableUntil = 0;
+    this.playerInvulnerableStartedAt = 0;
     this.steeringAt = 0;
     this.steering = new Map();
     scene.physics.add.overlap(scene.player, scene.enemies, (_player, enemy) => this.touchPlayer(enemy));
@@ -30,6 +32,7 @@ export class EnemySystem {
 
   update() {
     const now = this.scene.time.now;
+    this.updatePlayerInvulnerability(now);
     if (now >= this.steeringAt) {
       this.steeringAt = now + 100;
       this.rebuildSteering();
@@ -223,18 +226,32 @@ export class EnemySystem {
     this.damagePlayer(enemy.enemyDef.damage || 1, DAMAGE_SOURCE.ENEMY);
   }
 
+  isPlayerInvulnerable(now = this.scene.time.now) {
+    return now < this.playerInvulnerableUntil;
+  }
+
+  updatePlayerInvulnerability(now = this.scene.time.now) {
+    const invulnerable = this.isPlayerInvulnerable(now);
+    this.scene.state.isInvincible = invulnerable;
+    const elapsed = Math.max(0, now - this.playerInvulnerableStartedAt);
+    const dimmed = invulnerable
+      && Math.floor(elapsed / PLAYER_INVULNERABILITY_BLINK_MS) % 2 === 0;
+    const visibility = dimmed ? .28 : 1;
+    if (this.scene.player?.active) this.scene.player.setAlpha(visibility);
+    setHeroSkinVisibility(this.scene.skinAura, visibility);
+    this.scene.premiumVfx?.setPlayerVisibility?.(visibility);
+    return invulnerable;
+  }
+
   damagePlayer(amount, source = DAMAGE_SOURCE.UNKNOWN) {
     const now = this.scene.time.now;
-    if (now < this.playerInvulnerableUntil || this.scene.ended) return false;
+    if (this.scene.ended || this.updatePlayerInvulnerability(now)) return false;
     const result = this.scene.state.takeDamage(amount);
     this.lastDamageSource = source;
     this.scene.ui.showDamageSource?.(source);
+    this.playerInvulnerableStartedAt = now;
     this.playerInvulnerableUntil = now + PLAYER_INVULNERABILITY_MS;
-    this.invulnerabilityTween?.stop();
-    this.invulnerabilityTween = this.scene.tweens.add({
-      targets: this.scene.player, alpha: .32, duration: 80, yoyo: true, repeat: 3,
-      onComplete: () => this.scene.player?.active && this.scene.player.setAlpha(1),
-    });
+    this.updatePlayerInvulnerability(now);
     this.scene.player.setTint(result.blocked ? 0x65e6ff : 0xffffff).setTintMode(Phaser.TintModes.FILL);
     this.scene.time.delayedCall(110, () => restoreHeroSkin(this.scene));
     if (!result.blocked) this.scene.weaponAudio?.playVoice('hurt', this.scene.state.skin);
