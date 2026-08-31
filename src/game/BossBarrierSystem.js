@@ -1,6 +1,8 @@
 import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260828i';
 import { DAMAGE_SOURCE } from './EnemySystem.js?build=20260828f';
 
+const BODY_CLAMP_EPSILON = 0.01;
+
 export function clampPlayerBodyToBounds(player, bounds) {
   const body = player.body;
   const halfWidth = body?.halfWidth ?? (body?.width || 0) / 2;
@@ -9,9 +11,15 @@ export function clampPlayerBodyToBounds(player, bounds) {
   const centerY = body?.center?.y ?? player.y;
   const clampedCenterX = Phaser.Math.Clamp(centerX, bounds.x + halfWidth, bounds.right - halfWidth);
   const clampedCenterY = Phaser.Math.Clamp(centerY, bounds.y + halfHeight, bounds.bottom - halfHeight);
+  const correctionX = clampedCenterX - centerX;
+  const correctionY = clampedCenterY - centerY;
+  const hitX = Math.abs(correctionX) > BODY_CLAMP_EPSILON;
+  const hitY = Math.abs(correctionY) > BODY_CLAMP_EPSILON;
   return {
-    x: player.x + clampedCenterX - centerX,
-    y: player.y + clampedCenterY - centerY,
+    x: hitX ? player.x + correctionX : player.x,
+    y: hitY ? player.y + correctionY : player.y,
+    hitX,
+    hitY,
   };
 }
 
@@ -73,10 +81,10 @@ export class BossBarrierSystem {
     if (!this.active) return;
     const config = TEN_MINUTES_BALANCE.barrier;
     const bounds = this.bounds();
-    const { x, y } = clampPlayerBodyToBounds(this.scene.player, bounds);
-    if (x !== this.scene.player.x || y !== this.scene.player.y) {
-      let nx = x === this.scene.player.x ? 0 : Math.sign(x - this.scene.player.x);
-      let ny = y === this.scene.player.y ? 0 : Math.sign(y - this.scene.player.y);
+    const { x, y, hitX, hitY } = clampPlayerBodyToBounds(this.scene.player, bounds);
+    if (hitX || hitY) {
+      let nx = hitX ? Math.sign(x - this.scene.player.x) : 0;
+      let ny = hitY ? Math.sign(y - this.scene.player.y) : 0;
       const length = Math.hypot(nx, ny) || 1;
       nx /= length;
       ny /= length;

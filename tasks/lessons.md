@@ -71,3 +71,4 @@
 - When the authored balance defines discrete wave HP, never translate it into player-relative “equivalent hit” scaling. Snapshot the session's fixed `hp`, `maxHp`, session ID, and spawn time once; later timer thresholds and player upgrades must not mutate an existing enemy.
 - A sprite's visible bounds are not a faithful player hurtbox. Match the source game's authored collider shape and offset, and let Character Size scale both render and physics together; arbitrary per-hero square bodies make near-misses feel like hits.
 - Cosmetic intro voice must be opt-in at the scene boundary. Keeping a queued voice in the audio unlock path can replay it on the user's first gameplay gesture even after the opening moment has passed.
+- Never infer barrier contact from strict equality on a position reconstructed through floating-point body-center arithmetic. Return the original position when no axis needs a meaningful clamp, and drive damage from explicit collision flags.

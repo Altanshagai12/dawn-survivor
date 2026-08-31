@@ -85,3 +85,32 @@ test('boss barrier clamps the actual Character Size-scaled player body', () => {
     globalThis.Phaser = previousPhaser;
   }
 });
+
+test('an offset player body already inside the arena never becomes a barrier contact', () => {
+  const previousPhaser = globalThis.Phaser;
+  globalThis.Phaser = { Math: { Clamp: (value, min, max) => Math.max(min, Math.min(max, value)) } };
+  try {
+    const player = {
+      x: 43626.5369510856,
+      y: -18240.375,
+      body: {
+        center: { x: 43628.417837570945, y: -18239.274 },
+        halfWidth: 6.087,
+        halfHeight: 21.008,
+      },
+    };
+    const bounds = {
+      x: player.x - 500,
+      y: player.y - 300,
+      right: player.x + 500,
+      bottom: player.y + 300,
+    };
+    const result = clampPlayerBodyToBounds(player, bounds);
+    assert.equal(result.x, player.x);
+    assert.equal(result.y, player.y);
+    assert.equal(result.hitX, false);
+    assert.equal(result.hitY, false);
+  } finally {
+    globalThis.Phaser = previousPhaser;
+  }
+});
