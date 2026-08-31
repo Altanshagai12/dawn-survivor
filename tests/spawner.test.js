@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
-  Spawner, currentEquivalentHitDamage, followedCameraView, lateRunEnemyHp,
+  Spawner, enemySpawnSnapshot, followedCameraView,
   rectangularEdgeSpawn, shubArenaLayout,
 } from '../src/game/Spawner.js';
 
@@ -83,19 +83,37 @@ test('encounter scheduler reaches Elder, Shub, and the final 16-enemy wave', () 
   assert.equal(waves.filter((id) => id === 'tentacle-final').length, 16);
 });
 
-test('the final two minutes add exactly one current equivalent hit to normal enemy HP', () => {
-  assert.equal(lateRunEnemyHp(100, 479.99, 42), 100);
-  assert.equal(lateRunEnemyHp(100, 480, 42), 142);
-  assert.equal(Math.ceil(lateRunEnemyHp(100, 480, 42) / 42), Math.ceil(100 / 42) + 1);
-  assert.equal(currentEquivalentHitDamage({ weapon: { damage: 20 }, multiplierStats: { damage: 1.5 } }), 30);
+test('spawn snapshots keep fixed session HP across the six and eight minute boundaries', () => {
+  const thirtyHpSession = { id: 'tentacle-2', hp: 30 };
+  const sixtyHpSession = { id: 'tentacle-3', hp: 60 };
+  const finalSession = { id: 'tentacle-final', hp: 100 };
+  const oldAtSix = enemySpawnSnapshot({ hp: 24 }, thirtyHpSession, 359);
+  oldAtSix.hp = 5;
+  const newAfterSix = enemySpawnSnapshot({ hp: 24 }, sixtyHpSession, 361);
+  assert.deepEqual(oldAtSix, {
+    hp: 5, maxHp: 30, spawnSessionId: 'tentacle-2', spawnTime: 359,
+  });
+  assert.deepEqual(newAfterSix, {
+    hp: 60, maxHp: 60, spawnSessionId: 'tentacle-3', spawnTime: 361,
+  });
 
-  let spawnedHp = 0;
+  const oldAtEight = enemySpawnSnapshot({ hp: 24 }, sixtyHpSession, 479.9);
+  const newAfterEight = enemySpawnSnapshot({ hp: 24 }, finalSession, 480.1);
+  assert.equal(oldAtEight.maxHp, 60);
+  assert.equal(newAfterEight.maxHp, 100);
+});
+
+test('spawnEnemy copies fixed session HP once and ignores the player damage build', () => {
   const scene = {
-    state: { elapsed: 520, weapon: { damage: 20 }, multiplierStats: { damage: 1.5 } },
+    state: { elapsed: 520, weapon: { damage: 999 }, multiplierStats: { damage: 9 } },
   };
   const spawner = new Spawner(scene);
   spawner.acquire = () => ({});
-  spawner.setupSprite = (_sprite, _definition, _atlas, hp) => { spawnedHp = hp; return {}; };
-  spawner.spawnEnemy({ id: 'tentacle', hp: 100 }, { x: 0, y: 0 }, { id: 'final', hp: 100 });
-  assert.equal(spawnedHp, 130);
+  spawner.setupSprite = (sprite, _definition, _atlas, snapshot) => Object.assign(sprite, snapshot);
+  const enemy = spawner.spawnEnemy(
+    { id: 'tentacle', hp: 24 }, { x: 0, y: 0 }, { id: 'tentacle-final', hp: 100 },
+  );
+  assert.deepEqual(enemy, {
+    hp: 100, maxHp: 100, spawnSessionId: 'tentacle-final', spawnTime: 520,
+  });
 });

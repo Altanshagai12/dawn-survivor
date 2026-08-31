@@ -1,4 +1,4 @@
-import { SPAWN_SESSIONS, TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260828h';
+import { SPAWN_SESSIONS, TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260828i';
 
 const baseSpeed = TEN_MINUTES_BALANCE.player.baseRunSpeed;
 
@@ -27,7 +27,7 @@ export const BOSSES = {
     damage: 1, radius: 50, size: 132, score: 1000, pattern: 'elder', rewardType: 'chest',
   },
   shub: {
-    id: 'shub', name: 'Shub-Niggurath', spawnAt: 300, hp: 3200,
+    id: 'shub', name: 'Shub-Niggurath', spawnAt: 300, hp: 2500,
     speed: baseSpeed * TEN_MINUTES_BALANCE.enemy.shub.speedRatio,
     damage: 1, radius: 55, size: 140, score: 2500, pattern: 'shub', rewardType: 'tome',
   },

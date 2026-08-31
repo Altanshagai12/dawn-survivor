@@ -1,6 +1,6 @@
 import { BOSS_ATLASES, ENEMY_ATLASES } from '../config/assets.js?build=20260825r';
-import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260828h';
-import { BOSSES, ENEMY_SPAWN_SESSIONS } from '../data/enemies.js?build=20260828h';
+import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260828i';
+import { BOSSES, ENEMY_SPAWN_SESSIONS } from '../data/enemies.js?build=20260828i';
 import { playDirectional } from './animations.js?build=20260828g';
 import { attachGroundShadow } from './VisualEffects.js?build=20260825r';
 
@@ -35,17 +35,14 @@ export function shubArenaLayout(player, definition, random = Math.random) {
   };
 }
 
-export function lateRunEnemyHp(baseHp, elapsed, equivalentHitDamage) {
-  const config = TEN_MINUTES_BALANCE.enemy.lateRun;
-  const hp = Math.max(1, Number(baseHp) || 0);
-  if (elapsed < config.startsAt) return hp;
-  const hitDamage = Math.max(1, Number(equivalentHitDamage) || 0);
-  return hp + hitDamage * config.extraEquivalentHits;
-}
-
-export function currentEquivalentHitDamage(state) {
-  return Math.max(1, (Number(state?.weapon?.damage) || 0)
-    * (Number(state?.multiplierStats?.damage) || 1));
+export function enemySpawnSnapshot(definition, session, elapsed) {
+  const hp = Math.max(1, Number(session?.hp ?? definition?.hp) || 0);
+  return {
+    hp,
+    maxHp: hp,
+    spawnSessionId: session?.id ?? null,
+    spawnTime: Math.max(0, Number(elapsed) || 0),
+  };
 }
 
 export class Spawner {
@@ -114,7 +111,7 @@ export class Spawner {
     return sprite;
   }
 
-  setupSprite(sprite, definition, atlas, hp, sessionId = null) {
+  setupSprite(sprite, definition, atlas, snapshot) {
     const scale = definition.size / atlas.frameHeight;
     sprite.setScale(scale).setDepth(definition.boss ? 24 : 20).setDataEnabled();
     sprite.data?.reset?.();
@@ -126,10 +123,11 @@ export class Spawner {
       alpha: .4,
     });
     sprite.spawnId = this.nextId++;
-    sprite.spawnSessionId = sessionId;
+    sprite.spawnSessionId = snapshot.spawnSessionId;
+    sprite.spawnTime = snapshot.spawnTime;
     sprite.enemyDef = definition;
-    sprite.maxHp = hp;
-    sprite.hp = hp;
+    sprite.maxHp = snapshot.maxHp;
+    sprite.hp = snapshot.hp;
     sprite.speed = definition.speed;
     sprite.dying = false;
     sprite.nextAttack = this.scene.time.now + 900 + Math.random() * 700;
@@ -152,11 +150,8 @@ export class Spawner {
     const spawn = point || this.spawnPoint();
     const atlas = ENEMY_ATLASES[definition.id];
     const sprite = this.acquire(atlas, spawn.x, spawn.y);
-    const baseHp = session?.hp ?? definition.hp;
-    const hp = lateRunEnemyHp(
-      baseHp, this.scene.state.elapsed, currentEquivalentHitDamage(this.scene.state),
-    );
-    return sprite ? this.setupSprite(sprite, definition, atlas, hp, session?.id) : null;
+    const snapshot = enemySpawnSnapshot(definition, session, this.scene.state?.elapsed);
+    return sprite ? this.setupSprite(sprite, definition, atlas, snapshot) : null;
   }
 
   spawnBoss(definition) {
@@ -173,7 +168,9 @@ export class Spawner {
     const atlas = BOSS_ATLASES[definition.id];
     const sprite = this.acquire(atlas, point.x, point.y);
     if (!sprite) { this.spawnedBosses.delete(definition.id); return null; }
-    this.setupSprite(sprite, { ...definition, boss: true, xp: 0 }, atlas, definition.hp);
+    const bossDefinition = { ...definition, boss: true, xp: 0 };
+    const snapshot = enemySpawnSnapshot(bossDefinition, null, this.scene.state?.elapsed);
+    this.setupSprite(sprite, bossDefinition, atlas, snapshot);
     this.scene.activeBoss = sprite;
     if (arena) this.scene.barrier?.activate(arena.center.x, arena.center.y);
     this.scene.ui.toast(`${definition.name} approaches`, 2400);

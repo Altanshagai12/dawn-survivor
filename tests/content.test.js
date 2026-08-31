@@ -16,7 +16,7 @@ test('ships the exact original ten-minute roster', () => {
   assert.ok(Object.values(HEROES).every(({ speed }) => speed === BASE_HERO_SPEED));
   assert.deepEqual(Object.keys(ENEMIES), ['tentacle', 'boomer', 'eye']);
   assert.deepEqual(Object.keys(BOSSES), ['elder', 'shub']);
-  assert.deepEqual(Object.values(BOSSES).map(({ spawnAt, hp }) => [spawnAt, hp]), [[180, 1000], [300, 3200]]);
+  assert.deepEqual(Object.values(BOSSES).map(({ spawnAt, hp }) => [spawnAt, hp]), [[180, 1000], [300, 2500]]);
 });
 
 test('every shipped upgrade name points at its authored icon family', () => {
@@ -67,18 +67,19 @@ test('level choices sample five unique eligible cards without Tome leakage', () 
   assert.ok(cards.every(({ tier, type }) => tier === 1 && type === 'normal'));
 });
 
-test('spawn sessions preserve the authored ten-minute schedule', () => {
-  assert.equal(SPAWN_SESSIONS.length, 9);
-  assert.deepEqual(SPAWN_SESSIONS[0], {
-    id: 'tentacle-0', enemyId: 'tentacle', from: 0, to: 60, hp: 24,
-    maxAlive: 20, count: 4, interval: 3,
-  });
-  assert.deepEqual(SPAWN_SESSIONS.at(-1), {
-    id: 'tentacle-final', enemyId: 'tentacle', from: 480, to: 600, hp: 100,
-    maxAlive: 600, count: 16, interval: 1,
-  });
+test('spawn sessions preserve every fixed stat in the authored ten-minute schedule', () => {
+  assert.deepEqual(SPAWN_SESSIONS, [
+    { id: 'tentacle-0', enemyId: 'tentacle', from: 0, to: 60, hp: 24, maxAlive: 20, count: 4, interval: 3 },
+    { id: 'tentacle-1', enemyId: 'tentacle', from: 60, to: 120, hp: 24, maxAlive: 50, count: 10, interval: 4 },
+    { id: 'boomer-1', enemyId: 'boomer', from: 60, to: 120, hp: 30, maxAlive: 2, count: 1, interval: 4 },
+    { id: 'tentacle-2', enemyId: 'tentacle', from: 120, to: 360, hp: 30, maxAlive: 200, count: 7, interval: 2 },
+    { id: 'boomer-2', enemyId: 'boomer', from: 120, to: 360, hp: 30, maxAlive: 10, count: 2, interval: 5 },
+    { id: 'tentacle-3', enemyId: 'tentacle', from: 360, to: 480, hp: 60, maxAlive: 400, count: 12, interval: 2 },
+    { id: 'eye-3', enemyId: 'eye', from: 360, to: 480, hp: 400, maxAlive: 2, count: 2, interval: 10 },
+    { id: 'boomer-4', enemyId: 'boomer', from: 420, to: 540, hp: 60, maxAlive: 1, count: 1, interval: 1 },
+    { id: 'tentacle-final', enemyId: 'tentacle', from: 480, to: 600, hp: 100, maxAlive: 600, count: 16, interval: 1 },
+  ]);
   assert.equal(TEN_MINUTES_BALANCE.enemy.shub.chargeRatio, 2.6);
-  assert.deepEqual(TEN_MINUTES_BALANCE.enemy.lateRun, { startsAt: 480, extraEquivalentHits: 1 });
 });
 
 test('contact enemies remain kiteable while the player is firing', () => {
