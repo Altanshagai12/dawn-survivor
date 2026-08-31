@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { TEN_MINUTES_BALANCE } from '../src/config/balance.js';
-import { BossBarrierSystem } from '../src/game/BossBarrierSystem.js';
+import { BossBarrierSystem, clampPlayerBodyToBounds } from '../src/game/BossBarrierSystem.js';
 import { DAMAGE_SOURCE } from '../src/game/EnemySystem.js';
 
 test('Shub barrier fills the view, damages once, and bounces the player inward', () => {
@@ -26,7 +26,12 @@ test('Shub barrier fills the view, damages once, and bounces the player inward',
     time: { now: 0 },
     player: {
       x: 1000, y: 0,
-      setPosition(x, y) { this.x = x; this.y = y; return this; },
+      body: { center: { x: 1000, y: 0 }, halfWidth: 9.13, halfHeight: 31.51 },
+      setPosition(x, y) {
+        this.body.center.x += x - this.x;
+        this.body.center.y += y - this.y;
+        this.x = x; this.y = y; return this;
+      },
       setVelocity(x, y) { this.velocity = { x, y }; return this; },
     },
     enemySystem: { damagePlayer(amount, source) { damage += amount; damageSource = source; } },
@@ -44,15 +49,38 @@ test('Shub barrier fills the view, damages once, and bounces the player inward',
     assert.equal(damage, 1);
     assert.equal(damageSource, DAMAGE_SOURCE.BARRIER);
     scene.player.x = 1000;
+    scene.player.body.center.x = 1000;
     scene.time.now = 100;
     barrier.update();
     assert.equal(damage, 1, 'one contact cannot drain multiple hearts');
     scene.player.x = 0;
+    scene.player.body.center.x = 0;
     scene.time.now = 300;
     barrier.update();
     scene.player.x = 1000;
+    scene.player.body.center.x = 1000;
     barrier.update();
     assert.equal(damage, 2, 'leaving and touching again starts a new contact');
+  } finally {
+    globalThis.Phaser = previousPhaser;
+  }
+});
+
+test('boss barrier clamps the actual Character Size-scaled player body', () => {
+  const previousPhaser = globalThis.Phaser;
+  globalThis.Phaser = { Math: { Clamp: (value, min, max) => Math.max(min, Math.min(max, value)) } };
+  try {
+    const bounds = { x: -100, y: -80, right: 100, bottom: 80 };
+    const normal = clampPlayerBodyToBounds({
+      x: 96, y: 70, body: { center: { x: 96.25, y: 71.1 }, halfWidth: 6.087, halfHeight: 21.008 },
+    }, bounds);
+    const giant = clampPlayerBodyToBounds({
+      x: 96, y: 70, body: { center: { x: 96.4, y: 71.67 }, halfWidth: 9.131, halfHeight: 31.511 },
+    }, bounds);
+    assert.ok(giant.x < normal.x, 'Giant must bounce sooner at the horizontal edge');
+    assert.ok(giant.y < normal.y, 'Giant must bounce sooner at the vertical edge');
+    assert.ok(giant.x + 0.4 + 9.131 <= bounds.right + 1e-9);
+    assert.ok(giant.y + 1.67 + 31.511 <= bounds.bottom + 1e-9);
   } finally {
     globalThis.Phaser = previousPhaser;
   }

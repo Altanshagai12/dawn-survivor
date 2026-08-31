@@ -9,10 +9,10 @@ const skins = {
   'void-lotus': { pitch: 1.28, resonance: 1360, sub: .15, air: .17, echo: .16 },
 };
 const weapons = {
-  revolver: { duration: .24, base: 175, sweep: 9, noise: .28, decay: 18, click: .9 },
-  shotgun: { duration: .42, base: 78, sweep: 5, noise: .72, decay: 9, click: 1.2 },
-  crossbow: { duration: .31, base: 460, sweep: 13, noise: .18, decay: 14, click: .72 },
-  flame: { duration: .46, base: 104, sweep: 2.6, noise: .56, decay: 7.5, click: .5 },
+  revolver: { duration: .3, base: 185, sweep: 11, noise: .34, decay: 14, click: 1.2, thump: .48, crack: .5, tail: .12, drive: 1.25 },
+  shotgun: { duration: .54, base: 68, sweep: 4, noise: .86, decay: 7, click: 1.4, thump: .9, crack: .7, tail: .22, drive: 1.4 },
+  crossbow: { duration: .37, base: 510, sweep: 15, noise: .26, decay: 11, click: 1.05, thump: .24, crack: 1.1, tail: .15, drive: 1.2 },
+  flame: { duration: .58, base: 92, sweep: 2.2, noise: .72, decay: 5.8, click: .55, thump: .6, crack: .3, tail: .28, drive: 1.3 },
 };
 const events = {
   impact: { duration: .24, base: 92, sweep: 8, noise: .52, decay: 15, click: .85 },
@@ -42,19 +42,24 @@ function synthesize(definition, skin, variant, seed) {
     const phase = Math.PI * 2 * base * time * Math.exp(-definition.sweep * time * .17);
     const body = Math.sin(phase) * Math.exp(-time * definition.decay);
     const sub = Math.sin(phase * .48) * Math.exp(-time * definition.decay * .72) * skin.sub;
+    const thump = Math.sin(phase * .31) * Math.exp(-time * definition.decay * .45)
+      * (definition.thump || .18);
     const metal = (Math.sin(Math.PI * 2 * skin.resonance * time)
       + .46 * Math.sin(Math.PI * 2 * skin.resonance * 1.617 * time))
       * Math.exp(-time * (definition.decay * .75 + 3)) * .18;
     noiseState += (random() - noiseState) * Math.min(.92, .18 + skin.air);
     const noise = noiseState * definition.noise * Math.exp(-time * definition.decay * .82);
     const click = time < .012 ? random() * definition.click * (1 - time / .012) : 0;
-    samples[index] = body * .62 + sub + metal + noise + click * .42;
+    const crack = random() * Math.exp(-time * 62) * (definition.crack || .2);
+    const tail = noiseState * Math.exp(-time / Math.max(.04, definition.tail || .08)) * .24;
+    const mixed = body * .68 + sub + thump + metal + noise + click * .5 + crack + tail;
+    samples[index] = Math.tanh(mixed * (definition.drive || 1.1));
   }
   const delay = Math.max(1, Math.round(RATE * skin.echo));
   for (let index = delay; index < samples.length; index += 1) samples[index] += samples[index - delay] * .18;
   let peak = .001;
   for (const sample of samples) peak = Math.max(peak, Math.abs(sample));
-  const gain = .86 / peak;
+  const gain = .93 / peak;
   for (let index = 0; index < samples.length; index += 1) samples[index] *= gain;
   return samples;
 }

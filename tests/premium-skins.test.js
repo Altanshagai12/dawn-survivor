@@ -30,16 +30,17 @@ function fakeReceipt({ serviceId, amount, txId = 'tx-1' }) {
   return `${encode({ alg: 'HS256' })}.${encode({ sid: serviceId, amt: amount, tx_id: txId })}.signature`;
 }
 
-test('ships one complete premium hero, weapon, projectile, and voice pack per hunter', async () => {
+test('ships one complete premium hero, weapon, projectile, and firing-audio pack per hunter', async () => {
   assert.deepEqual(Object.keys(SKIN_BY_HERO).sort(), ['diamond', 'hina', 'scarlett', 'shana']);
   const prices = new Set();
   for (const skin of Object.values(PREMIUM_SKINS)) {
     assert.equal(SKIN_BY_HERO[skin.heroId], skin);
     assert.ok(skin.primary && skin.secondary && skin.impact && skin.spriteTint);
     assert.ok(skin.motif && skin.weaponPitch && skin.voicePitch);
+    assert.equal('voice' in skin, false, 'gameplay skins must not ship an intro voice hook');
     assert.ok(!prices.has(skin.priceCredits), 'each stateless receipt SKU needs a unique price');
     prices.add(skin.priceCredits);
-    for (const asset of [skin.packArt, skin.voice, skin.vfxAtlas]) {
+    for (const asset of [skin.packArt, skin.vfxAtlas]) {
       const path = asset.split('?')[0].replace(/^\.\//, '../');
       const url = new URL(path, import.meta.url);
       await access(url);
@@ -120,25 +121,25 @@ test('semantic combat paths retain premium presentation coverage and pooled budg
   assert.doesNotMatch(director, /tweens\.add/);
   assert.match(audio, /reserveVoice\(priority\)/);
   assert.match(audio, /lowest >= priority/);
-  assert.match(audio, /this\.htmlVoice\?\.pause/);
+  assert.match(audio, /if \(event === 'intro'\) return false/);
+  assert.doesNotMatch(audio, /new this\.Audio\(|htmlVoice|pendingVoice/);
   const weaponPresentation = await import('node:fs/promises').then(({ readFile }) => readFile(
     new URL('../src/game/WeaponPresentation.js', import.meta.url), 'utf8'));
   assert.match(weaponPresentation, /if \(skin\) \{[^]*return;/);
   assert.match(weaponPresentation, /if \(bullet\?\.skin\) return;/);
 });
 
-test('intro voice is owned by the scene audio lifecycle and stops on destroy', () => {
+test('skin intro voice is disabled and never creates an HTML audio element', () => {
   class FakeAudio {
-    constructor() { FakeAudio.last = this; }
+    constructor() { FakeAudio.created += 1; }
     play() { return Promise.resolve(); }
-    pause() { this.paused = true; }
   }
+  FakeAudio.created = 0;
   const host = { Audio: FakeAudio, addEventListener() {}, removeEventListener() {} };
   const audio = new PremiumWeaponAudio({ environment: host });
-  assert.equal(audio.playVoice('intro', { voice: 'intro.wav', voicePitch: 1 }), true);
+  assert.equal(audio.playVoice('intro', { voicePitch: 1 }), false);
+  assert.equal(FakeAudio.created, 0);
   audio.destroy();
-  assert.equal(FakeAudio.last.paused, true);
-  assert.equal(FakeAudio.last.currentTime, 0);
 });
 
 test('the runtime lazy-loads only the selected premium atlas and selected audio bank', async () => {
@@ -150,6 +151,7 @@ test('the runtime lazy-loads only the selected premium atlas and selected audio 
   assert.match(game, /PREMIUM_SKINS\[this\.selection\?\.skinId\]/);
   assert.match(game, /this\.load\.spritesheet\(skin\.vfxKey, skin\.vfxAtlas/);
   assert.match(game, /preloadSkin\?\.\(this\.state\.skin\)/);
+  assert.doesNotMatch(game, /queueVoice\(['"]intro/);
 });
 
 test('owned and equipped skin state is sanitized and remains hero-bound', () => {

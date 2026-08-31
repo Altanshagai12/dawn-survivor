@@ -1,4 +1,5 @@
 import { spawnRunDust } from './VisualEffects.js';
+import { characterSizeScale } from './PlayerHitbox.js?build=20260831a';
 
 export function nextWeaponCharge(current, weapon, delta, moving) {
   if (!weapon.chargeSeconds || moving) return 0;
@@ -23,8 +24,7 @@ export function recoilPose(strength, angle) {
   const lean = Math.cos(angle) >= 0 ? -1 : 1;
   return {
     angle: lean * 2.4 * strength,
-    scaleX: 1 + .026 * strength,
-    scaleY: 1 - .022 * strength,
+    muzzleLift: 2.4 * strength,
   };
 }
 
@@ -42,12 +42,12 @@ export function triggerShotFeedback(scene, angle) {
 
 export function updateShotFeedback(scene, delta) {
   const recoil = scene.shotRecoil;
-  const baseScale = scene.playerBaseScale * (1 + (scene.state.mods.playerSizeMul || 0));
+  const baseScale = scene.playerBaseScale * characterSizeScale(scene.state.mods);
   if (!recoil?.strength) {
     scene.player.setAngle(0).setScale(baseScale);
     return;
   }
   recoil.strength = Math.max(0, recoil.strength - delta * 10.5);
   const pose = recoilPose(recoil.strength, recoil.angle);
-  scene.player.setAngle(pose.angle).setScale(baseScale * pose.scaleX, baseScale * pose.scaleY);
+  scene.player.setAngle(pose.angle).setScale(baseScale);
 }

@@ -1,12 +1,12 @@
 import { HERO_ATLASES } from '../config/assets.js?build=20260825r';
 import { ENEMIES, RUN_SECONDS } from '../data/enemies.js?build=20260828i';
 import { HEROES } from '../data/heroes.js?build=20260828i';
-import { PREMIUM_SKINS } from '../data/skins.js?build=20260828g';
+import { PREMIUM_SKINS } from '../data/skins.js?build=20260831a';
 import { TOMES, sampleUpgradeCards } from '../data/upgrades.js?build=20260826b';
 import { WEAPONS } from '../data/weapons.js?build=20260827b';
 import { createCameraFittedBackground } from './BackgroundSystem.js?build=20260826d';
-import { CombatSystem } from './CombatSystem.js?build=20260828g';
-import { BossBarrierSystem } from './BossBarrierSystem.js?build=20260828i';
+import { CombatSystem } from './CombatSystem.js?build=20260831a';
+import { BossBarrierSystem } from './BossBarrierSystem.js?build=20260831a';
 import { CharacterAbilitySystem } from './CharacterAbilitySystem.js?build=20260828i';
 import { EnemySystem } from './EnemySystem.js?build=20260828i';
 import { InputController } from './InputController.js?build=20260828i';
@@ -16,12 +16,13 @@ import { Spawner } from './Spawner.js?build=20260828i';
 import { SummonSystem } from './SummonSystem.js?build=20260828e';
 import { UpgradeEffectSystem } from './UpgradeEffectSystem.js?build=20260828e';
 import { WorldObstacleSystem } from './WorldObstacleSystem.js?build=20260828i';
-import { PremiumWeaponAudio } from './PremiumWeaponAudio.js?build=20260828e';
-import { presentWeaponShot } from './WeaponPresentation.js?build=20260828g';
+import { PremiumWeaponAudio } from './PremiumWeaponAudio.js?build=20260831a';
+import { presentWeaponShot } from './WeaponPresentation.js?build=20260831a';
 import { PremiumVfxDirector } from './PremiumVfxDirector.js?build=20260828g';
 import { gameDeviceProfile } from './deviceProfile.js?build=20260826j';
 import { movementMultiplier } from './movement.js?build=20260825r';
-import { updateMovementFeedback, updateShotFeedback, updateWeaponCharge } from './PlayerFeedback.js?build=20260826f';
+import { updateMovementFeedback, updateShotFeedback, updateWeaponCharge } from './PlayerFeedback.js?build=20260831a';
+import { applyOriginalPlayerHitbox, characterSizeScale } from './PlayerHitbox.js?build=20260831a';
 import { facingVector, playDirectional } from './animations.js?build=20260828g';
 import { scoreForRun, survivalRecordMs } from './simulation.js?build=20260826j';
 import { applyHeroSkin, destroyHeroSkin, syncHeroSkin } from './SkinPresentation.js?build=20260828f';
@@ -74,7 +75,6 @@ export class GameScene extends Phaser.Scene {
     this.premiumVfx = new PremiumVfxDirector(this, this.state.skin);
     this.weaponAudio = new PremiumWeaponAudio({ voiceCap: this.performance.audioVoiceCap });
     this.weaponAudio.preloadSkin?.(this.state.skin);
-    this.weaponAudio.queueVoice('intro', this.state.skin);
     this.inputController = new InputController(this);
     this.barrier = new BossBarrierSystem(this);
     this.spawner = new Spawner(this);
@@ -111,11 +111,11 @@ export class GameScene extends Phaser.Scene {
 
   createPlayer() {
     const atlas = HERO_ATLASES[this.state.hero.id];
+    this.playerAtlas = atlas;
     this.player = this.physics.add.sprite(0, 0, atlas.key, 24).setDepth(25);
     const scale = 78 / atlas.frameHeight;
     this.playerBaseScale = scale;
-    this.player.setScale(scale);
-    this.player.body.setSize(this.state.hero.size / scale, this.state.hero.size / scale, true);
+    applyOriginalPlayerHitbox(this.player, atlas, scale, characterSizeScale(this.state.mods));
     this.player.body.setMaxVelocity(500, 500);
     attachGroundShadow(this, this.player, {
       width: this.player.displayWidth * .48,
@@ -272,10 +272,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   applyPlayerSize() {
-    const multiplier = 1 + (this.state.mods.playerSizeMul || 0);
-    const scale = this.playerBaseScale * multiplier;
-    this.player.setScale(scale);
-    this.player.body.setSize(this.state.hero.size / scale, this.state.hero.size / scale, true);
+    applyOriginalPlayerHitbox(
+      this.player, this.playerAtlas, this.playerBaseScale, characterSizeScale(this.state.mods),
+    );
   }
 
   pauseRun() {

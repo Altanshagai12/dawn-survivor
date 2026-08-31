@@ -1,9 +1,10 @@
 import {
   AUDIO_BANK_EVENTS, specialAudioEvent, weaponSoundProfile,
-} from './WeaponAudioProfiles.js?build=20260828e';
+} from './WeaponAudioProfiles.js?build=20260831a';
 import { upgradePresentation } from './UpgradePresentationProfiles.js?build=20260828e';
 
-export { weaponSoundProfile } from './WeaponAudioProfiles.js?build=20260828e';
+export { weaponSoundProfile } from './WeaponAudioProfiles.js?build=20260831a';
+export const MAX_SHOT_AUDIO_SOURCES = 3;
 
 function envelope(parameter, now, gain, duration) {
   parameter.setValueAtTime(.0001, now);
@@ -17,11 +18,9 @@ export class PremiumWeaponAudio {
     this.host = environment.window || environment;
     this.AudioContext = environment.AudioContext || environment.webkitAudioContext
       || this.host.AudioContext || this.host.webkitAudioContext;
-    this.Audio = environment.Audio || this.host.Audio;
     this.fetcher = options.fetcher || this.host.fetch?.bind(this.host) || globalThis.fetch?.bind(globalThis);
     this.voiceCap = options.voiceCap || 12;
     this.context = null;
-    this.pendingVoice = null;
     this.lastVoiceAt = 0;
     this.pendingBuffers = new Map();
     this.buffers = new Map();
@@ -29,13 +28,7 @@ export class PremiumWeaponAudio {
     this.shotCounter = 0;
     this.activeSources = new Map();
     this.skin = null;
-    this.unlockFromGesture = () => {
-      if (this.unlock() && this.pendingVoice) {
-        const pending = this.pendingVoice;
-        this.pendingVoice = null;
-        this.playVoice(pending.event, pending.skin);
-      }
-    };
+    this.unlockFromGesture = () => { this.unlock(); };
     this.host.addEventListener?.('pointerdown', this.unlockFromGesture, { capture: true, once: true });
     this.host.addEventListener?.('keydown', this.unlockFromGesture, { capture: true, once: true });
   }
@@ -46,7 +39,7 @@ export class PremiumWeaponAudio {
     Object.entries(AUDIO_BANK_EVENTS).forEach(([event, count]) => {
       for (let variant = 0; variant < count; variant += 1) {
         const key = `${event}-${variant}`;
-        this.pendingBuffers.set(key, this.fetcher(`${skin.audioBank}/${key}.wav?build=20260828e`)
+        this.pendingBuffers.set(key, this.fetcher(`${skin.audioBank}/${key}.wav?build=20260831a`)
           .then((response) => response.ok ? response.arrayBuffer() : null).catch(() => null));
       }
     });
@@ -68,12 +61,12 @@ export class PremiumWeaponAudio {
     this.weaponBus = this.context.createGain();
     this.impactBus = this.context.createGain();
     this.compressor = this.context.createDynamicsCompressor();
-    this.master.gain.value = .52;
-    this.weaponBus.gain.value = .92;
-    this.impactBus.gain.value = .78;
-    this.compressor.threshold.value = -15;
-    this.compressor.knee.value = 9;
-    this.compressor.ratio.value = 7;
+    this.master.gain.value = .58;
+    this.weaponBus.gain.value = .98;
+    this.impactBus.gain.value = .82;
+    this.compressor.threshold.value = -18;
+    this.compressor.knee.value = 8;
+    this.compressor.ratio.value = 8;
     this.compressor.attack.value = .002;
     this.compressor.release.value = .12;
     this.weaponBus.connect(this.master);
@@ -139,8 +132,9 @@ export class PremiumWeaponAudio {
     if (!this.context || this.context.state !== 'running') return false;
     const profile = weaponSoundProfile(weaponId, skin, state);
     const sampled = skin && this.playBuffer(this.variant(weaponId, 3),
-      .68 + Math.min(.15, (profile.powerScale || 1) * .08), this.weaponBus, 0, 3);
-    this.playSweetener(profile, sampled ? .26 : 1);
+      .78 + Math.min(.14, (profile.powerScale || 1) * .075), this.weaponBus, 0, 3);
+    if (!sampled) this.playSweetener(profile, 1);
+    this.playWeaponBody(profile, sampled ? .44 : .82);
     this.shotCounter += 1;
     if (skin && profile.accents?.length && this.shotCounter % 2 === 0) {
       const elemental = profile.accents.some((family) => ['pyro', 'frost', 'electro'].includes(family));
@@ -185,34 +179,13 @@ export class PremiumWeaponAudio {
     return true;
   }
 
-  queueVoice(event, skin) {
-    if (!skin) return false;
-    this.pendingVoice = { event, skin };
-    if (this.context?.state === 'running') {
-      this.pendingVoice = null;
-      return this.playVoice(event, skin);
-    }
-    return false;
-  }
-
   playVoice(event, skin) {
     if (!skin) return false;
+    if (event === 'intro') return false;
     const nowMs = Date.now();
-    if (event !== 'intro' && nowMs - this.lastVoiceAt < 700) return false;
+    if (nowMs - this.lastVoiceAt < 700) return false;
     this.lastVoiceAt = nowMs;
-    this.duck(event === 'intro' ? 1700 : 360);
-    if (event === 'intro' && this.Audio && skin.voice) {
-      try {
-        this.htmlVoice?.pause?.();
-        const voice = new this.Audio(skin.voice);
-        this.htmlVoice = voice;
-        voice.volume = .66;
-        voice.playbackRate = Math.min(1.1, Math.max(.9, skin.voicePitch || 1));
-        voice.play().catch(() => { this.pendingVoice = { event, skin }; });
-        voice.onended = () => { if (this.htmlVoice === voice) this.htmlVoice = null; };
-        return true;
-      } catch { /* authored event fallback */ }
-    }
+    this.duck(360);
     if (event === 'dash' && this.playBuffer(this.variant('dash', 2), .56, this.impactBus, 0, 4)) return true;
     if (!this.context || this.context.state !== 'running') return false;
     this.playVocalCue((event === 'hurt' ? 125 : 185) * (skin.voicePitch || 1), event === 'hurt' ? .16 : .24, .075);
@@ -231,6 +204,16 @@ export class PremiumWeaponAudio {
   playSweetener(profile, amount = 1) {
     this.playTone(profile, amount);
     this.playNoiseBurst(profile.low || 1200, profile.duration * .65, (profile.gain || .1) * .72 * amount, this.weaponBus);
+  }
+
+  playWeaponBody(profile, amount = 1) {
+    this.playTone({
+      type: 'sine',
+      from: Math.max(24, (profile.sub || 60) * 1.35),
+      to: Math.max(20, profile.sub || 44),
+      duration: profile.tail || .14,
+      gain: (profile.punch || .1) * amount,
+    }, 1, 1);
   }
 
   playTone(profile, amount = 1, priority = 0) {
@@ -284,12 +267,8 @@ export class PremiumWeaponAudio {
     this.host.removeEventListener?.('keydown', this.unlockFromGesture, true);
     this.activeSources.forEach((_priority, source) => { try { source.stop(); } catch { /* already stopped */ } });
     this.activeSources.clear();
-    this.htmlVoice?.pause?.();
-    if (this.htmlVoice) this.htmlVoice.currentTime = 0;
-    this.htmlVoice = null;
     this.context?.close?.().catch(() => {});
     this.context = null;
-    this.pendingVoice = null;
     this.buffers.clear();
     this.pendingBuffers.clear();
   }

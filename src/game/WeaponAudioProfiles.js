@@ -1,10 +1,22 @@
 import { activePresentationRecipe } from './UpgradePresentationProfiles.js?build=20260828e';
 
 export const WEAPON_SOUND_PROFILES = Object.freeze({
-  revolver: Object.freeze({ type: 'square', from: 210, to: 72, duration: .09, gain: .15, low: 1600 }),
-  shotgun: Object.freeze({ type: 'triangle', from: 112, to: 38, duration: .18, gain: .22, low: 760 }),
-  crossbow: Object.freeze({ type: 'triangle', from: 780, to: 145, duration: .12, gain: .12, low: 2900 }),
-  flame: Object.freeze({ type: 'sawtooth', from: 126, to: 52, duration: .22, gain: .1, low: 980 }),
+  revolver: Object.freeze({
+    type: 'square', from: 255, to: 58, duration: .115, gain: .2,
+    low: 1850, sub: 68, crack: 3900, tail: .12, punch: .13,
+  }),
+  shotgun: Object.freeze({
+    type: 'triangle', from: 132, to: 32, duration: .24, gain: .3,
+    low: 680, sub: 45, crack: 1450, tail: .24, punch: .22,
+  }),
+  crossbow: Object.freeze({
+    type: 'triangle', from: 980, to: 118, duration: .145, gain: .18,
+    low: 3400, sub: 110, crack: 5200, tail: .15, punch: .1,
+  }),
+  flame: Object.freeze({
+    type: 'sawtooth', from: 152, to: 38, duration: .28, gain: .16,
+    low: 840, sub: 42, crack: 1100, tail: .3, punch: .16,
+  }),
 });
 
 export const AUDIO_BANK_EVENTS = Object.freeze({
@@ -24,6 +36,10 @@ export function weaponSoundProfile(weaponId, skin = null, state = null) {
     duration: base.duration * Math.max(.72, 1 - rapidTier * .035 + multiTier * .018),
     gain: base.gain * Math.min(1.34, recipe.powerScale * (1 + multiTier * .025)),
     low: base.low * (1 + (recipe.tiers.power || 0) * .035),
+    sub: base.sub * (1 + (recipe.tiers.power || 0) * .015),
+    crack: base.crack * (1 + elementalTier * .012),
+    tail: base.tail * Math.min(1.25, 1 + multiTier * .04),
+    punch: base.punch * Math.min(1.3, recipe.powerScale),
   };
   if (!skin) return { ...base, ...upgradeMix, accents: recipe.audioAccents };
   const pitch = skin.weaponPitch || 1;
@@ -33,6 +49,8 @@ export function weaponSoundProfile(weaponId, skin = null, state = null) {
     to: upgradeMix.to * pitch,
     gain: upgradeMix.gain * 1.06,
     low: upgradeMix.low * pitch,
+    sub: upgradeMix.sub * pitch,
+    crack: upgradeMix.crack * pitch,
     premium: true,
     accents: recipe.audioAccents,
     powerScale: recipe.powerScale,

@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { WEAPONS } from '../src/data/weapons.js';
-import { PremiumWeaponAudio, weaponSoundProfile } from '../src/game/PremiumWeaponAudio.js';
+import {
+  MAX_SHOT_AUDIO_SOURCES, PremiumWeaponAudio, weaponSoundProfile,
+} from '../src/game/PremiumWeaponAudio.js';
 import { weaponEffectProfile, weaponShotAngles } from '../src/game/WeaponPresentation.js';
 
 test('all four weapons have distinct visual and sound identities', () => {
@@ -10,6 +12,12 @@ test('all four weapons have distinct visual and sound identities', () => {
   const sounds = ids.map((id) => JSON.stringify(weaponSoundProfile(id)));
   assert.equal(new Set(visuals).size, 4);
   assert.equal(new Set(sounds).size, 4);
+  ids.forEach((id) => {
+    const sound = weaponSoundProfile(id);
+    assert.ok(sound.punch >= .1);
+    assert.ok(sound.sub < sound.from);
+    assert.ok(sound.crack > sound.from);
+  });
 });
 
 test('shotgun presentation emits four short branches across its authored cone', () => {
@@ -37,4 +45,8 @@ test('weapon audio fails safely when Web Audio is unavailable', () => {
   assert.equal(audio.unlock(), false);
   assert.equal(audio.play('revolver'), false);
   assert.doesNotThrow(() => audio.destroy());
+});
+
+test('one shot stays within the constrained mobile audio source budget', () => {
+  assert.equal(MAX_SHOT_AUDIO_SOURCES, 3);
 });

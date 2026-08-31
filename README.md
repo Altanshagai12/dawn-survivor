@@ -35,7 +35,7 @@ Phaser runtime, starts after `Usion.init`, stores progression with
 
 Each hunter has one original premium cosmetic pack. A pack changes the loadout
 art, animated hero aura and movement wake, every core weapon's muzzle/projectile/
-trail/impact/reload motif, weapon timbre, and hero intro/hit/ability voice cues.
+trail/impact/reload motif, heavy weapon-specific firing reports, and hit/ability audio cues.
 All 51 upgrades feed an authored presentation recipe, including rear/fan fire,
 splinters, ricochets, piercing, summons, elemental statuses, and Tomes. The current production trial uses
 `SKIN_ACCESS_MODE = 'free-preview'`: every pack can be equipped without a wallet

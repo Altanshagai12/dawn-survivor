@@ -39,19 +39,11 @@ export class WeaponAudio {
     this.host = environment.window || environment;
     this.AudioContext = environment.AudioContext || environment.webkitAudioContext
       || this.host.AudioContext || this.host.webkitAudioContext;
-    this.Audio = environment.Audio || this.host.Audio;
     this.context = null;
     this.master = null;
     this.noiseBuffer = null;
-    this.pendingVoice = null;
     this.lastVoiceAt = 0;
-    this.unlockFromGesture = () => {
-      if (this.unlock() && this.pendingVoice) {
-        const pending = this.pendingVoice;
-        this.pendingVoice = null;
-        this.playVoice(pending.event, pending.skin);
-      }
-    };
+    this.unlockFromGesture = () => { this.unlock(); };
     this.host.addEventListener?.('pointerdown', this.unlockFromGesture, { capture: true, once: true });
     this.host.addEventListener?.('keydown', this.unlockFromGesture, { capture: true, once: true });
   }
@@ -83,30 +75,12 @@ export class WeaponAudio {
     return true;
   }
 
-  queueVoice(event, skin) {
-    if (!skin) return false;
-    this.pendingVoice = { event, skin };
-    if (this.context?.state === 'running') {
-      this.pendingVoice = null;
-      return this.playVoice(event, skin);
-    }
-    return false;
-  }
-
   playVoice(event, skin) {
     if (!skin) return false;
+    if (event === 'intro') return false;
     const nowMs = Date.now();
-    if (event !== 'intro' && nowMs - this.lastVoiceAt < 650) return false;
+    if (nowMs - this.lastVoiceAt < 650) return false;
     this.lastVoiceAt = nowMs;
-    if (event === 'intro' && this.Audio && skin.voice) {
-      try {
-        const voice = new this.Audio(skin.voice);
-        voice.volume = .58;
-        voice.playbackRate = Math.min(1.12, Math.max(.9, skin.voicePitch || 1));
-        voice.play().catch(() => { this.pendingVoice = { event, skin }; });
-        return true;
-      } catch { /* fall through to the synthesized cue */ }
-    }
     if (!this.context || this.context.state !== 'running' || !this.master) return false;
     const base = event === 'dash' ? 190 : event === 'hurt' ? 125 : 165;
     const pitch = skin.voicePitch || 1;
@@ -188,6 +162,5 @@ export class WeaponAudio {
     this.host.removeEventListener?.('keydown', this.unlockFromGesture, true);
     this.context?.close?.().catch(() => {});
     this.context = null;
-    this.pendingVoice = null;
   }
 }

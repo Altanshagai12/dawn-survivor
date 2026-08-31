@@ -1,5 +1,5 @@
-import { weaponArtForSkin } from '../data/skins.js?build=20260828g';
-import { SkinShopController } from './SkinShopController.js?build=20260828g';
+import { weaponArtForSkin } from '../data/skins.js?build=20260831a';
+import { SkinShopController } from './SkinShopController.js?build=20260831a';
 import {
   damageSourceLabel, formatSurvivalTime, heroPassiveCopy, movementCopy, savedOrDefault,
   survivalLeaderboardEntries,

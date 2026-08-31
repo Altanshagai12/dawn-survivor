@@ -44,8 +44,8 @@ test('firing movement is slower until Run and Gun removes the penalty', () => {
 test('every shot creates a brief raised recoil pose', () => {
   const pose = recoilPose(1, 0);
   assert.ok(pose.angle < 0);
-  assert.ok(pose.scaleX > 1);
-  assert.ok(pose.scaleY < 1);
+  assert.ok(pose.muzzleLift > 0);
+  assert.equal('scaleX' in pose, false, 'recoil must not resize the physics body');
 });
 
 test('running dust starts at the feet and trails opposite movement', () => {
