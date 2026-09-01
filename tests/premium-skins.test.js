@@ -14,7 +14,7 @@ import { activePresentationRecipe, presentationCoverage } from '../src/game/Upgr
 import { AUDIO_BANK_FILES } from '../src/game/WeaponAudioProfiles.js';
 import { PremiumWeaponAudio, weaponSoundProfile } from '../src/game/PremiumWeaponAudio.js';
 import {
-  premiumPowerAccent, PREMIUM_PROJECTILE_RENDER_BOOST, PREMIUM_SHOT_EFFECT_BOOST,
+  premiumPowerAccent, premiumShotLayout, PREMIUM_PROJECTILE_RENDER_BOOST, PREMIUM_SHOT_EFFECT_BOOST,
 } from '../src/game/PremiumVfxDirector.js';
 import { weaponEffectProfile } from '../src/game/WeaponPresentation.js';
 import { decodeReceiptClaims, settleSkinPurchase } from '../api/purchase-skin.js';
@@ -122,6 +122,13 @@ test('ships two complete premium hero, weapon, projectile, and firing-audio pack
     assert.equal(bigShotAccent.frame, 6, `${skin.id} Big Shot must reuse the authored shotgun projectile`);
     assert.ok(Math.abs(framePrincipalAngle(raw, bigShotAccent.frame)
       + bigShotAccent.rotation - .47) <= .02, `${skin.id} Big Shot accent follows the trajectory`);
+    const shotgunLayout = premiumShotLayout(skin, 'shotgun', .47);
+    assert.equal(shotgunLayout.muzzleFrame, 7, `${skin.id} shotgun muzzle is a radial flash, not a ground burst`);
+    assert.ok(shotgunLayout.muzzleDepth < 25, `${skin.id} muzzle flash stays behind the hero body`);
+    assert.equal(shotgunLayout.tracerFrame, 6);
+    assert.ok(shotgunLayout.muzzleOffset >= 42, `${skin.id} muzzle starts beyond the hero core`);
+    assert.ok(Math.abs(framePrincipalAngle(raw, shotgunLayout.tracerFrame)
+      + shotgunLayout.tracerRotation - .47) <= .02, `${skin.id} base tracer follows the trajectory`);
 
     const heroPath = skin.heroAtlas.file.split('?')[0].replace(/^\.\//, '../');
     const heroUrl = new URL(heroPath, import.meta.url);

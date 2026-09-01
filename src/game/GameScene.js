@@ -1,4 +1,4 @@
-import { HERO_ATLASES } from '../config/assets.js?build=20260901f';
+import { HERO_ATLASES } from '../config/assets.js?build=20260901g';
 import { ENEMIES, RUN_SECONDS } from '../data/enemies.js?build=20260828i';
 import { HEROES } from '../data/heroes.js?build=20260828i';
 import { PREMIUM_SKINS } from '../data/skins.js?build=20260901e';
@@ -18,7 +18,7 @@ import { UpgradeEffectSystem } from './UpgradeEffectSystem.js?build=20260828e';
 import { WorldObstacleSystem } from './WorldObstacleSystem.js?build=20260828i';
 import { PremiumWeaponAudio } from './PremiumWeaponAudio.js?build=20260901b';
 import { presentWeaponShot } from './WeaponPresentation.js?build=20260901e';
-import { PremiumVfxDirector } from './PremiumVfxDirector.js?build=20260901f';
+import { PremiumVfxDirector } from './PremiumVfxDirector.js?build=20260901g';
 import { gameDeviceProfile } from './deviceProfile.js?build=20260901f';
 import { movementMultiplier } from './movement.js?build=20260825r';
 import { updateMovementFeedback, updateShotFeedback, updateWeaponCharge } from './PlayerFeedback.js?build=20260831a';

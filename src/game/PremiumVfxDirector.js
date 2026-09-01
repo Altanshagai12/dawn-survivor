@@ -2,7 +2,7 @@ import { activePresentationRecipe, upgradePresentation } from './UpgradePresenta
 import { skinProjectileAnchor, skinProjectileRotation } from '../data/skins.js?build=20260901e';
 import { PREMIUM_PROJECTILE_CORE_RATIO, syncProjectileVisualRotation } from './ProjectileGeometry.js?build=20260901e';
 
-const WEAPON_FRAMES = Object.freeze({ revolver: 1, shotgun: 2, crossbow: 3, flame: 4 });
+const WEAPON_FRAMES = Object.freeze({ revolver: 1, shotgun: 7, crossbow: 3, flame: 4 });
 const PROJECTILE_FRAMES = Object.freeze({ revolver: 5, shotgun: 6, crossbow: 3, flame: 4 });
 const PROJECTILE_SCALES = Object.freeze({ revolver: .19, shotgun: .1, crossbow: .33, flame: .23 });
 const TRAIL_FRAMES = Object.freeze({ revolver: 5, shotgun: 6, crossbow: 10, flame: 4 });
@@ -25,6 +25,20 @@ export function premiumPowerAccent(skin, weaponId = 'revolver', trajectoryAngle 
   return {
     frame: PROJECTILE_FRAMES[weaponId] ?? PROJECTILE_FRAMES.revolver,
     rotation: trajectoryAngle + skinProjectileRotation(skin, weaponId),
+  };
+}
+
+export function premiumShotLayout(skin, weaponId = 'revolver', trajectoryAngle = 0) {
+  const shotgun = weaponId === 'shotgun';
+  return {
+    muzzleFrame: WEAPON_FRAMES[weaponId] ?? WEAPON_FRAMES.revolver,
+    muzzleOffset: shotgun ? 42 : 27,
+    muzzleDepth: shotgun ? 24.4 : 37,
+    muzzleRotation: shotgun ? 0 : trajectoryAngle,
+    tracerFrame: PROJECTILE_FRAMES.shotgun,
+    tracerDepth: shotgun ? 29 : 37,
+    tracerOriginX: shotgun ? .15 : .5,
+    tracerRotation: trajectoryAngle + (shotgun ? skinProjectileRotation(skin, 'shotgun') : 0),
   };
 }
 
@@ -91,7 +105,8 @@ export class PremiumVfxDirector {
     entry.spin = options.spin || 0;
     entry.priority = options.priority || 0;
     entry.node.setTexture(this.skin.vfxKey, frame).setPosition(x, y)
-      .setDepth(options.depth || 37).setRotation(options.rotation || 0)
+      .setOrigin(options.originX ?? .5, options.originY ?? .5)
+      .setDepth(options.depth ?? 37).setRotation(options.rotation || 0)
       .setScale(entry.startScaleX, entry.startScaleY).setAlpha(entry.startAlpha).setVisible(true)
       .setBlendMode(Phaser.BlendModes.ADD);
     if (!this.active.includes(entry)) this.active.push(entry);
@@ -173,22 +188,27 @@ export class PremiumVfxDirector {
   shot(angle, authoredAngles = []) {
     const { weapon } = this.scene.state;
     const recipe = activePresentationRecipe(this.scene.state);
-    const x = this.scene.player.x + Math.cos(angle) * 27;
-    const y = this.scene.player.y + Math.sin(angle) * 27;
-    this.emit(WEAPON_FRAMES[weapon.id] ?? 1, x, y, {
-      rotation: angle, scale: (weapon.id === 'shotgun' ? .2 : .15) * PREMIUM_SHOT_EFFECT_BOOST,
+    const layout = premiumShotLayout(this.skin, weapon.id, angle);
+    const x = this.scene.player.x + Math.cos(angle) * layout.muzzleOffset;
+    const y = this.scene.player.y + Math.sin(angle) * layout.muzzleOffset;
+    this.emit(layout.muzzleFrame, x, y, {
+      rotation: layout.muzzleRotation, depth: layout.muzzleDepth,
+      scale: (weapon.id === 'shotgun' ? .09 : .15) * PREMIUM_SHOT_EFFECT_BOOST,
       endScale: .28 * PREMIUM_SHOT_EFFECT_BOOST,
       duration: weapon.id === 'flame' ? 240 : 155, priority: 3,
     });
     const tracerAngles = authoredAngles.length ? authoredAngles : [angle];
-    tracerAngles.forEach((shotAngle) => this.emit(6, x, y, {
-      rotation: shotAngle,
-      scaleX: (weapon.id === 'crossbow' ? .34 : weapon.id === 'shotgun' ? .2 : .23) * PREMIUM_SHOT_EFFECT_BOOST,
-      scaleY: (weapon.id === 'flame' ? .085 : .035) * PREMIUM_SHOT_EFFECT_BOOST,
-      endScaleX: (weapon.id === 'crossbow' ? .48 : .34) * PREMIUM_SHOT_EFFECT_BOOST,
-      endScaleY: .018 * PREMIUM_SHOT_EFFECT_BOOST,
-      duration: weapon.id === 'crossbow' ? 170 : 120, alpha: .86, priority: 2,
-    }));
+    tracerAngles.forEach((shotAngle) => {
+      const tracer = premiumShotLayout(this.skin, weapon.id, shotAngle);
+      this.emit(tracer.tracerFrame, x, y, {
+        rotation: tracer.tracerRotation, originX: tracer.tracerOriginX, depth: tracer.tracerDepth,
+        scaleX: (weapon.id === 'crossbow' ? .34 : weapon.id === 'shotgun' ? .2 : .23) * PREMIUM_SHOT_EFFECT_BOOST,
+        scaleY: (weapon.id === 'flame' ? .085 : .035) * PREMIUM_SHOT_EFFECT_BOOST,
+        endScaleX: (weapon.id === 'crossbow' ? .48 : .34) * PREMIUM_SHOT_EFFECT_BOOST,
+        endScaleY: .018 * PREMIUM_SHOT_EFFECT_BOOST,
+        duration: weapon.id === 'crossbow' ? 170 : 120, alpha: .86, priority: 2,
+      });
+    });
     if (recipe.multiTier || authoredAngles.length > 1) this.emit(11, x, y, {
       rotation: angle, scale: .11 * PREMIUM_SHOT_EFFECT_BOOST,
       endScale: (.26 + recipe.multiTier * .02) * PREMIUM_SHOT_EFFECT_BOOST, duration: 190, priority: 2,
@@ -196,7 +216,8 @@ export class PremiumVfxDirector {
     if (recipe.powerScale > 1.1) {
       const accent = premiumPowerAccent(this.skin, weapon.id, angle);
       this.emit(accent.frame, x, y, {
-        rotation: accent.rotation, scale: .08 * PREMIUM_SHOT_EFFECT_BOOST,
+        rotation: accent.rotation, originX: weapon.id === 'shotgun' ? .15 : .5,
+        depth: weapon.id === 'shotgun' ? 29 : 37, scale: .08 * PREMIUM_SHOT_EFFECT_BOOST,
         endScale: .2 * recipe.powerScale * PREMIUM_SHOT_EFFECT_BOOST, duration: 175,
       });
     }

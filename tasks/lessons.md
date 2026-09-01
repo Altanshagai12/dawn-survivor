@@ -82,3 +82,6 @@
 - An opaque hero atlas can still read as translucent when additive motes and orbitals render above the body or the i-frame blink dims the body itself. Keep the authored body opaque and blink only secondary cosmetic layers.
 - Upgrade-specific muzzle accents must reuse the selected weapon projectile's authored frame, alpha anchor, and rotation offset. Testing only the base projectile misses Big Shot-style overlays that reintroduce a visual tilt.
 - A CSS-rotated mobile canvas must use exact swapped viewport dimensions. Even a two-pixel overscan forces full-frame fractional resampling and makes every map and hero texture look soft despite a high-DPI backing buffer.
+- Never assign a generated VFX atlas frame by numeric position without inspecting its semantic content. A ground-burst frame rotated as a shotgun muzzle can both tilt the shot and continuously cover the hero, making a solid skin look broken.
+- Upscaling a small generated texture to 4K also enlarges every authored motif. Build a periodic multi-tile 4K surface from the native edit, then measure luminance variance and adjacent contrast so high density looks farther away instead of closer.
+- Premium skin QA must capture an active firing frame at the actual phone iframe aspect ratio. An idle hero preview cannot reveal a high-depth muzzle effect that obscures the body during normal play.
