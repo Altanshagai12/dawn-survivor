@@ -7,6 +7,10 @@ const skins = {
   bloodmoon: { pitch: .78, resonance: 520, sub: .28, air: .08, echo: .13 },
   sunforge: { pitch: 1.03, resonance: 840, sub: .18, air: .31, echo: .075 },
   'void-lotus': { pitch: 1.28, resonance: 1360, sub: .15, air: .17, echo: .16 },
+  'celestial-dragon': { pitch: 1.12, resonance: 1260, sub: .18, air: .28, echo: .11 },
+  'obsidian-eclipse': { pitch: .72, resonance: 430, sub: .34, air: .07, echo: .15 },
+  'prismatic-tempest': { pitch: 1.2, resonance: 1540, sub: .16, air: .38, echo: .085 },
+  'chrono-kitsune': { pitch: 1.34, resonance: 1680, sub: .14, air: .2, echo: .18 },
 };
 const weapons = {
   revolver: { duration: .3, base: 185, sweep: 11, noise: .34, decay: 14, click: 1.2, thump: .48, crack: .5, tail: .12, drive: 1.25 },
@@ -59,7 +63,7 @@ function synthesize(definition, skin, variant, seed) {
   for (let index = delay; index < samples.length; index += 1) samples[index] += samples[index - delay] * .18;
   let peak = .001;
   for (const sample of samples) peak = Math.max(peak, Math.abs(sample));
-  const gain = .93 / peak;
+  const gain = .88 / peak;
   for (let index = 0; index < samples.length; index += 1) samples[index] *= gain;
   return samples;
 }
@@ -77,18 +81,54 @@ function wav(samples) {
 }
 
 const root = path.resolve('assets/skins/premium/audio');
+const GAP_SECONDS = .03;
+
+function joinSegments(segments) {
+  const gap = new Float32Array(Math.round(RATE * GAP_SECONDS));
+  const length = segments.reduce((sum, segment) => sum + segment.length, 0)
+    + gap.length * Math.max(0, segments.length - 1);
+  const output = new Float32Array(length);
+  let offset = 0;
+  segments.forEach((segment, index) => {
+    output.set(segment, offset);
+    offset += segment.length;
+    if (index + 1 < segments.length) offset += gap.length;
+  });
+  return output;
+}
+
 for (const [skinId, skin] of Object.entries(skins)) {
   const directory = path.join(root, skinId);
   await mkdir(directory, { recursive: true });
   for (const [weaponId, definition] of Object.entries(weapons)) {
+    const variants = [];
     for (let variant = 0; variant < 3; variant += 1) {
-      await writeFile(path.join(directory, `${weaponId}-${variant}.wav`), wav(synthesize(definition, skin, variant, skinId.length * 9001 + weaponId.length * 701 + variant)));
+      variants.push(synthesize(definition, skin, variant,
+        skinId.length * 9001 + weaponId.length * 701 + variant));
+    }
+    await writeFile(path.join(directory, `${weaponId}.wav`), wav(joinSegments(variants)));
+  }
+  const eventSegments = [];
+  for (const [weaponId, weapon] of Object.entries(weapons)) {
+    for (const eventId of ['impact', 'reload']) {
+      const definition = {
+        ...events[eventId],
+        base: events[eventId].base * Math.max(.72, Math.min(1.35, weapon.base / 180)),
+        noise: events[eventId].noise * (weaponId === 'shotgun' || weaponId === 'flame' ? 1.25 : .86),
+      };
+      for (let variant = 0; variant < 2; variant += 1) {
+        eventSegments.push(synthesize(definition, skin, variant,
+          skinId.length * 7103 + weaponId.length * 503 + eventId.length * 307 + variant));
+      }
     }
   }
   for (const [eventId, definition] of Object.entries(events)) {
+    if (eventId === 'impact' || eventId === 'reload') continue;
     for (let variant = 0; variant < 2; variant += 1) {
-      await writeFile(path.join(directory, `${eventId}-${variant}.wav`), wav(synthesize(definition, skin, variant, skinId.length * 5101 + eventId.length * 401 + variant)));
+      eventSegments.push(synthesize(definition, skin, variant,
+        skinId.length * 5101 + eventId.length * 401 + variant));
     }
   }
+  await writeFile(path.join(directory, 'events.wav'), wav(joinSegments(eventSegments)));
 }
-console.log(`Generated premium audio banks in ${root}`);
+console.log(`Generated five-file premium audio sprite banks in ${root}`);

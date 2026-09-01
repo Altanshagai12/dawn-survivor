@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#09080d" />
     <title>Dawn Survivor</title>
     <link rel="stylesheet" href="./styles.css?build=20260828i" />
-    <link rel="stylesheet" href="./skin-shop.css?build=20260828c" />
+    <link rel="stylesheet" href="./skin-shop.css?build=20260901b" />
     <script src="https://usions.com/usion-sdk.js"></script>
     <script src="https://usions.com/vendor/phaser/4.2.1/phaser.min.js"></script>
   </head>
@@ -48,13 +48,24 @@
 
       <section id="skin-modal" class="modal hidden" aria-labelledby="skin-name">
         <div class="modal__panel skin-panel">
-          <img id="skin-preview" class="skin-panel__preview" alt="Premium hero, weapon, and projectile skin pack" />
+          <div class="skin-panel__visual">
+            <img id="skin-preview" class="skin-panel__preview" alt="Premium hero, weapon, and projectile skin pack" />
+            <p id="skin-live-label" class="skin-live__label">LIVE GAMEPLAY PREVIEW</p>
+            <div class="skin-live" aria-label="Animated gameplay-scale skin preview">
+              <i id="skin-live-vfx" class="skin-live__vfx" aria-hidden="true"></i>
+              <i id="skin-live-hero" class="skin-live__hero" aria-hidden="true"></i>
+              <img id="skin-live-weapon" class="skin-live__weapon" alt="Selected skin weapon" />
+            </div>
+            <div id="skin-weapon-tabs" class="skin-weapon-tabs" aria-label="Skin weapon previews"></div>
+          </div>
           <div class="skin-panel__copy">
-            <p class="eyebrow">COSMETIC PACK · FREE PREVIEW</p>
+            <p id="skin-eyebrow" class="eyebrow">FREE AAA PROTOTYPE</p>
             <h2 id="skin-name"></h2>
             <p id="skin-description"></p>
+            <small id="skin-contents" class="skin-panel__contents"></small>
             <strong id="skin-price" class="skin-panel__price"></strong>
             <p id="skin-status" class="skin-panel__status" aria-live="polite"></p>
+            <button id="skin-audio-shot" class="secondary skin-audio" type="button">PLAY WEAPON AUDIO</button>
             <button id="skin-action" class="primary" type="button"></button>
             <button id="skin-close" class="secondary" type="button">CLOSE</button>
           </div>
@@ -132,6 +143,6 @@
       </div>
       <div id="toast" class="toast hidden"></div>
     </main>
-    <script type="module" src="./src/main.js?build=20260901a"></script>
+    <script type="module" src="./src/main.js?build=20260901b"></script>
   </body>
 </html>

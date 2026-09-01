@@ -24,6 +24,49 @@ export const AUDIO_BANK_EVENTS = Object.freeze({
   impact: 2, reload: 2, ricochet: 2, elemental: 2, upgrade: 2, dash: 2,
 });
 
+export const AUDIO_BANK_FILES = Object.freeze(['revolver', 'shotgun', 'crossbow', 'flame', 'events']);
+
+const CLIP_GAP = .03;
+const CLIP_DURATIONS = Object.freeze({
+  revolver: .3, shotgun: .54, crossbow: .37, flame: .58,
+  impact: .24, reload: .18, ricochet: .21, elemental: .36, upgrade: .52, dash: .29,
+});
+
+function buildAudioSpriteClips() {
+  const clips = {};
+  for (const weaponId of ['revolver', 'shotgun', 'crossbow', 'flame']) {
+    let offset = 0;
+    for (let variant = 0; variant < 3; variant += 1) {
+      clips[`${weaponId}-${variant}`] = Object.freeze({
+        bank: weaponId, offset, duration: CLIP_DURATIONS[weaponId],
+      });
+      offset += CLIP_DURATIONS[weaponId] + CLIP_GAP;
+    }
+  }
+  let eventOffset = 0;
+  const addEvent = (key, duration) => {
+    clips[key] = Object.freeze({ bank: 'events', offset: eventOffset, duration });
+    eventOffset += duration + CLIP_GAP;
+  };
+  for (const weaponId of ['revolver', 'shotgun', 'crossbow', 'flame']) {
+    for (const eventId of ['impact', 'reload']) {
+      for (let variant = 0; variant < 2; variant += 1) {
+        addEvent(`${weaponId}-${eventId}-${variant}`, CLIP_DURATIONS[eventId]);
+      }
+    }
+  }
+  for (const eventId of ['ricochet', 'elemental', 'upgrade', 'dash']) {
+    for (let variant = 0; variant < 2; variant += 1) {
+      addEvent(`${eventId}-${variant}`, CLIP_DURATIONS[eventId]);
+    }
+  }
+  return Object.freeze(clips);
+}
+
+export const AUDIO_SPRITE_CLIPS = buildAudioSpriteClips();
+
+export function audioSpriteClip(key) { return AUDIO_SPRITE_CLIPS[key] || null; }
+
 export function weaponSoundProfile(weaponId, skin = null, state = null) {
   const base = WEAPON_SOUND_PROFILES[weaponId] || WEAPON_SOUND_PROFILES.revolver;
   const recipe = activePresentationRecipe(state);
@@ -58,10 +101,10 @@ export function weaponSoundProfile(weaponId, skin = null, state = null) {
   };
 }
 
-export function specialAudioEvent(event) {
+export function specialAudioEvent(event, weaponId = 'revolver') {
   if (event === 'ricochet' || event === 'pierce') return 'ricochet';
-  if (event === 'fan' || event === 'rear' || event === 'splinter') return 'impact';
+  if (event === 'fan' || event === 'rear' || event === 'splinter') return `${weaponId}-impact`;
   if (event === 'ice' || event === 'fireball' || event === 'lightning' || event === 'explosion') return 'elemental';
   if (event === 'dash') return 'dash';
-  return 'impact';
+  return `${weaponId}-impact`;
 }

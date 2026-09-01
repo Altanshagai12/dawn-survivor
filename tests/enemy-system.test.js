@@ -30,9 +30,9 @@ function makeScene() {
     enemyBullets: {},
     ended: false,
     skinAura: {
-      silhouette: makeAlphaNode(.18), backSigil: makeAlphaNode(.22), crest: makeAlphaNode(.16),
-      orbitals: [makeAlphaNode(.75), makeAlphaNode(.75), makeAlphaNode(.75)],
-      weapon: makeAlphaNode(.62),
+      silhouette: makeAlphaNode(.11), backSigil: makeAlphaNode(.14),
+      orbitals: [makeAlphaNode(.58), makeAlphaNode(.58)],
+      weapon: makeAlphaNode(.96),
     },
     premiumVfx: { setPlayerVisibility(value) { premiumVisibility = value; } },
     lastInput: { moveX: 0, moveY: 0 },
@@ -64,11 +64,10 @@ test('one hit grants synchronized i-frames that block every stacked damage sourc
     assert.equal(scene.state.isInvincible, true);
     assert.equal(scene.player.alpha, .28);
     assert.equal(scene.premiumVisibility, .28);
-    assert.ok(Math.abs(scene.skinAura.silhouette.alpha - .18 * .28) < 1e-10);
-    assert.ok(Math.abs(scene.skinAura.backSigil.alpha - .22 * .28) < 1e-10);
-    assert.ok(Math.abs(scene.skinAura.crest.alpha - .16 * .28) < 1e-10);
-    assert.ok(scene.skinAura.orbitals.every(({ alpha }) => Math.abs(alpha - .75 * .28) < 1e-10));
-    assert.ok(Math.abs(scene.skinAura.weapon.alpha - .62 * .28) < 1e-10);
+    assert.ok(Math.abs(scene.skinAura.silhouette.alpha - .11 * .28) < 1e-10);
+    assert.ok(Math.abs(scene.skinAura.backSigil.alpha - .14 * .28) < 1e-10);
+    assert.ok(scene.skinAura.orbitals.every(({ alpha }) => Math.abs(alpha - .58 * .28) < 1e-10));
+    assert.ok(Math.abs(scene.skinAura.weapon.alpha - .96 * .28) < 1e-10);
 
     assert.equal(system.damagePlayer(1, DAMAGE_SOURCE.ENEMY), false);
     assert.equal(system.damagePlayer(1, DAMAGE_SOURCE.BARRIER), false);
@@ -78,11 +77,10 @@ test('one hit grants synchronized i-frames that block every stacked damage sourc
     system.updatePlayerInvulnerability();
     assert.equal(scene.state.isInvincible, true);
     assert.equal(scene.player.alpha, 1);
-    assert.equal(scene.skinAura.silhouette.alpha, .18);
-    assert.equal(scene.skinAura.backSigil.alpha, .22);
-    assert.equal(scene.skinAura.crest.alpha, .16);
-    assert.ok(scene.skinAura.orbitals.every(({ alpha }) => alpha === .75));
-    assert.equal(scene.skinAura.weapon.alpha, .62);
+    assert.equal(scene.skinAura.silhouette.alpha, .11);
+    assert.equal(scene.skinAura.backSigil.alpha, .14);
+    assert.ok(scene.skinAura.orbitals.every(({ alpha }) => alpha === .58));
+    assert.equal(scene.skinAura.weapon.alpha, .96);
 
     scene.time.now += PLAYER_INVULNERABILITY_MS - PLAYER_INVULNERABILITY_BLINK_MS - 1;
     assert.equal(system.damagePlayer(1), false);

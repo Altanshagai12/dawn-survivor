@@ -1,5 +1,5 @@
-import { weaponArtForSkin } from '../data/skins.js?build=20260901a';
-import { SkinShopController } from './SkinShopController.js?build=20260831a';
+import { weaponArtForSkin } from '../data/skins.js?build=20260901b';
+import { SkinShopController } from './SkinShopController.js?build=20260901b';
 import {
   damageSourceLabel, formatSurvivalTime, heroPassiveCopy, movementCopy, savedOrDefault,
   survivalLeaderboardEntries,
@@ -144,6 +144,7 @@ export class UIController {
   }
 
   showGame() {
+    this.skinShop.disposePreviewMedia();
     this.hideAll();
     this.el.hud.classList.remove('hidden');
     this.el['damage-source'].classList.add('hidden');

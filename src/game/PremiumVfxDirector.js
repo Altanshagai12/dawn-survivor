@@ -1,7 +1,9 @@
 import { activePresentationRecipe, upgradePresentation } from './UpgradePresentationProfiles.js?build=20260828e';
 
 const WEAPON_FRAMES = Object.freeze({ revolver: 1, shotgun: 2, crossbow: 3, flame: 4 });
-const PROJECTILE_FRAMES = Object.freeze({ revolver: 5, shotgun: 6, crossbow: 3, flame: 5 });
+const PROJECTILE_FRAMES = Object.freeze({ revolver: 5, shotgun: 6, crossbow: 3, flame: 4 });
+const TRAIL_FRAMES = Object.freeze({ revolver: 5, shotgun: 6, crossbow: 10, flame: 4 });
+const IMPACT_FRAMES = Object.freeze({ revolver: 1, shotgun: 7, crossbow: 10, flame: 4 });
 const STATUS_FRAMES = Object.freeze({ burn: 12, freeze: 13, lightning: 14, curse: 15, dash: 15 });
 const SPECIAL_FRAMES = Object.freeze({
   dash: 15, fan: 11, rear: 10, splinter: 7, summon: 6, clone: 15,
@@ -27,13 +29,10 @@ export class PremiumVfxDirector {
 
   createAura() {
     const back = this.scene.add.image(0, 0, this.skin.vfxKey, 0)
-      .setDepth(21).setBlendMode(Phaser.BlendModes.ADD).setAlpha(.42);
-    back.premiumBaseAlpha = .42;
-    const front = this.scene.add.image(0, 0, this.skin.vfxKey, 0)
-      .setDepth(34).setBlendMode(Phaser.BlendModes.ADD).setAlpha(.17);
-    front.premiumBaseAlpha = .17;
-    this.aura.push(back, front);
-    for (let index = 0; index < 3; index += 1) {
+      .setDepth(21).setBlendMode(Phaser.BlendModes.ADD).setAlpha(.26);
+    back.premiumBaseAlpha = .26;
+    this.aura.push(back);
+    for (let index = 0; index < 1; index += 1) {
       const mote = this.scene.add.image(0, 0, this.skin.vfxKey, 6)
         .setDepth(33).setBlendMode(Phaser.BlendModes.ADD).setAlpha(.72);
       mote.premiumBaseAlpha = .72;
@@ -117,9 +116,8 @@ export class PremiumVfxDirector {
     const recipe = activePresentationRecipe(this.scene.state);
     const pulse = 1 + Math.sin(now * .004) * .055;
     const baseScale = (.28 + Math.min(.08, recipe.heroTier * .008)) * pulse;
-    const [back, front, ...motes] = this.aura;
+    const [back, ...motes] = this.aura;
     back.setPosition(this.scene.player.x, this.scene.player.y + 5).setScale(baseScale).setRotation(now * .00025);
-    front.setPosition(this.scene.player.x, this.scene.player.y - 2).setScale(baseScale * .68).setRotation(-now * .00038);
     motes.forEach((mote, index) => {
       const angle = now * .0011 + index * Math.PI * 2 / motes.length;
       const radius = 31 + recipe.heroTier * .6;
@@ -188,7 +186,7 @@ export class PremiumVfxDirector {
     bullet.nextPremiumTrailAt = this.scene.time.now + Math.max(34,
       (this.scene.performance?.mobile ? 96 : 58) - recipe.trailRate * 5);
     const angle = bullet.rotation || 0;
-    this.emit(recipe.fire && bullet.burnChance ? 12 : 6,
+    this.emit(recipe.fire && bullet.burnChance ? 12 : (TRAIL_FRAMES[bullet.weaponId] ?? 6),
       bullet.x - Math.cos(angle) * 10, bullet.y - Math.sin(angle) * 10, {
         rotation: angle, scale: Math.max(.035, (bullet.premiumVfxScale || .06) * .7),
         endScale: .025, duration: 180, alpha: .7, depth: 29,
@@ -197,7 +195,7 @@ export class PremiumVfxDirector {
 
   impact(bullet, x, y) {
     const recipe = activePresentationRecipe(this.scene.state);
-    this.emit(7, x, y, {
+    this.emit(IMPACT_FRAMES[bullet?.weaponId] ?? 7, x, y, {
       scale: .1 * recipe.powerScale * PREMIUM_SHOT_EFFECT_BOOST,
       endScale: .3 * recipe.powerScale * PREMIUM_SHOT_EFFECT_BOOST, duration: 235, priority: 2,
     });

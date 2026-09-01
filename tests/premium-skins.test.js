@@ -7,11 +7,11 @@ import sharp from 'sharp';
 import { SkinCommerce } from '../src/commerce/SkinCommerce.js';
 import {
   hasSkinAccess, normalizeSkinProfile, PREMIUM_SKINS, selectedSkin, SKIN_ACCESS_MODE,
-  SKIN_BY_HERO, SKIN_CATALOG_VERSION, weaponArtForSkin,
+  SKINS_BY_HERO, SKIN_CATALOG_VERSION, weaponArtForSkin,
 } from '../src/data/skins.js';
 import { ALL_UPGRADES } from '../src/data/upgrades.js';
 import { activePresentationRecipe, presentationCoverage } from '../src/game/UpgradePresentationProfiles.js';
-import { AUDIO_BANK_EVENTS } from '../src/game/WeaponAudioProfiles.js';
+import { AUDIO_BANK_FILES } from '../src/game/WeaponAudioProfiles.js';
 import { PremiumWeaponAudio, weaponSoundProfile } from '../src/game/PremiumWeaponAudio.js';
 import { PREMIUM_PROJECTILE_RENDER_BOOST, PREMIUM_SHOT_EFFECT_BOOST } from '../src/game/PremiumVfxDirector.js';
 import { weaponEffectProfile } from '../src/game/WeaponPresentation.js';
@@ -30,11 +30,12 @@ function fakeReceipt({ serviceId, amount, txId = 'tx-1' }) {
   return `${encode({ alg: 'HS256' })}.${encode({ sid: serviceId, amt: amount, tx_id: txId })}.signature`;
 }
 
-test('ships one complete premium hero, weapon, projectile, and firing-audio pack per hunter', async () => {
-  assert.deepEqual(Object.keys(SKIN_BY_HERO).sort(), ['diamond', 'hina', 'scarlett', 'shana']);
+test('ships two complete premium hero, weapon, projectile, and firing-audio packs per hunter', async () => {
+  assert.deepEqual(Object.keys(SKINS_BY_HERO).sort(), ['diamond', 'hina', 'scarlett', 'shana']);
+  assert.ok(Object.values(SKINS_BY_HERO).every((skins) => skins.length === 2));
   const prices = new Set();
   for (const skin of Object.values(PREMIUM_SKINS)) {
-    assert.equal(SKIN_BY_HERO[skin.heroId], skin);
+    assert.ok(SKINS_BY_HERO[skin.heroId].includes(skin));
     assert.ok(skin.primary && skin.secondary && skin.impact && skin.spriteTint);
     assert.ok(skin.motif && skin.weaponPitch && skin.voicePitch);
     assert.ok(skin.heroAtlas?.key && skin.heroAtlas?.file);
@@ -42,7 +43,7 @@ test('ships one complete premium hero, weapon, projectile, and firing-audio pack
     assert.equal('voice' in skin, false, 'gameplay skins must not ship an intro voice hook');
     assert.ok(!prices.has(skin.priceCredits), 'each stateless receipt SKU needs a unique price');
     prices.add(skin.priceCredits);
-    for (const asset of [skin.packArt, skin.vfxAtlas, skin.heroAtlas.file]) {
+    for (const asset of [skin.packArt, skin.cardArt, skin.vfxAtlas, skin.heroAtlas.file]) {
       const path = asset.split('?')[0].replace(/^\.\//, '../');
       const url = new URL(path, import.meta.url);
       await access(url);
@@ -94,8 +95,7 @@ test('ships one complete premium hero, weapon, projectile, and firing-audio pack
 
     const audioUrl = new URL(skin.audioBank.replace(/^\.\//, '../'), import.meta.url);
     const audioFiles = (await readdir(audioUrl)).filter((file) => file.endsWith('.wav'));
-    const expectedCount = Object.values(AUDIO_BANK_EVENTS).reduce((sum, count) => sum + count, 0);
-    assert.equal(audioFiles.length, expectedCount);
+    for (const bank of AUDIO_BANK_FILES) assert.ok(audioFiles.includes(`${bank}.wav`));
     let bytes = 0;
     for (const file of audioFiles) bytes += (await stat(new URL(`${audioUrl.href}/${file}`))).size;
     assert.ok(bytes < 1_500_000, 'one selected skin audio bank must stay mobile-safe');
@@ -185,7 +185,7 @@ test('the runtime lazy-loads only the selected premium atlas and selected audio 
   assert.doesNotMatch(game, /queueVoice\(['"]intro/);
   assert.match(presentation, /if \(authoredHero\) scene\.player\.clearTint\(\)/);
   assert.match(presentation, /skin\.vfxKey, 0/);
-  assert.match(presentation, /const orbitals = \[0, 1, 2\]/);
+  assert.match(presentation, /const orbitals = \[0, 1\]/);
 });
 
 test('owned and equipped skin state is sanitized and remains hero-bound', () => {

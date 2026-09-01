@@ -1,7 +1,7 @@
 import { BOSS_ATLASES, ENEMY_ATLASES } from '../config/assets.js?build=20260825r';
 import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260828i';
 import { playDirectional } from './animations.js?build=20260828g';
-import { restoreHeroSkin, setHeroSkinVisibility } from './SkinPresentation.js?build=20260901a';
+import { restoreHeroSkin, setHeroSkinVisibility } from './SkinPresentation.js?build=20260901b';
 import { syncGroundShadow } from './VisualEffects.js?build=20260825r';
 
 export const PLAYER_INVULNERABILITY_MS = TEN_MINUTES_BALANCE.player.hitIFramesMs;

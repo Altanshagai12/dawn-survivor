@@ -1,9 +1,9 @@
 import {
-  AUDIO_BANK_EVENTS, specialAudioEvent, weaponSoundProfile,
-} from './WeaponAudioProfiles.js?build=20260831a';
+  AUDIO_BANK_FILES, audioSpriteClip, specialAudioEvent, weaponSoundProfile,
+} from './WeaponAudioProfiles.js?build=20260901b';
 import { upgradePresentation } from './UpgradePresentationProfiles.js?build=20260828e';
 
-export { weaponSoundProfile } from './WeaponAudioProfiles.js?build=20260831a';
+export { weaponSoundProfile } from './WeaponAudioProfiles.js?build=20260901b';
 export const MAX_SHOT_AUDIO_SOURCES = 3;
 
 function envelope(parameter, now, gain, duration) {
@@ -36,12 +36,11 @@ export class PremiumWeaponAudio {
   preloadSkin(skin) {
     this.skin = skin;
     if (!skin?.audioBank || !this.fetcher) return;
-    Object.entries(AUDIO_BANK_EVENTS).forEach(([event, count]) => {
-      for (let variant = 0; variant < count; variant += 1) {
-        const key = `${event}-${variant}`;
-        this.pendingBuffers.set(key, this.fetcher(`${skin.audioBank}/${key}.wav?build=20260831a`)
-          .then((response) => response.ok ? response.arrayBuffer() : null).catch(() => null));
-      }
+    this.pendingBuffers.clear();
+    this.buffers.clear();
+    AUDIO_BANK_FILES.forEach((bank) => {
+      this.pendingBuffers.set(bank, this.fetcher(`${skin.audioBank}/${bank}.wav?build=20260901b`)
+        .then((response) => response.ok ? response.arrayBuffer() : null).catch(() => null));
     });
     if (this.context) this.decodePending();
   }
@@ -110,7 +109,8 @@ export class PremiumWeaponAudio {
   }
 
   playBuffer(key, gainValue = .72, bus = this.weaponBus, pan = 0, priority = 2, rate = 1) {
-    const buffer = this.buffers.get(key);
+    const clip = audioSpriteClip(key);
+    const buffer = this.buffers.get(clip?.bank);
     if (!buffer || !this.context || !bus || !this.reserveVoice(priority)) return false;
     const source = this.context.createBufferSource();
     const gain = this.context.createGain();
@@ -124,7 +124,7 @@ export class PremiumWeaponAudio {
       gain.connect(panner).connect(bus);
     } else gain.connect(bus);
     this.trackSource(source, priority);
-    source.start();
+    source.start(0, clip.offset, Math.max(.01, Math.min(clip.duration, buffer.duration - clip.offset)));
     return true;
   }
 
@@ -144,16 +144,18 @@ export class PremiumWeaponAudio {
     return true;
   }
 
-  playImpact(_bullet, state) {
+  playImpact(bullet, state) {
     if (!this.context || this.context.state !== 'running') return false;
-    if (this.skin && this.playBuffer(this.variant('impact', 2), .46, this.impactBus, 0, 1)) return true;
+    const weaponId = bullet?.weaponId || state?.weapon?.id || 'revolver';
+    if (this.skin && this.playBuffer(this.variant(`${weaponId}-impact`, 2), .46,
+      this.impactBus, 0, 1)) return true;
     this.playNoiseBurst(520, .055, .075, this.impactBus);
     return Boolean(state);
   }
 
   playReload(stage, weaponId, skin, state) {
     if (!this.context || this.context.state !== 'running') return false;
-    if (skin && this.playBuffer(this.variant('reload', 2), stage === 'complete' ? .58 : .34,
+    if (skin && this.playBuffer(this.variant(`${weaponId}-reload`, 2), stage === 'complete' ? .58 : .34,
       this.weaponBus, 0, 2)) return true;
     const profile = weaponSoundProfile(weaponId, skin, state);
     this.playTone({ ...profile, from: profile.from * 2.4, to: profile.from * 3.1, duration: .07, gain: .055 });
@@ -162,7 +164,7 @@ export class PremiumWeaponAudio {
 
   playSpecial(event, skin, state) {
     if (!this.context || this.context.state !== 'running') return false;
-    const bank = specialAudioEvent(event);
+    const bank = specialAudioEvent(event, state?.weapon?.id);
     if (skin && this.playBuffer(this.variant(bank, 2), event === 'explosion' ? .72 : .52,
       this.impactBus, 0, event === 'explosion' ? 3 : 2)) return true;
     const profile = weaponSoundProfile(state?.weapon?.id, skin, state);
