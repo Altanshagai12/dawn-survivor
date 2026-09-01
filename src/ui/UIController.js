@@ -96,6 +96,13 @@ export class UIController {
     };
   }
 
+  setRunStartPending(pending) {
+    ['start-button', 'again-button'].forEach((id) => {
+      this.el[id].disabled = pending;
+      this.el[id].setAttribute('aria-busy', pending ? 'true' : 'false');
+    });
+  }
+
   renderLoadout() {
     const loadoutSkin = this.skinShop.selected(this.selectedHero);
     this.el['hero-list'].replaceChildren(...Object.values(this.heroes).map((hero) => {

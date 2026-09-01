@@ -5,10 +5,11 @@ import { BootScene } from './game/BootScene.js?build=20260901g';
 import { GameScene } from './game/GameScene.js?build=20260901h';
 import { gameRenderResolution } from './game/deviceProfile.js?build=20260901f';
 import { installVisibleResume } from './game/runtimeLifecycle.js?build=20260825r';
+import { singleFlight, startFreshRun } from './game/runLifecycle.js?build=20260901i';
 import { defaultProfile, initPlatform } from './platform/usion.js?build=20260828a';
 import { createI18n } from './ui/i18n.js?build=20260826l';
 import { installInteractionGuards } from './ui/interactionGuards.js?build=20260826h';
-import { UIController } from './ui/UIController.js?build=20260901e';
+import { UIController } from './ui/UIController.js?build=20260901i';
 import { gameViewportSize, installAutoLandscape, requestLandscape } from './ui/orientation.js?build=20260826b';
 
 async function boot() {
@@ -59,16 +60,21 @@ async function boot() {
   game.registry.set('ui', ui);
   game.registry.set('i18n', i18n);
 
-  ui.onStart = async (selection) => {
-    await requestLandscape();
-    syncOrientation();
-    resizeGame();
-    profile.selectedHero = selection.heroId;
-    profile.selectedWeapon = selection.weaponId;
-    await platform.saveProfile(profile);
-    ui.showGame();
-    game.scene.start('game', selection);
-  };
+  ui.onStart = singleFlight(async (selection) => {
+    ui.setRunStartPending(true);
+    try {
+      await requestLandscape();
+      syncOrientation();
+      resizeGame();
+      profile.selectedHero = selection.heroId;
+      profile.selectedWeapon = selection.weaponId;
+      ui.showGame();
+      startFreshRun(game.scene, selection);
+      void platform.saveProfile(profile).catch((error) => console.warn('Profile save pending', error));
+    } finally {
+      ui.setRunStartPending(false);
+    }
+  });
   platform.releaseBack();
 }
 
