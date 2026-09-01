@@ -97,5 +97,5 @@ test('contact enemies remain kiteable while the player is firing', () => {
 test('content mappings use only the approved enemies and bosses', () => {
   assert.deepEqual(Object.keys(ENEMY_ATLASES), Object.keys(ENEMIES));
   assert.deepEqual(Object.keys(BOSS_ATLASES), Object.keys(BOSSES));
-  assert.match(STATIC_ASSETS.map, /night-soil-calm-v3-2k\.webp$/);
+  assert.match(STATIC_ASSETS.map, /night-soil-calm-v4-4k\.webp$/);
 });

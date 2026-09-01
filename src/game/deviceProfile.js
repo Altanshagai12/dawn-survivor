@@ -27,6 +27,6 @@ export function gameRenderResolution(devicePixelRatio = 1, {
   const ratio = Number(devicePixelRatio);
   const mobile = coarse || width <= 520;
   const constrained = mobile && ((cores > 0 && cores <= 4) || (memory > 0 && memory <= 4));
-  const resolutionCap = constrained ? 2 : 2.5;
+  const resolutionCap = constrained ? 2.5 : 3;
   return Math.min(resolutionCap, Math.max(1, Number.isFinite(ratio) ? ratio : 1));
 }

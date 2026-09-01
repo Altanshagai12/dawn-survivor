@@ -60,7 +60,7 @@ for (const file of Object.values(WEAPON_ART)) await assertFile(file);
 
 const generatedSizes = {
   [STATIC_ASSETS.upgradeIcons]: [960, 960],
-  [STATIC_ASSETS.map]: [2048, 2048],
+  [STATIC_ASSETS.map]: [4096, 4096],
   [STATIC_ASSETS.mysteriousTree]: [1084, 362],
 };
 for (const [file, expected] of Object.entries(generatedSizes)) {

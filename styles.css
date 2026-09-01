@@ -32,8 +32,8 @@ html.mobile-rotated #app {
   top: 50%;
   right: auto;
   bottom: auto;
-  width: calc(var(--app-viewport-height, 100vh) + 2px);
-  height: calc(var(--app-viewport-width, 100vw) + 2px);
+  width: var(--app-viewport-height, 100vh);
+  height: var(--app-viewport-width, 100vw);
   transform: translate(-50%, -50%) rotate(90deg);
   transform-origin: center;
 }

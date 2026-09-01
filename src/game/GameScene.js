@@ -1,4 +1,4 @@
-import { HERO_ATLASES } from '../config/assets.js?build=20260825r';
+import { HERO_ATLASES } from '../config/assets.js?build=20260901f';
 import { ENEMIES, RUN_SECONDS } from '../data/enemies.js?build=20260828i';
 import { HEROES } from '../data/heroes.js?build=20260828i';
 import { PREMIUM_SKINS } from '../data/skins.js?build=20260901e';
@@ -8,7 +8,7 @@ import { createCameraFittedBackground } from './BackgroundSystem.js?build=202608
 import { CombatSystem } from './CombatSystem.js?build=20260901e';
 import { BossBarrierSystem } from './BossBarrierSystem.js?build=20260831b';
 import { CharacterAbilitySystem } from './CharacterAbilitySystem.js?build=20260828i';
-import { EnemySystem } from './EnemySystem.js?build=20260901c';
+import { EnemySystem } from './EnemySystem.js?build=20260901f';
 import { InputController } from './InputController.js?build=20260901d';
 import { LootSystem } from './LootSystem.js?build=20260826k';
 import { RunState } from './RunState.js?build=20260828f';
@@ -18,14 +18,14 @@ import { UpgradeEffectSystem } from './UpgradeEffectSystem.js?build=20260828e';
 import { WorldObstacleSystem } from './WorldObstacleSystem.js?build=20260828i';
 import { PremiumWeaponAudio } from './PremiumWeaponAudio.js?build=20260901b';
 import { presentWeaponShot } from './WeaponPresentation.js?build=20260901e';
-import { PremiumVfxDirector } from './PremiumVfxDirector.js?build=20260901e';
-import { gameDeviceProfile } from './deviceProfile.js?build=20260901c';
+import { PremiumVfxDirector } from './PremiumVfxDirector.js?build=20260901f';
+import { gameDeviceProfile } from './deviceProfile.js?build=20260901f';
 import { movementMultiplier } from './movement.js?build=20260825r';
 import { updateMovementFeedback, updateShotFeedback, updateWeaponCharge } from './PlayerFeedback.js?build=20260831a';
 import { applyOriginalPlayerHitbox, characterSizeScale } from './PlayerHitbox.js?build=20260831a';
 import { createDirectionalAnimations, facingVector, playDirectional } from './animations.js?build=20260828g';
 import { scoreForRun, survivalRecordMs } from './simulation.js?build=20260826j';
-import { applyHeroSkin, destroyHeroSkin, syncHeroSkin } from './SkinPresentation.js?build=20260901c';
+import { applyHeroSkin, destroyHeroSkin, syncHeroSkin } from './SkinPresentation.js?build=20260901f';
 import {
   attachGroundShadow, createGameTextures, createPlayerLights, createReloadIndicator,
   syncGroundShadow, syncPlayerLights, syncReloadIndicator,

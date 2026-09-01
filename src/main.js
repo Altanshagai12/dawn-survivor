@@ -1,9 +1,9 @@
 import { HEROES } from './data/heroes.js?build=20260828i';
 import { normalizeSkinProfile, SKIN_ACCESS_MODE } from './data/skins.js?build=20260901e';
 import { WEAPONS } from './data/weapons.js?build=20260827b';
-import { BootScene } from './game/BootScene.js?build=20260828g';
-import { GameScene } from './game/GameScene.js?build=20260901e';
-import { gameRenderResolution } from './game/deviceProfile.js?build=20260901c';
+import { BootScene } from './game/BootScene.js?build=20260901f';
+import { GameScene } from './game/GameScene.js?build=20260901f';
+import { gameRenderResolution } from './game/deviceProfile.js?build=20260901f';
 import { installVisibleResume } from './game/runtimeLifecycle.js?build=20260825r';
 import { defaultProfile, initPlatform } from './platform/usion.js?build=20260828a';
 import { createI18n } from './ui/i18n.js?build=20260826l';
@@ -38,7 +38,7 @@ async function boot() {
     parent: 'game',
     resolution: gameRenderResolution(window.devicePixelRatio, renderProfile),
     backgroundColor: '#09080d',
-    render: { antialias: false, pixelArt: true, roundPixels: true },
+    render: { antialias: true, pixelArt: false, roundPixels: true },
     scale: { mode: Phaser.Scale.NONE, width: viewport.width, height: viewport.height },
     physics: { default: 'arcade', arcade: { gravity: { x: 0, y: 0 }, debug: false } },
     scene: [BootScene, GameScene],

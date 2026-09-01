@@ -28,9 +28,9 @@ test('the ground compensates camera zoom and fills every viewport edge', () => {
   assert.ok(Math.abs(desktop.height * 1.05 - 900) < 1e-9);
 });
 
-test('capable high-density phones render at 2.5x while constrained phones stay bounded', () => {
-  assert.equal(gameRenderResolution(3, { coarse: true, width: 844, cores: 6, memory: 8 }), 2.5);
-  assert.equal(gameRenderResolution(3, { coarse: true, width: 844, cores: 4, memory: 4 }), 2);
+test('capable high-density phones preserve native 3x detail while constrained phones stay bounded', () => {
+  assert.equal(gameRenderResolution(3, { coarse: true, width: 844, cores: 6, memory: 8 }), 3);
+  assert.equal(gameRenderResolution(3, { coarse: true, width: 844, cores: 4, memory: 4 }), 2.5);
   assert.equal(gameRenderResolution(1.5), 1.5);
   assert.equal(gameRenderResolution(0), 1);
 });

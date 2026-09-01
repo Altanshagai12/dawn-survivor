@@ -17,7 +17,7 @@ export function applyHeroSkin(scene) {
   const orbitals = [0, 1].map((index) => scene.add.circle(
     scene.player.x, scene.player.y, 1.55 + index * .18,
     index === 1 ? skin.secondary : skin.primary, .9,
-  ).setStrokeStyle(.7, skin.impact, .8).setDepth(27).setBlendMode(Phaser.BlendModes.ADD));
+  ).setStrokeStyle(.7, skin.impact, .8).setDepth(24.2).setBlendMode(Phaser.BlendModes.ADD));
   const weapon = scene.add.image(scene.player.x, scene.player.y, scene.skinWeaponKey)
     .setDepth(32).setScale(.075).setAlpha(.96);
   return {
@@ -63,7 +63,7 @@ export function syncHeroSkin(aura, player, deltaSeconds = 0) {
     orbital.setPosition(
       player.x + Math.cos(orbitalAngle) * (29 + index * 3),
       player.y - 3 + Math.sin(orbitalAngle) * (10 + index * 1.5),
-    ).setDepth(front ? 27 : 22.5)
+    ).setDepth(front ? 24.2 : 22.5)
       .setScale(.82 + Math.sin(orbitalAngle * 1.7) * .16)
       .setAlpha((.3 + (front ? .16 : .04)) * aura.visibility);
   });

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   DAMAGE_SOURCE, EnemySystem, PLAYER_INVULNERABILITY_BLINK_MS, PLAYER_INVULNERABILITY_MS,
-  PREMIUM_INVULNERABILITY_ALPHA,
+  PREMIUM_INVULNERABILITY_ALPHA, PREMIUM_INVULNERABILITY_EFFECT_ALPHA,
 } from '../src/game/EnemySystem.js';
 
 function makeAlphaNode(alpha) {
@@ -111,7 +111,9 @@ test('premium hunters keep a readable body during the same i-frame window', () =
     assert.equal(system.damagePlayer(1, DAMAGE_SOURCE.ENEMY), true);
     assert.equal(system.playerInvulnerableUntil, 1000 + PLAYER_INVULNERABILITY_MS);
     assert.equal(scene.player.alpha, PREMIUM_INVULNERABILITY_ALPHA);
-    assert.equal(scene.premiumVisibility, PREMIUM_INVULNERABILITY_ALPHA);
+    assert.equal(scene.player.alpha, 1, 'premium body stays opaque while its effects blink');
+    assert.equal(scene.premiumVisibility, PREMIUM_INVULNERABILITY_EFFECT_ALPHA);
+    assert.ok(Math.abs(scene.skinAura.silhouette.alpha - .11 * PREMIUM_INVULNERABILITY_EFFECT_ALPHA) < 1e-10);
     assert.equal(scene.damageCalls, 1);
     assert.equal(system.damagePlayer(1, DAMAGE_SOURCE.ENEMY), false);
     assert.equal(scene.damageCalls, 1, 'presentation must not change i-frame collision mechanics');

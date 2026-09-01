@@ -21,6 +21,13 @@ export function premiumProjectileScale(size = 8, weaponId = 'revolver', powerSca
   return base * Math.max(.72, size / 8) * powerScale * PREMIUM_PROJECTILE_RENDER_BOOST;
 }
 
+export function premiumPowerAccent(skin, weaponId = 'revolver', trajectoryAngle = 0) {
+  return {
+    frame: PROJECTILE_FRAMES[weaponId] ?? PROJECTILE_FRAMES.revolver,
+    rotation: trajectoryAngle + skinProjectileRotation(skin, weaponId),
+  };
+}
+
 function easeOut(value) { return 1 - (1 - value) ** 3; }
 
 export class PremiumVfxDirector {
@@ -42,8 +49,8 @@ export class PremiumVfxDirector {
     this.aura.push(back);
     for (let index = 0; index < 1; index += 1) {
       const mote = this.scene.add.image(0, 0, this.skin.vfxKey, 6)
-        .setDepth(33).setBlendMode(Phaser.BlendModes.ADD).setAlpha(.72);
-      mote.premiumBaseAlpha = .72;
+        .setDepth(24).setBlendMode(Phaser.BlendModes.ADD).setAlpha(.52);
+      mote.premiumBaseAlpha = .52;
       this.aura.push(mote);
     }
   }
@@ -186,10 +193,13 @@ export class PremiumVfxDirector {
       rotation: angle, scale: .11 * PREMIUM_SHOT_EFFECT_BOOST,
       endScale: (.26 + recipe.multiTier * .02) * PREMIUM_SHOT_EFFECT_BOOST, duration: 190, priority: 2,
     });
-    if (recipe.powerScale > 1.1) this.emit(10, x, y, {
-      rotation: angle, scale: .08 * PREMIUM_SHOT_EFFECT_BOOST,
-      endScale: .2 * recipe.powerScale * PREMIUM_SHOT_EFFECT_BOOST, duration: 175,
-    });
+    if (recipe.powerScale > 1.1) {
+      const accent = premiumPowerAccent(this.skin, weapon.id, angle);
+      this.emit(accent.frame, x, y, {
+        rotation: accent.rotation, scale: .08 * PREMIUM_SHOT_EFFECT_BOOST,
+        endScale: .2 * recipe.powerScale * PREMIUM_SHOT_EFFECT_BOOST, duration: 175,
+      });
+    }
   }
 
   trail(bullet) {
