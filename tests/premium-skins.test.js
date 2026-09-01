@@ -37,10 +37,12 @@ test('ships one complete premium hero, weapon, projectile, and firing-audio pack
     assert.equal(SKIN_BY_HERO[skin.heroId], skin);
     assert.ok(skin.primary && skin.secondary && skin.impact && skin.spriteTint);
     assert.ok(skin.motif && skin.weaponPitch && skin.voicePitch);
+    assert.ok(skin.heroAtlas?.key && skin.heroAtlas?.file);
+    assert.ok(skin.heroAtlas.frameWidth > 0 && skin.heroAtlas.frameHeight > 0);
     assert.equal('voice' in skin, false, 'gameplay skins must not ship an intro voice hook');
     assert.ok(!prices.has(skin.priceCredits), 'each stateless receipt SKU needs a unique price');
     prices.add(skin.priceCredits);
-    for (const asset of [skin.packArt, skin.vfxAtlas]) {
+    for (const asset of [skin.packArt, skin.vfxAtlas, skin.heroAtlas.file]) {
       const path = asset.split('?')[0].replace(/^\.\//, '../');
       const url = new URL(path, import.meta.url);
       await access(url);
@@ -64,6 +66,30 @@ test('ships one complete premium hero, weapon, projectile, and firing-audio pack
         assert.equal(raw[((offset * 1024) + pixel) * 4 + 3], 0, 'horizontal cell gutter must be transparent');
         assert.equal(raw[((pixel * 1024) + offset) * 4 + 3], 0, 'vertical cell gutter must be transparent');
       }
+    }
+
+    const heroPath = skin.heroAtlas.file.split('?')[0].replace(/^\.\//, '../');
+    const heroUrl = new URL(heroPath, import.meta.url);
+    const heroMetadata = await sharp(fileURLToPath(heroUrl)).metadata();
+    assert.deepEqual(
+      [heroMetadata.width, heroMetadata.height, heroMetadata.hasAlpha],
+      [skin.heroAtlas.frameWidth * 6, skin.heroAtlas.frameHeight * 8, true],
+    );
+    const heroRaw = await sharp(fileURLToPath(heroUrl)).ensureAlpha().raw().toBuffer();
+    const heroWidth = heroMetadata.width;
+    for (let row = 0; row < 8; row += 1) for (let column = 0; column < 6; column += 1) {
+      const left = column * skin.heroAtlas.frameWidth;
+      const top = row * skin.heroAtlas.frameHeight;
+      let visible = 0;
+      for (let y = 0; y < skin.heroAtlas.frameHeight; y += 1) {
+        for (let x = 0; x < skin.heroAtlas.frameWidth; x += 1) {
+          const alpha = heroRaw[((top + y) * heroWidth + left + x) * 4 + 3];
+          if (alpha) visible += 1;
+          if (x === 0 || y === 0 || x === skin.heroAtlas.frameWidth - 1
+            || y === skin.heroAtlas.frameHeight - 1) assert.equal(alpha, 0);
+        }
+      }
+      assert.ok(visible >= 480, `${skin.id} frame ${row * 6 + column} must be readable`);
     }
 
     const audioUrl = new URL(skin.audioBank.replace(/^\.\//, '../'), import.meta.url);
@@ -147,11 +173,19 @@ test('the runtime lazy-loads only the selected premium atlas and selected audio 
     new URL('../src/game/BootScene.js', import.meta.url), 'utf8'));
   const game = await import('node:fs/promises').then(({ readFile }) => readFile(
     new URL('../src/game/GameScene.js', import.meta.url), 'utf8'));
+  const presentation = await import('node:fs/promises').then(({ readFile }) => readFile(
+    new URL('../src/game/SkinPresentation.js', import.meta.url), 'utf8'));
   assert.doesNotMatch(boot, /PREMIUM_SKINS|vfxAtlas/);
   assert.match(game, /PREMIUM_SKINS\[this\.selection\?\.skinId\]/);
   assert.match(game, /this\.load\.spritesheet\(skin\.vfxKey, skin\.vfxAtlas/);
+  assert.match(game, /this\.load\.spritesheet\(skin\.heroAtlas\.key, skin\.heroAtlas\.file/);
+  assert.match(game, /createDirectionalAnimations\(this, skin\.heroAtlas/);
+  assert.match(game, /this\.playerAtlas = this\.state\.skin\?\.heroAtlas/);
   assert.match(game, /preloadSkin\?\.\(this\.state\.skin\)/);
   assert.doesNotMatch(game, /queueVoice\(['"]intro/);
+  assert.match(presentation, /if \(authoredHero\) scene\.player\.clearTint\(\)/);
+  assert.match(presentation, /skin\.vfxKey, 0/);
+  assert.match(presentation, /const orbitals = \[0, 1, 2\]/);
 });
 
 test('owned and equipped skin state is sanitized and remains hero-bound', () => {

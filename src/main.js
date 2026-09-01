@@ -1,8 +1,8 @@
 import { HEROES } from './data/heroes.js?build=20260828i';
-import { normalizeSkinProfile, SKIN_ACCESS_MODE } from './data/skins.js?build=20260831a';
+import { normalizeSkinProfile, SKIN_ACCESS_MODE } from './data/skins.js?build=20260901a';
 import { WEAPONS } from './data/weapons.js?build=20260827b';
 import { BootScene } from './game/BootScene.js?build=20260828g';
-import { GameScene } from './game/GameScene.js?build=20260831b';
+import { GameScene } from './game/GameScene.js?build=20260901a';
 import { gameRenderResolution } from './game/deviceProfile.js?build=20260826j';
 import { installVisibleResume } from './game/runtimeLifecycle.js?build=20260825r';
 import { defaultProfile, initPlatform } from './platform/usion.js?build=20260828a';

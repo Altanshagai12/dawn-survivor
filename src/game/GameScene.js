@@ -1,7 +1,7 @@
 import { HERO_ATLASES } from '../config/assets.js?build=20260825r';
 import { ENEMIES, RUN_SECONDS } from '../data/enemies.js?build=20260828i';
 import { HEROES } from '../data/heroes.js?build=20260828i';
-import { PREMIUM_SKINS } from '../data/skins.js?build=20260831a';
+import { PREMIUM_SKINS } from '../data/skins.js?build=20260901a';
 import { TOMES, sampleUpgradeCards } from '../data/upgrades.js?build=20260826b';
 import { WEAPONS } from '../data/weapons.js?build=20260827b';
 import { createCameraFittedBackground } from './BackgroundSystem.js?build=20260826d';
@@ -23,9 +23,9 @@ import { gameDeviceProfile } from './deviceProfile.js?build=20260826j';
 import { movementMultiplier } from './movement.js?build=20260825r';
 import { updateMovementFeedback, updateShotFeedback, updateWeaponCharge } from './PlayerFeedback.js?build=20260831a';
 import { applyOriginalPlayerHitbox, characterSizeScale } from './PlayerHitbox.js?build=20260831a';
-import { facingVector, playDirectional } from './animations.js?build=20260828g';
+import { createDirectionalAnimations, facingVector, playDirectional } from './animations.js?build=20260828g';
 import { scoreForRun, survivalRecordMs } from './simulation.js?build=20260826j';
-import { applyHeroSkin, destroyHeroSkin, syncHeroSkin } from './SkinPresentation.js?build=20260828f';
+import { applyHeroSkin, destroyHeroSkin, syncHeroSkin } from './SkinPresentation.js?build=20260901a';
 import {
   attachGroundShadow, createGameTextures, createPlayerLights, createReloadIndicator,
   syncGroundShadow, syncPlayerLights, syncReloadIndicator,
@@ -49,8 +49,15 @@ export class GameScene extends Phaser.Scene {
 
   preload() {
     const skin = PREMIUM_SKINS[this.selection?.skinId];
-    if (skin && !this.textures.exists(skin.vfxKey)) {
+    if (skin?.heroId !== this.selection?.heroId) return;
+    if (!this.textures.exists(skin.vfxKey)) {
       this.load.spritesheet(skin.vfxKey, skin.vfxAtlas, { frameWidth: 256, frameHeight: 256 });
+    }
+    if (!this.textures.exists(skin.heroAtlas.key)) {
+      this.load.spritesheet(skin.heroAtlas.key, skin.heroAtlas.file, {
+        frameWidth: skin.heroAtlas.frameWidth,
+        frameHeight: skin.heroAtlas.frameHeight,
+      });
     }
   }
 
@@ -62,6 +69,9 @@ export class GameScene extends Phaser.Scene {
     const selectedSkin = PREMIUM_SKINS[this.selection.skinId];
     const skin = selectedSkin?.heroId === this.selection.heroId ? selectedSkin : null;
     this.state = new RunState(HEROES[this.selection.heroId], WEAPONS[this.selection.weaponId], skin);
+    if (skin?.heroAtlas && this.textures.exists(skin.heroAtlas.key)) {
+      createDirectionalAnimations(this, skin.heroAtlas, 11);
+    }
     this.performance = gameDeviceProfile({
       coarse: matchMedia('(pointer: coarse)').matches,
       width: this.scale.width,
@@ -110,8 +120,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   createPlayer() {
-    const atlas = HERO_ATLASES[this.state.hero.id];
-    this.playerAtlas = atlas;
+    this.playerAtlas = this.state.skin?.heroAtlas || HERO_ATLASES[this.state.hero.id];
+    if (!this.textures.exists(this.playerAtlas.key)) this.playerAtlas = HERO_ATLASES[this.state.hero.id];
+    const atlas = this.playerAtlas;
     this.player = this.physics.add.sprite(0, 0, atlas.key, 24).setDepth(25);
     const scale = 78 / atlas.frameHeight;
     this.playerBaseScale = scale;
@@ -154,7 +165,7 @@ export class GameScene extends Phaser.Scene {
     );
     const facing = facingVector(input, this.facing, this.time.now < this.aimHoldUntil || this.state.reloading);
     this.facing = facing;
-    playDirectional(this.player, HERO_ATLASES[this.state.hero.id].key, facing.x, facing.y,
+    playDirectional(this.player, this.playerAtlas.key, facing.x, facing.y,
       Math.hypot(input.moveX, input.moveY) > .08, { mirrorLeft: true });
     updateShotFeedback(this, deltaSeconds);
     syncGroundShadow(this.player);

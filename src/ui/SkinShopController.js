@@ -1,4 +1,4 @@
-import { hasSkinAccess, selectedSkin, SKIN_ACCESS_MODE, SKIN_BY_HERO } from '../data/skins.js?build=20260831a';
+import { hasSkinAccess, selectedSkin, SKIN_ACCESS_MODE, SKIN_BY_HERO } from '../data/skins.js?build=20260901a';
 
 const COPY = {
   en: {
