@@ -11,9 +11,51 @@ const GAMEPLAY_KEYS = new Set([
   'damage', 'hp', 'maxHp', 'speed', 'moveSpeed', 'fireRate', 'projectileSpeed',
   'magazine', 'reload', 'enemy', 'spawn', 'hitbox', 'duration', 'range', 'knockback',
 ]);
+const FRAGMENT_PRUNED_SKINS = new Set([
+  'diamond-obsidian-eclipse-valkyrie',
+  'hina-nine-tail-chrono-kitsune',
+]);
 
 function assetUrl(asset) {
   return new URL(asset.split('?')[0].replace(/^\.\//, '../'), import.meta.url);
+}
+
+function detachedFragments(data, atlasWidth, frameWidth, frameHeight, row, column) {
+  const seen = new Uint8Array(frameWidth * frameHeight);
+  const components = [];
+  for (let y = 0; y < frameHeight; y += 1) for (let x = 0; x < frameWidth; x += 1) {
+    const local = y * frameWidth + x;
+    const alphaAt = (px, py) => data[(((row * frameHeight + py) * atlasWidth)
+      + column * frameWidth + px) * 4 + 3];
+    if (seen[local] || !alphaAt(x, y)) continue;
+    const stack = [local];
+    seen[local] = 1;
+    let pixels = 0;
+    let left = x;
+    let right = x;
+    while (stack.length) {
+      const pixel = stack.pop();
+      const px = pixel % frameWidth;
+      const py = Math.floor(pixel / frameWidth);
+      pixels += 1;
+      left = Math.min(left, px);
+      right = Math.max(right, px);
+      for (let oy = -1; oy <= 1; oy += 1) for (let ox = -1; ox <= 1; ox += 1) {
+        const nx = px + ox;
+        const ny = py + oy;
+        if (nx < 0 || ny < 0 || nx >= frameWidth || ny >= frameHeight) continue;
+        const neighbor = ny * frameWidth + nx;
+        if (seen[neighbor] || !alphaAt(nx, ny)) continue;
+        seen[neighbor] = 1;
+        stack.push(neighbor);
+      }
+    }
+    components.push({ pixels, left, right });
+  }
+  components.sort((a, b) => b.pixels - a.pixels);
+  const body = components[0];
+  return components.slice(1).filter((component) => component.pixels >= 8
+    && (component.right < body.left - 6 || component.left > body.right + 6));
 }
 
 test('mythic collection stays cosmetic-only and free during prototype review', () => {
@@ -53,6 +95,13 @@ test('every authored hero atlas is centered, foot-locked, and transparent at cel
           assert.ok(x > 0 && y > 0 && x < frameWidth - 1 && y < frameHeight - 1);
         }
         frames.push({ area, center: weightedX / area * 78 / frameHeight, bottom });
+        if (FRAGMENT_PRUNED_SKINS.has(skin.id)) {
+          assert.equal(
+            detachedFragments(data, info.width, frameWidth, frameHeight, row, column).length,
+            0,
+            `${skin.id} frame ${row * 6 + column} detached fragment`,
+          );
+        }
       }
       const centers = frames.map(({ center }) => center);
       const bottoms = frames.map(({ bottom }) => bottom);
@@ -62,6 +111,25 @@ test('every authored hero atlas is centered, foot-locked, and transparent at cel
       assert.ok(Math.max(...bottoms) - Math.min(...bottoms) <= 1, `${skin.id} row ${row} feet`);
       assert.ok((Math.max(...areas) - Math.min(...areas)) / median <= .08, `${skin.id} row ${row} area`);
     }
+  }
+});
+
+test('mythic hero bodies remain opaque and readable before their aura is applied', async () => {
+  const mythics = Object.values(PREMIUM_SKINS).filter(({ rarity }) => rarity === 'mythic');
+  for (const skin of mythics) {
+    const { data } = await sharp(fileURLToPath(assetUrl(skin.heroAtlas.file))).ensureAlpha().raw()
+      .toBuffer({ resolveWithObject: true });
+    let visible = 0;
+    let alpha = 0;
+    let luminance = 0;
+    for (let index = 0; index < data.length; index += 4) {
+      if (!data[index + 3]) continue;
+      visible += 1;
+      alpha += data[index + 3];
+      luminance += data[index] * .2126 + data[index + 1] * .7152 + data[index + 2] * .0722;
+    }
+    assert.ok(alpha / visible >= 150, `${skin.id} body alpha`);
+    assert.ok(luminance / visible >= 60, `${skin.id} body luminance`);
   }
 });
 

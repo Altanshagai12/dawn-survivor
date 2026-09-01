@@ -21,7 +21,12 @@ export function cameraCompensatedViewport(width, height, zoom = 1) {
   return { width: width / safeZoom, height: height / safeZoom };
 }
 
-export function gameRenderResolution(devicePixelRatio = 1) {
+export function gameRenderResolution(devicePixelRatio = 1, {
+  coarse = false, width = 1024, cores = 8, memory = 8,
+} = {}) {
   const ratio = Number(devicePixelRatio);
-  return Math.min(2, Math.max(1, Number.isFinite(ratio) ? ratio : 1));
+  const mobile = coarse || width <= 520;
+  const constrained = mobile && ((cores > 0 && cores <= 4) || (memory > 0 && memory <= 4));
+  const resolutionCap = constrained ? 2 : 2.5;
+  return Math.min(resolutionCap, Math.max(1, Number.isFinite(ratio) ? ratio : 1));
 }

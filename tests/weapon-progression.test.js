@@ -5,6 +5,7 @@ import { UPGRADES } from '../src/data/upgrades.js';
 import {
   CombatSystem, PROJECTILE_RENDER_MULTIPLIER, projectileBodyRadius, projectileCollisionRadius, projectileScale,
 } from '../src/game/CombatSystem.js';
+import { premiumProjectileScale, PREMIUM_PROJECTILE_RENDER_BOOST } from '../src/game/PremiumVfxDirector.js';
 import { shouldConsumeAmmo, upgradedProjectileCount } from '../src/game/WeaponMechanics.js';
 import { nextWeaponCharge } from '../src/game/PlayerFeedback.js';
 import { RunState } from '../src/game/RunState.js';
@@ -35,14 +36,19 @@ test('weapons preserve their authored near-to-far projectile travel roles', () =
 
 test('Big Shot enlarges both projectile rendering and its collision footprint', () => {
   const bigShotSize = WEAPONS.revolver.bulletSize * 1.4;
-  assert.ok(Math.abs(projectileScale(bigShotSize) - 2.24) < 1e-9);
+  assert.ok(Math.abs(projectileScale(bigShotSize) - 2.66) < 1e-9);
   assert.ok(Math.abs(projectileCollisionRadius(bigShotSize) - 5.6) < 1e-9);
 });
 
 test('base projectiles render larger without silently widening their hit radius', () => {
-  assert.equal(PROJECTILE_RENDER_MULTIPLIER, 1.6);
-  assert.equal(projectileScale(WEAPONS.revolver.bulletSize), 1.6);
+  assert.equal(PROJECTILE_RENDER_MULTIPLIER, 1.9);
+  assert.equal(projectileScale(WEAPONS.revolver.bulletSize), 1.9);
   assert.equal(projectileCollisionRadius(WEAPONS.revolver.bulletSize), 4);
+  assert.equal(PREMIUM_PROJECTILE_RENDER_BOOST, 1.65);
+  assert.ok(premiumProjectileScale(8, 'revolver') >= .31);
+  assert.ok(premiumProjectileScale(6, 'shotgun') >= .12);
+  assert.ok(premiumProjectileScale(9, 'crossbow') >= .61);
+  assert.ok(premiumProjectileScale(8, 'flame') >= .37);
 });
 
 test('a premium atlas scale preserves the authored world collision radius', () => {

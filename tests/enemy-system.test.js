@@ -2,13 +2,14 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   DAMAGE_SOURCE, EnemySystem, PLAYER_INVULNERABILITY_BLINK_MS, PLAYER_INVULNERABILITY_MS,
+  PREMIUM_INVULNERABILITY_ALPHA,
 } from '../src/game/EnemySystem.js';
 
 function makeAlphaNode(alpha) {
   return { alpha, setAlpha(value) { this.alpha = value; return this; } };
 }
 
-function makeScene() {
+function makeScene({ premium = false } = {}) {
   let damageCalls = 0;
   let premiumVisibility = 1;
   const player = {
@@ -38,6 +39,7 @@ function makeScene() {
     lastInput: { moveX: 0, moveY: 0 },
     state: {
       flags: {},
+      skin: premium ? { id: 'test-premium' } : null,
       isInvincible: false,
       takeDamage() { damageCalls += 1; return { blocked: false, dead: false }; },
     },
@@ -95,6 +97,24 @@ test('one hit grants synchronized i-frames that block every stacked damage sourc
     assert.equal(scene.state.isInvincible, false);
     assert.equal(scene.player.alpha, 1);
     assert.equal(scene.premiumVisibility, 1);
+  } finally {
+    globalThis.Phaser = previousPhaser;
+  }
+});
+
+test('premium hunters keep a readable body during the same i-frame window', () => {
+  const previousPhaser = globalThis.Phaser;
+  globalThis.Phaser = { TintModes: { FILL: 1 } };
+  try {
+    const scene = makeScene({ premium: true });
+    const system = new EnemySystem(scene);
+    assert.equal(system.damagePlayer(1, DAMAGE_SOURCE.ENEMY), true);
+    assert.equal(system.playerInvulnerableUntil, 1000 + PLAYER_INVULNERABILITY_MS);
+    assert.equal(scene.player.alpha, PREMIUM_INVULNERABILITY_ALPHA);
+    assert.equal(scene.premiumVisibility, PREMIUM_INVULNERABILITY_ALPHA);
+    assert.equal(scene.damageCalls, 1);
+    assert.equal(system.damagePlayer(1, DAMAGE_SOURCE.ENEMY), false);
+    assert.equal(scene.damageCalls, 1, 'presentation must not change i-frame collision mechanics');
   } finally {
     globalThis.Phaser = previousPhaser;
   }

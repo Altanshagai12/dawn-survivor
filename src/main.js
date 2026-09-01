@@ -1,9 +1,9 @@
 import { HEROES } from './data/heroes.js?build=20260828i';
-import { normalizeSkinProfile, SKIN_ACCESS_MODE } from './data/skins.js?build=20260901b';
+import { normalizeSkinProfile, SKIN_ACCESS_MODE } from './data/skins.js?build=20260901c';
 import { WEAPONS } from './data/weapons.js?build=20260827b';
 import { BootScene } from './game/BootScene.js?build=20260828g';
-import { GameScene } from './game/GameScene.js?build=20260901b';
-import { gameRenderResolution } from './game/deviceProfile.js?build=20260826j';
+import { GameScene } from './game/GameScene.js?build=20260901c';
+import { gameRenderResolution } from './game/deviceProfile.js?build=20260901c';
 import { installVisibleResume } from './game/runtimeLifecycle.js?build=20260825r';
 import { defaultProfile, initPlatform } from './platform/usion.js?build=20260828a';
 import { createI18n } from './ui/i18n.js?build=20260826l';
@@ -27,10 +27,16 @@ async function boot() {
   const ui = new UIController({ heroes: HEROES, weapons: WEAPONS, i18n, profile, platform, commerce });
 
   const viewport = gameViewportSize();
+  const renderProfile = {
+    coarse: matchMedia('(pointer: coarse)').matches,
+    width: viewport.width,
+    cores: navigator.hardwareConcurrency || 8,
+    memory: navigator.deviceMemory || 8,
+  };
   const game = new Phaser.Game({
     type: Phaser.AUTO,
     parent: 'game',
-    resolution: gameRenderResolution(window.devicePixelRatio),
+    resolution: gameRenderResolution(window.devicePixelRatio, renderProfile),
     backgroundColor: '#09080d',
     render: { antialias: false, pixelArt: true, roundPixels: true },
     scale: { mode: Phaser.Scale.NONE, width: viewport.width, height: viewport.height },

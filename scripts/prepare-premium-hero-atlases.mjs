@@ -13,9 +13,9 @@ const atlases = [
   { id: 'scarlett-sunforge-phoenix', frameWidth: 181, frameHeight: 181 },
   { id: 'hina-void-lotus', frameWidth: 181, frameHeight: 181 },
   { id: 'shana-celestial-dragon-sovereign', frameWidth: 181, frameHeight: 181 },
-  { id: 'diamond-obsidian-eclipse-valkyrie', frameWidth: 222, frameHeight: 148 },
+  { id: 'diamond-obsidian-eclipse-valkyrie', frameWidth: 222, frameHeight: 148, pruneDetached: true },
   { id: 'scarlett-prismatic-tempest-seraph', frameWidth: 181, frameHeight: 181, mirrorMissingRow: 1 },
-  { id: 'hina-nine-tail-chrono-kitsune', frameWidth: 181, frameHeight: 181 },
+  { id: 'hina-nine-tail-chrono-kitsune', frameWidth: 181, frameHeight: 181, pruneDetached: true },
 ];
 
 function visible(data, offset) {
@@ -66,10 +66,54 @@ function frameBounds(data, width, height, column, band) {
   return { left, top, width: right - left + 1, height: bottom - top + 1 };
 }
 
+function pruneDetachedComponents(data, width, height, margin = 6) {
+  const seen = new Uint8Array(width * height);
+  const components = [];
+  for (let y = 0; y < height; y += 1) for (let x = 0; x < width; x += 1) {
+    const index = y * width + x;
+    if (seen[index] || data[index * 4 + 3] === 0) continue;
+    const pixels = [];
+    const stack = [index];
+    seen[index] = 1;
+    let left = x;
+    let right = x;
+    let top = y;
+    let bottom = y;
+    while (stack.length) {
+      const pixel = stack.pop();
+      const px = pixel % width;
+      const py = Math.floor(pixel / width);
+      pixels.push(pixel);
+      left = Math.min(left, px);
+      right = Math.max(right, px);
+      top = Math.min(top, py);
+      bottom = Math.max(bottom, py);
+      for (let oy = -1; oy <= 1; oy += 1) for (let ox = -1; ox <= 1; ox += 1) {
+        const nx = px + ox;
+        const ny = py + oy;
+        if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+        const neighbor = ny * width + nx;
+        if (seen[neighbor] || data[neighbor * 4 + 3] === 0) continue;
+        seen[neighbor] = 1;
+        stack.push(neighbor);
+      }
+    }
+    components.push({ pixels, left, right, top, bottom });
+  }
+  if (!components.length) return data;
+  const body = components.reduce((largest, component) => (
+    component.pixels.length > largest.pixels.length ? component : largest
+  ));
+  for (const component of components) {
+    const nearBody = component.right >= body.left - margin && component.left <= body.right + margin;
+    if (component === body || nearBody) continue;
+    component.pixels.forEach((pixel) => data.fill(0, pixel * 4, pixel * 4 + 4));
+  }
+  return data;
+}
+
 function isolate(raw, width, bounds) {
   const output = Buffer.alloc(bounds.width * bounds.height * 4);
-  let area = 0;
-  let weightedX = 0;
   for (let y = 0; y < bounds.height; y += 1) {
     for (let x = 0; x < bounds.width; x += 1) {
       const source = ((bounds.top + y) * width + bounds.left + x) * 4;
@@ -79,10 +123,14 @@ function isolate(raw, width, bounds) {
       output[target + 1] = raw[source + 1];
       output[target + 2] = raw[source + 2];
       output[target + 3] = raw[source + 3];
-      const alpha = raw[source + 3] / 255;
-      area += alpha;
-      weightedX += x * alpha;
     }
+  }
+  let area = 0;
+  let weightedX = 0;
+  for (let y = 0; y < bounds.height; y += 1) for (let x = 0; x < bounds.width; x += 1) {
+    const alpha = output[(y * bounds.width + x) * 4 + 3] / 255;
+    area += alpha;
+    weightedX += x * alpha;
   }
   return {
     data: output,
@@ -167,6 +215,23 @@ function copyFrame(atlas, atlasWidth, frame, definition, column, row) {
   }
 }
 
+function pruneAtlasFrames(atlas, atlasWidth, definition) {
+  for (let row = 0; row < rows; row += 1) for (let column = 0; column < columns; column += 1) {
+    const frame = Buffer.alloc(definition.frameWidth * definition.frameHeight * 4);
+    for (let y = 0; y < definition.frameHeight; y += 1) {
+      const source = ((row * definition.frameHeight + y) * atlasWidth
+        + column * definition.frameWidth) * 4;
+      atlas.copy(frame, y * definition.frameWidth * 4, source, source + definition.frameWidth * 4);
+    }
+    pruneDetachedComponents(frame, definition.frameWidth, definition.frameHeight);
+    for (let y = 0; y < definition.frameHeight; y += 1) {
+      const target = ((row * definition.frameHeight + y) * atlasWidth
+        + column * definition.frameWidth) * 4;
+      frame.copy(atlas, target, y * definition.frameWidth * 4, (y + 1) * definition.frameWidth * 4);
+    }
+  }
+}
+
 function inspect(atlas, width, definition) {
   const rowReports = [];
   for (let row = 0; row < rows; row += 1) {
@@ -209,6 +274,7 @@ async function prepare(definition) {
   frames.forEach((rowFrames, row) => rowFrames.forEach((frame, column) => (
     copyFrame(atlas, width, frame, definition, column, row)
   )));
+  if (definition.pruneDetached) pruneAtlasFrames(atlas, width, definition);
   const report = inspect(atlas, width, definition);
   if (report.some(({ centerDriftPx, baselineDrift, areaVariance }) => (
     centerDriftPx > 2 || baselineDrift > 1 || areaVariance > 0.08

@@ -3,22 +3,22 @@ const weaponIds = Object.freeze(['revolver', 'shotgun', 'crossbow', 'flame']);
 
 function skinWeaponArt(skinId) {
   return Object.freeze(Object.fromEntries(weaponIds.map((weaponId) => [
-    weaponId, `${base}/weapons/${skinId}/${weaponId}.webp?build=20260901b`,
+    weaponId, `${base}/weapons/${skinId}/${weaponId}.webp?build=20260901c`,
   ])));
 }
 
 function skinHeroAtlas(skinId, frameWidth, frameHeight) {
   return Object.freeze({
     key: `skin-hero-${skinId}`,
-    file: `${base}/heroes/${skinId}-atlas.webp?build=20260901b`,
+    file: `${base}/heroes/${skinId}-atlas.webp?build=20260901c`,
     frameWidth, frameHeight, weaponless: true,
   });
 }
 
 function skinPackArt(skinId) {
   return Object.freeze({
-    full: `${base}/${skinId}-pack.webp?build=20260901b`,
-    card: `${base}/${skinId}-card.webp?build=20260901b`,
+    full: `${base}/${skinId}-pack.webp?build=20260901c`,
+    card: `${base}/${skinId}-card.webp?build=20260901c`,
   });
 }
 
@@ -100,7 +100,7 @@ export const PREMIUM_SKINS = Object.freeze({
     spriteTint: 0xc9ffff, primary: 0x25e9ff, secondary: 0xffd86b, impact: 0xedffff,
     motif: 'dragon', weaponPitch: 1.12, voicePitch: 1.08,
     vfxKey: 'skin-vfx-celestial-dragon',
-    vfxAtlas: `${base}/vfx/celestial-dragon-vfx-atlas.webp?build=20260901b`,
+    vfxAtlas: `${base}/vfx/celestial-dragon-vfx-atlas.webp?build=20260901c`,
     audioBank: `${base}/audio/celestial-dragon`,
   }),
   'diamond-obsidian-eclipse-valkyrie': Object.freeze({
@@ -116,7 +116,7 @@ export const PREMIUM_SKINS = Object.freeze({
     spriteTint: 0xff85cd, primary: 0xff2f9d, secondary: 0x8517c9, impact: 0xffd0eb,
     motif: 'eclipse', weaponPitch: .72, voicePitch: .74,
     vfxKey: 'skin-vfx-obsidian-eclipse',
-    vfxAtlas: `${base}/vfx/obsidian-eclipse-vfx-atlas.webp?build=20260901b`,
+    vfxAtlas: `${base}/vfx/obsidian-eclipse-vfx-atlas.webp?build=20260901c`,
     audioBank: `${base}/audio/obsidian-eclipse`,
   }),
   'scarlett-prismatic-tempest-seraph': Object.freeze({
@@ -132,7 +132,7 @@ export const PREMIUM_SKINS = Object.freeze({
     spriteTint: 0xf2f8ff, primary: 0x64c9ff, secondary: 0xffcf63, impact: 0xffffff,
     motif: 'seraph', weaponPitch: 1.2, voicePitch: 1.14,
     vfxKey: 'skin-vfx-prismatic-tempest',
-    vfxAtlas: `${base}/vfx/prismatic-tempest-vfx-atlas.webp?build=20260901b`,
+    vfxAtlas: `${base}/vfx/prismatic-tempest-vfx-atlas.webp?build=20260901c`,
     audioBank: `${base}/audio/prismatic-tempest`,
   }),
   'hina-nine-tail-chrono-kitsune': Object.freeze({
@@ -148,7 +148,7 @@ export const PREMIUM_SKINS = Object.freeze({
     spriteTint: 0xbba8ff, primary: 0x8c42ff, secondary: 0x35e5e7, impact: 0xf0e5ff,
     motif: 'kitsune', weaponPitch: 1.34, voicePitch: 1.28,
     vfxKey: 'skin-vfx-chrono-kitsune',
-    vfxAtlas: `${base}/vfx/chrono-kitsune-vfx-atlas.webp?build=20260901b`,
+    vfxAtlas: `${base}/vfx/chrono-kitsune-vfx-atlas.webp?build=20260901c`,
     audioBank: `${base}/audio/chrono-kitsune`,
   }),
 });

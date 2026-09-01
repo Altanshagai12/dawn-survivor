@@ -4,9 +4,9 @@ import { handleSpecialKill } from './KillProgression.js?build=20260825r';
 import { resolveProjectileLaunchHits, resolveProjectileTravelHits } from './ProjectileLaunchCollision.js?build=20260827e';
 import { shouldConsumeAmmo, upgradedProjectileCount } from './WeaponMechanics.js?build=20260825r';
 import { presentWeaponImpact, updateProjectilePresentation } from './WeaponPresentation.js?build=20260831a';
-import { skinProjectileTint } from '../data/skins.js?build=20260901b';
+import { skinProjectileTint } from '../data/skins.js?build=20260901c';
 
-export const PROJECTILE_RENDER_MULTIPLIER = 1.6;
+export const PROJECTILE_RENDER_MULTIPLIER = 1.9;
 
 export function projectileScale(size = 7) {
   return size / 8 * PROJECTILE_RENDER_MULTIPLIER;

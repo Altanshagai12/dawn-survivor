@@ -2,6 +2,7 @@ import { activePresentationRecipe, upgradePresentation } from './UpgradePresenta
 
 const WEAPON_FRAMES = Object.freeze({ revolver: 1, shotgun: 2, crossbow: 3, flame: 4 });
 const PROJECTILE_FRAMES = Object.freeze({ revolver: 5, shotgun: 6, crossbow: 3, flame: 4 });
+const PROJECTILE_SCALES = Object.freeze({ revolver: .19, shotgun: .1, crossbow: .33, flame: .23 });
 const TRAIL_FRAMES = Object.freeze({ revolver: 5, shotgun: 6, crossbow: 10, flame: 4 });
 const IMPACT_FRAMES = Object.freeze({ revolver: 1, shotgun: 7, crossbow: 10, flame: 4 });
 const STATUS_FRAMES = Object.freeze({ burn: 12, freeze: 13, lightning: 14, curse: 15, dash: 15 });
@@ -10,8 +11,13 @@ const SPECIAL_FRAMES = Object.freeze({
   ice: 13, fireball: 12, glare: 14, gale: 15, blazing: 12, shield: 14,
   scythe: 10, shatter: 13,
 });
-export const PREMIUM_PROJECTILE_RENDER_BOOST = 1.15;
+export const PREMIUM_PROJECTILE_RENDER_BOOST = 1.65;
 export const PREMIUM_SHOT_EFFECT_BOOST = 1.12;
+
+export function premiumProjectileScale(size = 8, weaponId = 'revolver', powerScale = 1) {
+  const base = PROJECTILE_SCALES[weaponId] ?? PROJECTILE_SCALES.revolver;
+  return base * Math.max(.72, size / 8) * powerScale * PREMIUM_PROJECTILE_RENDER_BOOST;
+}
 
 function easeOut(value) { return 1 - (1 - value) ** 3; }
 
@@ -143,8 +149,7 @@ export class PremiumVfxDirector {
   styleProjectile(bullet, size, weaponId) {
     if (!bullet || !this.skin) return;
     const recipe = activePresentationRecipe(this.scene.state);
-    const base = weaponId === 'crossbow' ? .085 : weaponId === 'shotgun' ? .045 : .062;
-    const scale = base * Math.max(.72, size / 8) * recipe.powerScale * PREMIUM_PROJECTILE_RENDER_BOOST;
+    const scale = premiumProjectileScale(size, weaponId, recipe.powerScale);
     bullet.setTexture(this.skin.vfxKey, this.projectileFrame(weaponId))
       .setScale(scale)
       .setBlendMode(Phaser.BlendModes.ADD);
