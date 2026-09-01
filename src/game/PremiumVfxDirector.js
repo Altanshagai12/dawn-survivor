@@ -15,6 +15,7 @@ const SPECIAL_FRAMES = Object.freeze({
 });
 export const PREMIUM_PROJECTILE_RENDER_BOOST = 1.65;
 export const PREMIUM_SHOT_EFFECT_BOOST = 1.12;
+export const PREMIUM_HERO_AURA_ALPHA = Object.freeze({ back: .12, mote: .28 });
 
 export function premiumProjectileScale(size = 8, weaponId = 'revolver', powerScale = 1) {
   const base = PROJECTILE_SCALES[weaponId] ?? PROJECTILE_SCALES.revolver;
@@ -58,13 +59,13 @@ export class PremiumVfxDirector {
 
   createAura() {
     const back = this.scene.add.image(0, 0, this.skin.vfxKey, 0)
-      .setDepth(21).setBlendMode(Phaser.BlendModes.ADD).setAlpha(.26);
-    back.premiumBaseAlpha = .26;
+      .setDepth(21).setBlendMode(Phaser.BlendModes.ADD).setAlpha(PREMIUM_HERO_AURA_ALPHA.back);
+    back.premiumBaseAlpha = PREMIUM_HERO_AURA_ALPHA.back;
     this.aura.push(back);
     for (let index = 0; index < 1; index += 1) {
       const mote = this.scene.add.image(0, 0, this.skin.vfxKey, 6)
-        .setDepth(24).setBlendMode(Phaser.BlendModes.ADD).setAlpha(.52);
-      mote.premiumBaseAlpha = .52;
+        .setDepth(24).setBlendMode(Phaser.BlendModes.ADD).setAlpha(PREMIUM_HERO_AURA_ALPHA.mote);
+      mote.premiumBaseAlpha = PREMIUM_HERO_AURA_ALPHA.mote;
       this.aura.push(mote);
     }
   }
@@ -145,7 +146,7 @@ export class PremiumVfxDirector {
     const now = this.scene.time.now;
     const recipe = activePresentationRecipe(this.scene.state);
     const pulse = 1 + Math.sin(now * .004) * .055;
-    const baseScale = (.28 + Math.min(.08, recipe.heroTier * .008)) * pulse;
+    const baseScale = (.22 + Math.min(.065, recipe.heroTier * .006)) * pulse;
     const [back, ...motes] = this.aura;
     back.setPosition(this.scene.player.x, this.scene.player.y + 5).setScale(baseScale).setRotation(now * .00025);
     motes.forEach((mote, index) => {
@@ -153,7 +154,7 @@ export class PremiumVfxDirector {
       const radius = 31 + recipe.heroTier * .6;
       mote.setPosition(this.scene.player.x + Math.cos(angle) * radius,
         this.scene.player.y + Math.sin(angle) * radius * .7)
-        .setScale(.055 + index * .006).setRotation(angle);
+        .setScale(.042 + index * .005).setRotation(angle);
     });
   }
 

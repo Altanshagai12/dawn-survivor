@@ -18,14 +18,16 @@ import { UpgradeEffectSystem } from './UpgradeEffectSystem.js?build=20260828e';
 import { WorldObstacleSystem } from './WorldObstacleSystem.js?build=20260828i';
 import { PremiumWeaponAudio } from './PremiumWeaponAudio.js?build=20260901b';
 import { presentWeaponShot } from './WeaponPresentation.js?build=20260901e';
-import { PremiumVfxDirector } from './PremiumVfxDirector.js?build=20260901g';
+import { PremiumVfxDirector } from './PremiumVfxDirector.js?build=20260901h';
 import { gameDeviceProfile } from './deviceProfile.js?build=20260901f';
 import { movementMultiplier } from './movement.js?build=20260825r';
 import { updateMovementFeedback, updateShotFeedback, updateWeaponCharge } from './PlayerFeedback.js?build=20260831a';
-import { applyOriginalPlayerHitbox, characterSizeScale } from './PlayerHitbox.js?build=20260831a';
+import {
+  applyOriginalPlayerHitbox, characterSizeScale, premiumPlayerDisplayHeight,
+} from './PlayerHitbox.js?build=20260901h';
 import { createDirectionalAnimations, facingVector, playDirectional } from './animations.js?build=20260828g';
 import { scoreForRun, survivalRecordMs } from './simulation.js?build=20260826j';
-import { applyHeroSkin, destroyHeroSkin, syncHeroSkin } from './SkinPresentation.js?build=20260901f';
+import { applyHeroSkin, destroyHeroSkin, syncHeroSkin } from './SkinPresentation.js?build=20260901h';
 import {
   attachGroundShadow, createGameTextures, createPlayerLights, createReloadIndicator,
   syncGroundShadow, syncPlayerLights, syncReloadIndicator,
@@ -75,6 +77,7 @@ export class GameScene extends Phaser.Scene {
     this.state = new RunState(HEROES[this.selection.heroId], WEAPONS[this.selection.weaponId], skin);
     if (skin?.heroAtlas && this.textures.exists(skin.heroAtlas.key)) {
       createDirectionalAnimations(this, skin.heroAtlas, 11);
+      this.textures.get(skin.heroAtlas.key)?.setFilter?.(Phaser.Textures.FilterMode.NEAREST);
     }
     this.performance = gameDeviceProfile({
       coarse: matchMedia('(pointer: coarse)').matches,
@@ -128,7 +131,9 @@ export class GameScene extends Phaser.Scene {
     if (!this.textures.exists(this.playerAtlas.key)) this.playerAtlas = HERO_ATLASES[this.state.hero.id];
     const atlas = this.playerAtlas;
     this.player = this.physics.add.sprite(0, 0, atlas.key, 24).setDepth(25);
-    const scale = 78 / atlas.frameHeight;
+    const displayHeight = this.state.skin
+      ? premiumPlayerDisplayHeight(this.performance.cameraZoom) : 78;
+    const scale = displayHeight / atlas.frameHeight;
     this.playerBaseScale = scale;
     applyOriginalPlayerHitbox(this.player, atlas, scale, characterSizeScale(this.state.mods));
     this.player.body.setMaxVelocity(500, 500);

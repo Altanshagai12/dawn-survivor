@@ -4,6 +4,7 @@ import {
   DAMAGE_SOURCE, EnemySystem, PLAYER_INVULNERABILITY_BLINK_MS, PLAYER_INVULNERABILITY_MS,
   PREMIUM_INVULNERABILITY_ALPHA, PREMIUM_INVULNERABILITY_EFFECT_ALPHA,
 } from '../src/game/EnemySystem.js';
+import { HERO_SKIN_ALPHA } from '../src/game/SkinPresentation.js';
 
 function makeAlphaNode(alpha) {
   return { alpha, setAlpha(value) { this.alpha = value; return this; } };
@@ -31,9 +32,10 @@ function makeScene({ premium = false } = {}) {
     enemyBullets: {},
     ended: false,
     skinAura: {
-      silhouette: makeAlphaNode(.11), backSigil: makeAlphaNode(.14),
-      orbitals: [makeAlphaNode(.58), makeAlphaNode(.58)],
-      weapon: makeAlphaNode(.96),
+      silhouette: makeAlphaNode(HERO_SKIN_ALPHA.silhouette),
+      backSigil: makeAlphaNode(HERO_SKIN_ALPHA.sigil),
+      orbitals: [makeAlphaNode(HERO_SKIN_ALPHA.orbital), makeAlphaNode(HERO_SKIN_ALPHA.orbital)],
+      weapon: makeAlphaNode(HERO_SKIN_ALPHA.weapon),
     },
     premiumVfx: { setPlayerVisibility(value) { premiumVisibility = value; } },
     lastInput: { moveX: 0, moveY: 0 },
@@ -66,10 +68,12 @@ test('one hit grants synchronized i-frames that block every stacked damage sourc
     assert.equal(scene.state.isInvincible, true);
     assert.equal(scene.player.alpha, .28);
     assert.equal(scene.premiumVisibility, .28);
-    assert.ok(Math.abs(scene.skinAura.silhouette.alpha - .11 * .28) < 1e-10);
-    assert.ok(Math.abs(scene.skinAura.backSigil.alpha - .14 * .28) < 1e-10);
-    assert.ok(scene.skinAura.orbitals.every(({ alpha }) => Math.abs(alpha - .58 * .28) < 1e-10));
-    assert.ok(Math.abs(scene.skinAura.weapon.alpha - .96 * .28) < 1e-10);
+    assert.ok(Math.abs(scene.skinAura.silhouette.alpha - HERO_SKIN_ALPHA.silhouette * .28) < 1e-10);
+    assert.ok(Math.abs(scene.skinAura.backSigil.alpha - HERO_SKIN_ALPHA.sigil * .28) < 1e-10);
+    assert.ok(scene.skinAura.orbitals.every(({ alpha }) => Math.abs(
+      alpha - HERO_SKIN_ALPHA.orbital * .28,
+    ) < 1e-10));
+    assert.ok(Math.abs(scene.skinAura.weapon.alpha - HERO_SKIN_ALPHA.weapon * .28) < 1e-10);
 
     assert.equal(system.damagePlayer(1, DAMAGE_SOURCE.ENEMY), false);
     assert.equal(system.damagePlayer(1, DAMAGE_SOURCE.BARRIER), false);
@@ -79,10 +83,10 @@ test('one hit grants synchronized i-frames that block every stacked damage sourc
     system.updatePlayerInvulnerability();
     assert.equal(scene.state.isInvincible, true);
     assert.equal(scene.player.alpha, 1);
-    assert.equal(scene.skinAura.silhouette.alpha, .11);
-    assert.equal(scene.skinAura.backSigil.alpha, .14);
-    assert.ok(scene.skinAura.orbitals.every(({ alpha }) => alpha === .58));
-    assert.equal(scene.skinAura.weapon.alpha, .96);
+    assert.equal(scene.skinAura.silhouette.alpha, HERO_SKIN_ALPHA.silhouette);
+    assert.equal(scene.skinAura.backSigil.alpha, HERO_SKIN_ALPHA.sigil);
+    assert.ok(scene.skinAura.orbitals.every(({ alpha }) => alpha === HERO_SKIN_ALPHA.orbital));
+    assert.equal(scene.skinAura.weapon.alpha, HERO_SKIN_ALPHA.weapon);
 
     scene.time.now += PLAYER_INVULNERABILITY_MS - PLAYER_INVULNERABILITY_BLINK_MS - 1;
     assert.equal(system.damagePlayer(1), false);
@@ -113,7 +117,8 @@ test('premium hunters keep a readable body during the same i-frame window', () =
     assert.equal(scene.player.alpha, PREMIUM_INVULNERABILITY_ALPHA);
     assert.equal(scene.player.alpha, 1, 'premium body stays opaque while its effects blink');
     assert.equal(scene.premiumVisibility, PREMIUM_INVULNERABILITY_EFFECT_ALPHA);
-    assert.ok(Math.abs(scene.skinAura.silhouette.alpha - .11 * PREMIUM_INVULNERABILITY_EFFECT_ALPHA) < 1e-10);
+    assert.ok(Math.abs(scene.skinAura.silhouette.alpha
+      - HERO_SKIN_ALPHA.silhouette * PREMIUM_INVULNERABILITY_EFFECT_ALPHA) < 1e-10);
     assert.equal(scene.damageCalls, 1);
     assert.equal(system.damagePlayer(1, DAMAGE_SOURCE.ENEMY), false);
     assert.equal(scene.damageCalls, 1, 'presentation must not change i-frame collision mechanics');

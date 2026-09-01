@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { access, readdir, stat } from 'node:fs/promises';
+import { access, readFile, readdir, stat } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import sharp from 'sharp';
@@ -14,8 +14,12 @@ import { activePresentationRecipe, presentationCoverage } from '../src/game/Upgr
 import { AUDIO_BANK_FILES } from '../src/game/WeaponAudioProfiles.js';
 import { PremiumWeaponAudio, weaponSoundProfile } from '../src/game/PremiumWeaponAudio.js';
 import {
-  premiumPowerAccent, premiumShotLayout, PREMIUM_PROJECTILE_RENDER_BOOST, PREMIUM_SHOT_EFFECT_BOOST,
+  premiumPowerAccent, premiumShotLayout, PREMIUM_HERO_AURA_ALPHA,
+  PREMIUM_PROJECTILE_RENDER_BOOST, PREMIUM_SHOT_EFFECT_BOOST,
 } from '../src/game/PremiumVfxDirector.js';
+import {
+  PLAYER_DISPLAY_HEIGHT, PREMIUM_PLAYER_SCREEN_HEIGHT, premiumPlayerDisplayHeight,
+} from '../src/game/PlayerHitbox.js';
 import { weaponEffectProfile } from '../src/game/WeaponPresentation.js';
 import { decodeReceiptClaims, settleSkinPurchase } from '../api/purchase-skin.js';
 
@@ -59,6 +63,17 @@ function framePrincipalAngle(raw, frame) {
   }
   return .5 * Math.atan2(2 * xy, xx - yy);
 }
+
+test('premium gameplay sprites match the crisp mobile preview footprint', async () => {
+  const mobileZoom = .82;
+  assert.equal(premiumPlayerDisplayHeight(mobileZoom) * mobileZoom, PREMIUM_PLAYER_SCREEN_HEIGHT);
+  assert.equal(premiumPlayerDisplayHeight(1.05), PLAYER_DISPLAY_HEIGHT);
+  assert.ok(PREMIUM_HERO_AURA_ALPHA.back <= .12);
+  assert.ok(PREMIUM_HERO_AURA_ALPHA.mote <= .28);
+  const game = await readFile(new URL('../src/game/GameScene.js', import.meta.url), 'utf8');
+  assert.match(game, /setFilter\?\.\(Phaser\.Textures\.FilterMode\.NEAREST\)/);
+  assert.match(game, /premiumPlayerDisplayHeight\(this\.performance\.cameraZoom\)/);
+});
 
 test('ships two complete premium hero, weapon, projectile, and firing-audio packs per hunter', async () => {
   assert.deepEqual(Object.keys(SKINS_BY_HERO).sort(), ['diamond', 'hina', 'scarlett', 'shana']);
