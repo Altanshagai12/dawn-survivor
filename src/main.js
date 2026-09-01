@@ -1,14 +1,14 @@
 import { HEROES } from './data/heroes.js?build=20260828i';
-import { normalizeSkinProfile, SKIN_ACCESS_MODE } from './data/skins.js?build=20260901c';
+import { normalizeSkinProfile, SKIN_ACCESS_MODE } from './data/skins.js?build=20260901e';
 import { WEAPONS } from './data/weapons.js?build=20260827b';
 import { BootScene } from './game/BootScene.js?build=20260828g';
-import { GameScene } from './game/GameScene.js?build=20260901d';
+import { GameScene } from './game/GameScene.js?build=20260901e';
 import { gameRenderResolution } from './game/deviceProfile.js?build=20260901c';
 import { installVisibleResume } from './game/runtimeLifecycle.js?build=20260825r';
 import { defaultProfile, initPlatform } from './platform/usion.js?build=20260828a';
 import { createI18n } from './ui/i18n.js?build=20260826l';
 import { installInteractionGuards } from './ui/interactionGuards.js?build=20260826h';
-import { UIController } from './ui/UIController.js?build=20260901b';
+import { UIController } from './ui/UIController.js?build=20260901e';
 import { gameViewportSize, installAutoLandscape, requestLandscape } from './ui/orientation.js?build=20260826b';
 
 async function boot() {

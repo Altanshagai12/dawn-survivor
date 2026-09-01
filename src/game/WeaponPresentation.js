@@ -134,7 +134,7 @@ export function presentWeaponImpact(scene, bullet, x, y) {
   if (!bullet?.weaponId || !scene?.add?.rectangle) return;
   const skin = bullet.skin || null;
   const profile = weaponEffectProfile(bullet.weaponId, skin);
-  const angle = bullet.rotation || 0;
+  const angle = bullet.trajectoryAngle ?? bullet.rotation ?? 0;
   scene.premiumVfx?.impact(bullet, x, y);
   scene.weaponAudio?.playImpact?.(bullet, scene.state);
   if (skin) return;
@@ -158,7 +158,7 @@ export function updateProjectilePresentation(scene, bullet) {
   if (bullet?.skin) return;
   if (bullet?.weaponId !== 'flame' || scene.time.now < (bullet.nextTrailAt || 0)) return;
   bullet.nextTrailAt = scene.time.now + (scene.performance?.mobile ? 92 : 62);
-  const angle = bullet.rotation || 0;
+  const angle = bullet.trajectoryAngle ?? bullet.rotation ?? 0;
   const x = bullet.x - Math.cos(angle) * 12;
   const y = bullet.y - Math.sin(angle) * 12;
   const scale = weaponEffectProfile('flame', bullet.skin || null).visualScale;

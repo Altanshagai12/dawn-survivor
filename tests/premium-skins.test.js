@@ -7,7 +7,7 @@ import sharp from 'sharp';
 import { SkinCommerce } from '../src/commerce/SkinCommerce.js';
 import {
   hasSkinAccess, normalizeSkinProfile, PREMIUM_SKINS, selectedSkin, SKIN_ACCESS_MODE,
-  skinProjectileAnchor, SKINS_BY_HERO, SKIN_CATALOG_VERSION, weaponArtForSkin,
+  skinProjectileAnchor, skinProjectileRotation, SKINS_BY_HERO, SKIN_CATALOG_VERSION, weaponArtForSkin,
 } from '../src/data/skins.js';
 import { ALL_UPGRADES } from '../src/data/upgrades.js';
 import { activePresentationRecipe, presentationCoverage } from '../src/game/UpgradePresentationProfiles.js';
@@ -28,6 +28,34 @@ function response(body, status = 200) {
 function fakeReceipt({ serviceId, amount, txId = 'tx-1' }) {
   const encode = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
   return `${encode({ alg: 'HS256' })}.${encode({ sid: serviceId, amt: amount, tx_id: txId })}.signature`;
+}
+
+function framePrincipalAngle(raw, frame) {
+  const left = frame % 4 * 256;
+  const top = Math.floor(frame / 4) * 256;
+  const points = [];
+  let weight = 0;
+  let meanX = 0;
+  let meanY = 0;
+  for (let y = 0; y < 256; y += 1) for (let x = 0; x < 256; x += 1) {
+    const alpha = raw[((top + y) * 1024 + left + x) * 4 + 3];
+    if (alpha < 64) continue;
+    points.push([x, y, alpha]);
+    weight += alpha;
+    meanX += x * alpha;
+    meanY += y * alpha;
+  }
+  meanX /= weight;
+  meanY /= weight;
+  let xx = 0;
+  let yy = 0;
+  let xy = 0;
+  for (const [x, y, alpha] of points) {
+    xx += (x - meanX) ** 2 * alpha;
+    yy += (y - meanY) ** 2 * alpha;
+    xy += (x - meanX) * (y - meanY) * alpha;
+  }
+  return .5 * Math.atan2(2 * xy, xx - yy);
 }
 
 test('ships two complete premium hero, weapon, projectile, and firing-audio packs per hunter', async () => {
@@ -86,6 +114,8 @@ test('ships two complete premium hero, weapon, projectile, and firing-audio pack
       assert.ok(Math.abs(anchor.x * 256 - weightedX / alpha) <= 1.5, `${skin.id}/${weaponId} alpha x anchor`);
       assert.ok(Math.abs(anchor.y * 256 - weightedY / alpha) <= 1.5, `${skin.id}/${weaponId} alpha y anchor`);
     }
+    const shotgunResidual = framePrincipalAngle(raw, 6) + skinProjectileRotation(skin, 'shotgun');
+    assert.ok(Math.abs(shotgunResidual) <= .02, `${skin.id} shotgun art follows its trajectory`);
 
     const heroPath = skin.heroAtlas.file.split('?')[0].replace(/^\.\//, '../');
     const heroUrl = new URL(heroPath, import.meta.url);
@@ -96,6 +126,10 @@ test('ships two complete premium hero, weapon, projectile, and firing-audio pack
     );
     const heroRaw = await sharp(fileURLToPath(heroUrl)).ensureAlpha().raw().toBuffer();
     const heroWidth = heroMetadata.width;
+    let heroVisible = 0;
+    let heroAlpha = 0;
+    let heroSolid = 0;
+    let heroLuminance = 0;
     for (let row = 0; row < 8; row += 1) for (let column = 0; column < 6; column += 1) {
       const left = column * skin.heroAtlas.frameWidth;
       const top = row * skin.heroAtlas.frameHeight;
@@ -103,12 +137,26 @@ test('ships two complete premium hero, weapon, projectile, and firing-audio pack
       for (let y = 0; y < skin.heroAtlas.frameHeight; y += 1) {
         for (let x = 0; x < skin.heroAtlas.frameWidth; x += 1) {
           const alpha = heroRaw[((top + y) * heroWidth + left + x) * 4 + 3];
-          if (alpha) visible += 1;
+          if (alpha) {
+            visible += 1;
+            heroVisible += 1;
+            heroAlpha += alpha;
+            if (alpha >= 240) heroSolid += 1;
+            const offset = ((top + y) * heroWidth + left + x) * 4;
+            heroLuminance += (heroRaw[offset] * .2126 + heroRaw[offset + 1] * .7152
+              + heroRaw[offset + 2] * .0722) * alpha / 255;
+          }
           if (x === 0 || y === 0 || x === skin.heroAtlas.frameWidth - 1
             || y === skin.heroAtlas.frameHeight - 1) assert.equal(alpha, 0);
         }
       }
       assert.ok(visible >= 480, `${skin.id} frame ${row * 6 + column} must be readable`);
+    }
+    if (skin.heroId === 'diamond' || skin.heroId === 'hina') {
+      const minimumAlpha = skin.rarity === 'mythic' ? 195 : 215;
+      assert.ok(heroAlpha / heroVisible >= minimumAlpha, `${skin.id} mobile body alpha`);
+      assert.ok(heroSolid / heroVisible >= .7, `${skin.id} mobile solid silhouette`);
+      assert.ok(heroLuminance / heroVisible >= 60, `${skin.id} mobile premultiplied luminance`);
     }
 
     const audioUrl = new URL(skin.audioBank.replace(/^\.\//, '../'), import.meta.url);

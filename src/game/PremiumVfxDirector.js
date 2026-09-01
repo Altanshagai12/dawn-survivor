@@ -1,6 +1,6 @@
 import { activePresentationRecipe, upgradePresentation } from './UpgradePresentationProfiles.js?build=20260828e';
-import { skinProjectileAnchor } from '../data/skins.js?build=20260901d';
-import { PREMIUM_PROJECTILE_CORE_RATIO } from './ProjectileGeometry.js?build=20260901d';
+import { skinProjectileAnchor, skinProjectileRotation } from '../data/skins.js?build=20260901e';
+import { PREMIUM_PROJECTILE_CORE_RATIO, syncProjectileVisualRotation } from './ProjectileGeometry.js?build=20260901e';
 
 const WEAPON_FRAMES = Object.freeze({ revolver: 1, shotgun: 2, crossbow: 3, flame: 4 });
 const PROJECTILE_FRAMES = Object.freeze({ revolver: 5, shotgun: 6, crossbow: 3, flame: 4 });
@@ -159,6 +159,8 @@ export class PremiumVfxDirector {
       .setBlendMode(Phaser.BlendModes.ADD);
     bullet.premiumVfxScale = scale;
     bullet.projectileCoreRatio = PREMIUM_PROJECTILE_CORE_RATIO;
+    bullet.visualRotationOffset = skinProjectileRotation(this.skin, weaponId);
+    syncProjectileVisualRotation(bullet, bullet.trajectoryAngle || 0);
   }
 
   shot(angle, authoredAngles = []) {
@@ -195,7 +197,7 @@ export class PremiumVfxDirector {
     const recipe = activePresentationRecipe(this.scene.state);
     bullet.nextPremiumTrailAt = this.scene.time.now + Math.max(34,
       (this.scene.performance?.mobile ? 96 : 58) - recipe.trailRate * 5);
-    const angle = bullet.rotation || 0;
+    const angle = bullet.trajectoryAngle ?? bullet.rotation ?? 0;
     this.emit(recipe.fire && bullet.burnChance ? 12 : (TRAIL_FRAMES[bullet.weaponId] ?? 6),
       bullet.x - Math.cos(angle) * 10, bullet.y - Math.sin(angle) * 10, {
         rotation: angle, scale: Math.max(.035, (bullet.premiumVfxScale || .06) * .7),
@@ -224,7 +226,8 @@ export class PremiumVfxDirector {
   }
 
   ricochet(bullet) {
-    this.emit(9, bullet.x, bullet.y, { rotation: bullet.rotation, scale: .075, endScale: .2, duration: 175, priority: 2 });
+    this.emit(9, bullet.x, bullet.y, { rotation: bullet.trajectoryAngle ?? bullet.rotation,
+      scale: .075, endScale: .2, duration: 175, priority: 2 });
   }
 
   reload(stage) {

@@ -13,6 +13,12 @@ export function usesSweptProjectileCollision(weaponId) {
   return Boolean(weaponId);
 }
 
+export function syncProjectileVisualRotation(bullet, trajectoryAngle) {
+  bullet.trajectoryAngle = trajectoryAngle;
+  bullet.setRotation(trajectoryAngle + (bullet.visualRotationOffset || 0));
+  return bullet.rotation;
+}
+
 export function visibleProjectileCollisionRadius(
   size = 7,
   renderScale = projectileScale(size),

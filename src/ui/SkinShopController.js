@@ -1,4 +1,4 @@
-import { hasSkinAccess, selectedSkin, SKIN_ACCESS_MODE, SKINS_BY_HERO } from '../data/skins.js?build=20260901b';
+import { hasSkinAccess, selectedSkin, SKIN_ACCESS_MODE, SKINS_BY_HERO } from '../data/skins.js?build=20260901e';
 
 const WEAPON_IDS = Object.freeze(['revolver', 'shotgun', 'crossbow', 'flame']);
 const WEAPON_VFX_FRAMES = Object.freeze({ revolver: 1, shotgun: 2, crossbow: 3, flame: 4 });

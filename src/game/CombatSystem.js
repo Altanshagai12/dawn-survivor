@@ -3,17 +3,17 @@ import { CombatEffects } from './CombatEffects.js?build=20260828e';
 import { handleSpecialKill } from './KillProgression.js?build=20260825r';
 import { resolveProjectileLaunchHits, resolveProjectileTravelHits } from './ProjectileLaunchCollision.js?build=20260827e';
 import { shouldConsumeAmmo, upgradedProjectileCount } from './WeaponMechanics.js?build=20260825r';
-import { presentWeaponImpact, updateProjectilePresentation } from './WeaponPresentation.js?build=20260831a';
-import { skinProjectileTint } from '../data/skins.js?build=20260901c';
+import { presentWeaponImpact, updateProjectilePresentation } from './WeaponPresentation.js?build=20260901e';
+import { skinProjectileTint } from '../data/skins.js?build=20260901e';
 import {
   PROJECTILE_RENDER_MULTIPLIER, projectileBodyGeometry, projectileBodyRadius,
-  projectileCollisionRadius, projectileScale, usesSweptProjectileCollision,
+  projectileCollisionRadius, projectileScale, syncProjectileVisualRotation, usesSweptProjectileCollision,
   visibleProjectileCollisionRadius,
-} from './ProjectileGeometry.js?build=20260901d';
+} from './ProjectileGeometry.js?build=20260901e';
 
 export {
   PROJECTILE_RENDER_MULTIPLIER, projectileBodyGeometry, projectileBodyRadius,
-  projectileCollisionRadius, projectileScale, usesSweptProjectileCollision,
+  projectileCollisionRadius, projectileScale, syncProjectileVisualRotation, usesSweptProjectileCollision,
   visibleProjectileCollisionRadius,
 };
 
@@ -40,6 +40,7 @@ export class CombatSystem {
       if (!bullet?.active) return;
       if (bullet.homingTarget?.active) {
         const angle = Phaser.Math.Angle.Between(bullet.x, bullet.y, bullet.homingTarget.x, bullet.homingTarget.y);
+        syncProjectileVisualRotation(bullet, angle);
         this.scene.physics.velocityFromRotation(angle, bullet.speed, bullet.body.velocity);
       }
       if (bullet.sweptCollision) {
@@ -142,6 +143,8 @@ export class CombatSystem {
     bullet.summon = Boolean(spec.summon);
     bullet.sourceType = spec.sourceType || (bullet.summon ? 'summon' : 'weapon');
     bullet.weaponId = spec.weaponId || null;
+    bullet.trajectoryAngle = angle;
+    bullet.visualRotationOffset = 0;
     bullet.skin = spec.skin === undefined && bullet.weaponId ? this.scene.state.skin : (spec.skin || null);
     bullet.sweptCollision = usesSweptProjectileCollision(bullet.weaponId);
     bullet.previousX = x;
@@ -260,7 +263,7 @@ export class CombatSystem {
     bullet.damage *= 1.12;
     bullet.trajectoryRevision = Number(bullet.trajectoryRevision || 0) + 1;
     const angle = Phaser.Math.Angle.Between(bullet.x, bullet.y, target.x, target.y);
-    bullet.setRotation(angle);
+    syncProjectileVisualRotation(bullet, angle);
     this.scene.physics.velocityFromRotation(angle, bullet.speed, bullet.body.velocity);
     bullet.expiresAt = Math.max(bullet.expiresAt, this.scene.time.now + 420);
     this.scene.premiumVfx?.ricochet(bullet);

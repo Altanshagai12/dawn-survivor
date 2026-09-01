@@ -4,7 +4,7 @@ import { projectileTravelDistance, WEAPONS } from '../src/data/weapons.js';
 import { UPGRADES } from '../src/data/upgrades.js';
 import {
   CombatSystem, PROJECTILE_RENDER_MULTIPLIER, projectileBodyGeometry, projectileBodyRadius,
-  projectileCollisionRadius, projectileScale, usesSweptProjectileCollision,
+  projectileCollisionRadius, projectileScale, syncProjectileVisualRotation, usesSweptProjectileCollision,
   visibleProjectileCollisionRadius,
 } from '../src/game/CombatSystem.js';
 import { PREMIUM_PROJECTILE_CORE_RATIO } from '../src/game/ProjectileGeometry.js';
@@ -78,6 +78,15 @@ test('projectile body is centered on its visible anchor at every render scale', 
 test('every authored weapon projectile uses swept collision on slow frames', () => {
   for (const weapon of Object.values(WEAPONS)) assert.equal(usesSweptProjectileCollision(weapon.id), true);
   assert.equal(usesSweptProjectileCollision(null), false);
+});
+
+test('cosmetic projectile rotation does not alter its authored trajectory', () => {
+  const bullet = {
+    rotation: 0, visualRotationOffset: .42,
+    setRotation(value) { this.rotation = value; return this; },
+  };
+  assert.ok(Math.abs(syncProjectileVisualRotation(bullet, -.2) - .22) < 1e-9);
+  assert.equal(bullet.trajectoryAngle, -.2);
 });
 
 test('crossbow charge grows while still and resets on movement', () => {
