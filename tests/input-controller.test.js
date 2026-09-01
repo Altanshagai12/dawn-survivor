@@ -114,9 +114,9 @@ test('mobile aim starts from the touched point and requires a deliberate drag', 
   assert.deepEqual(stickOriginOffset(origin, { left: 670, top: 250, width: 96, height: 96 }), { x: 12, y: 12 });
 });
 
-test('mobile canvas taps do not bypass the aim stick while desktop mouse fire remains enabled', () => {
-  assert.equal(usesCanvasFire('touch'), false);
-  assert.equal(usesCanvasFire('pen'), false);
+test('canvas taps shoot with mouse, touch, and pen while stick events stay isolated', () => {
+  assert.equal(usesCanvasFire('touch'), true);
+  assert.equal(usesCanvasFire('pen'), true);
   assert.equal(usesCanvasFire('mouse'), true);
 });
 

@@ -1,5 +1,15 @@
 const base = './assets/skins/premium';
 const weaponIds = Object.freeze(['revolver', 'shotgun', 'crossbow', 'flame']);
+const projectileAnchors = Object.freeze({
+  'shana-astral-warden': { revolver: [128, 121], shotgun: [104, 127], crossbow: [122, 128], flame: [110, 120] },
+  'diamond-bloodmoon-regent': { revolver: [154, 120], shotgun: [156, 113], crossbow: [118, 137], flame: [139, 132] },
+  'scarlett-sunforge-phoenix': { revolver: [133, 126], shotgun: [138, 114], crossbow: [84, 129], flame: [127, 123] },
+  'hina-void-lotus': { revolver: [153, 128], shotgun: [131, 135], crossbow: [121, 132], flame: [135, 129] },
+  'shana-celestial-dragon-sovereign': { revolver: [134, 127], shotgun: [132, 103], crossbow: [111, 108], flame: [118, 106] },
+  'diamond-obsidian-eclipse-valkyrie': { revolver: [166, 134], shotgun: [155, 96], crossbow: [117, 105], flame: [141, 120] },
+  'scarlett-prismatic-tempest-seraph': { revolver: [129, 133], shotgun: [138, 129], crossbow: [94, 124], flame: [122, 128] },
+  'hina-nine-tail-chrono-kitsune': { revolver: [127, 113], shotgun: [141, 129], crossbow: [113, 127], flame: [126, 144] },
+});
 
 function skinWeaponArt(skinId) {
   return Object.freeze(Object.fromEntries(weaponIds.map((weaponId) => [
@@ -192,6 +202,11 @@ export function skinProjectileTint(skin, weaponId) {
   if (weaponId === 'flame') return skin.secondary;
   if (weaponId === 'crossbow') return skin.impact;
   return skin.primary;
+}
+
+export function skinProjectileAnchor(skin, weaponId) {
+  const point = projectileAnchors[skin?.id]?.[weaponId] || [128, 128];
+  return { x: point[0] / 256, y: point[1] / 256 };
 }
 
 export function weaponArtForSkin(skin, weapon) {

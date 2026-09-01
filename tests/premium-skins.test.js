@@ -7,7 +7,7 @@ import sharp from 'sharp';
 import { SkinCommerce } from '../src/commerce/SkinCommerce.js';
 import {
   hasSkinAccess, normalizeSkinProfile, PREMIUM_SKINS, selectedSkin, SKIN_ACCESS_MODE,
-  SKINS_BY_HERO, SKIN_CATALOG_VERSION, weaponArtForSkin,
+  skinProjectileAnchor, SKINS_BY_HERO, SKIN_CATALOG_VERSION, weaponArtForSkin,
 } from '../src/data/skins.js';
 import { ALL_UPGRADES } from '../src/data/upgrades.js';
 import { activePresentationRecipe, presentationCoverage } from '../src/game/UpgradePresentationProfiles.js';
@@ -67,6 +67,24 @@ test('ships two complete premium hero, weapon, projectile, and firing-audio pack
         assert.equal(raw[((offset * 1024) + pixel) * 4 + 3], 0, 'horizontal cell gutter must be transparent');
         assert.equal(raw[((pixel * 1024) + offset) * 4 + 3], 0, 'vertical cell gutter must be transparent');
       }
+    }
+    const projectileFrames = { revolver: 5, shotgun: 6, crossbow: 3, flame: 4 };
+    for (const [weaponId, frame] of Object.entries(projectileFrames)) {
+      const left = frame % 4 * 256;
+      const top = Math.floor(frame / 4) * 256;
+      let alpha = 0;
+      let weightedX = 0;
+      let weightedY = 0;
+      for (let y = 0; y < 256; y += 1) for (let x = 0; x < 256; x += 1) {
+        const value = raw[((top + y) * 1024 + left + x) * 4 + 3];
+        if (value < 64) continue;
+        alpha += value;
+        weightedX += x * value;
+        weightedY += y * value;
+      }
+      const anchor = skinProjectileAnchor(skin, weaponId);
+      assert.ok(Math.abs(anchor.x * 256 - weightedX / alpha) <= 1.5, `${skin.id}/${weaponId} alpha x anchor`);
+      assert.ok(Math.abs(anchor.y * 256 - weightedY / alpha) <= 1.5, `${skin.id}/${weaponId} alpha y anchor`);
     }
 
     const heroPath = skin.heroAtlas.file.split('?')[0].replace(/^\.\//, '../');

@@ -85,7 +85,7 @@ export function stickOriginOffset(point, rect, rotated = false) {
   }, rotated);
 }
 
-export function usesCanvasFire(pointerType) { return !pointerType || pointerType === 'mouse'; }
+export function usesCanvasFire(pointerType) { return !pointerType || ['mouse', 'touch', 'pen'].includes(pointerType); }
 
 export class PointerFireLatch {
   constructor() {

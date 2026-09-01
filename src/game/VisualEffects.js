@@ -204,10 +204,11 @@ export function createReloadIndicator(scene, player) {
 
 export function reloadIndicatorState(player, state) {
   const reloading = Boolean(state.reloading);
-  const charging = !reloading && Boolean(state.weapon?.chargeSeconds) && state.weaponCharge > .01;
+  const charge = Math.min(1, state.weaponCharge || 0);
+  const charging = !reloading && Boolean(state.weapon?.chargeSeconds) && charge > .01 && charge < .995;
   const progress = reloading
     ? Math.min(1, state.reloadProgress / Math.max(1, state.reloadMs))
-    : Math.min(1, state.weaponCharge || 0);
+    : charge;
   return {
     visible: reloading || charging,
     progress,

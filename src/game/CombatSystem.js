@@ -5,20 +5,17 @@ import { resolveProjectileLaunchHits, resolveProjectileTravelHits } from './Proj
 import { shouldConsumeAmmo, upgradedProjectileCount } from './WeaponMechanics.js?build=20260825r';
 import { presentWeaponImpact, updateProjectilePresentation } from './WeaponPresentation.js?build=20260831a';
 import { skinProjectileTint } from '../data/skins.js?build=20260901c';
+import {
+  PROJECTILE_RENDER_MULTIPLIER, projectileBodyGeometry, projectileBodyRadius,
+  projectileCollisionRadius, projectileScale, usesSweptProjectileCollision,
+  visibleProjectileCollisionRadius,
+} from './ProjectileGeometry.js?build=20260901d';
 
-export const PROJECTILE_RENDER_MULTIPLIER = 1.9;
-
-export function projectileScale(size = 7) {
-  return size / 8 * PROJECTILE_RENDER_MULTIPLIER;
-}
-
-export function projectileCollisionRadius(size = 7) {
-  return size / 2;
-}
-
-export function projectileBodyRadius(size = 7, renderScale = projectileScale(size)) {
-  return projectileCollisionRadius(size) / Math.max(.001, Math.abs(renderScale));
-}
+export {
+  PROJECTILE_RENDER_MULTIPLIER, projectileBodyGeometry, projectileBodyRadius,
+  projectileCollisionRadius, projectileScale, usesSweptProjectileCollision,
+  visibleProjectileCollisionRadius,
+};
 
 export class CombatSystem {
   constructor(scene) {
@@ -146,7 +143,7 @@ export class CombatSystem {
     bullet.sourceType = spec.sourceType || (bullet.summon ? 'summon' : 'weapon');
     bullet.weaponId = spec.weaponId || null;
     bullet.skin = spec.skin === undefined && bullet.weaponId ? this.scene.state.skin : (spec.skin || null);
-    bullet.sweptCollision = bullet.weaponId === 'crossbow';
+    bullet.sweptCollision = usesSweptProjectileCollision(bullet.weaponId);
     bullet.previousX = x;
     bullet.previousY = y;
     bullet.trajectoryRevision = 0;
@@ -159,8 +156,19 @@ export class CombatSystem {
     this.scene.premiumVfx?.styleProjectile(bullet, spec.size || 7, bullet.weaponId);
     this.applyLens(bullet, angle);
     this.scene.physics.velocityFromRotation(angle, speed, bullet.body.velocity);
-    bullet.collisionRadius = projectileCollisionRadius(spec.size);
-    bullet.body.setCircle(projectileBodyRadius(spec.size, bullet.scaleX));
+    const frameWidth = bullet.frame?.realWidth || bullet.frame?.width || bullet.width || 0;
+    const frameHeight = bullet.frame?.realHeight || bullet.frame?.height || bullet.height || frameWidth;
+    const body = projectileBodyGeometry({
+      size: spec.size,
+      renderScale: bullet.scaleX,
+      frameWidth,
+      frameHeight,
+      originX: bullet.originX,
+      originY: bullet.originY,
+      visualCoreRatio: bullet.projectileCoreRatio || 0,
+    });
+    bullet.collisionRadius = body.worldRadius;
+    bullet.body.setCircle(body.localRadius, body.offsetX, body.offsetY);
     if (spec.launchOrigin) {
       resolveProjectileLaunchHits(this, bullet, spec.launchOrigin.x, spec.launchOrigin.y, x, y);
     }

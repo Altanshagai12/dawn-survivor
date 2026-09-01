@@ -1,4 +1,6 @@
 import { activePresentationRecipe, upgradePresentation } from './UpgradePresentationProfiles.js?build=20260828e';
+import { skinProjectileAnchor } from '../data/skins.js?build=20260901d';
+import { PREMIUM_PROJECTILE_CORE_RATIO } from './ProjectileGeometry.js?build=20260901d';
 
 const WEAPON_FRAMES = Object.freeze({ revolver: 1, shotgun: 2, crossbow: 3, flame: 4 });
 const PROJECTILE_FRAMES = Object.freeze({ revolver: 5, shotgun: 6, crossbow: 3, flame: 4 });
@@ -150,10 +152,13 @@ export class PremiumVfxDirector {
     if (!bullet || !this.skin) return;
     const recipe = activePresentationRecipe(this.scene.state);
     const scale = premiumProjectileScale(size, weaponId, recipe.powerScale);
+    const anchor = skinProjectileAnchor(this.skin, weaponId);
     bullet.setTexture(this.skin.vfxKey, this.projectileFrame(weaponId))
+      .setOrigin(anchor.x, anchor.y)
       .setScale(scale)
       .setBlendMode(Phaser.BlendModes.ADD);
     bullet.premiumVfxScale = scale;
+    bullet.projectileCoreRatio = PREMIUM_PROJECTILE_CORE_RATIO;
   }
 
   shot(angle, authoredAngles = []) {

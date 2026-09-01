@@ -14,7 +14,7 @@ test('reload progress is positioned immediately above the hero', () => {
   });
 });
 
-test('crossbow charge shares the hero indicator and hides when empty', () => {
+test('crossbow charge shares the hero indicator only while progress is changing', () => {
   const player = { x: 10, y: 20, displayHeight: 40 };
   const charging = reloadIndicatorState(player, {
     reloading: false, reloadProgress: 0, reloadMs: 1000,
@@ -24,4 +24,5 @@ test('crossbow charge shares the hero indicator and hides when empty', () => {
   assert.equal(charging.progress, .6);
   assert.equal(charging.color, 0xffd36c);
   assert.equal(reloadIndicatorState(player, { ...charging, weapon: {}, weaponCharge: 0 }).visible, false);
+  assert.equal(reloadIndicatorState(player, { ...charging, weaponCharge: 1 }).visible, false);
 });

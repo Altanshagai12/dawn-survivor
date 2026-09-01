@@ -5,11 +5,11 @@ import { PREMIUM_SKINS } from '../data/skins.js?build=20260901c';
 import { TOMES, sampleUpgradeCards } from '../data/upgrades.js?build=20260826b';
 import { WEAPONS } from '../data/weapons.js?build=20260827b';
 import { createCameraFittedBackground } from './BackgroundSystem.js?build=20260826d';
-import { CombatSystem } from './CombatSystem.js?build=20260901c';
+import { CombatSystem } from './CombatSystem.js?build=20260901d';
 import { BossBarrierSystem } from './BossBarrierSystem.js?build=20260831b';
 import { CharacterAbilitySystem } from './CharacterAbilitySystem.js?build=20260828i';
 import { EnemySystem } from './EnemySystem.js?build=20260901c';
-import { InputController } from './InputController.js?build=20260828i';
+import { InputController } from './InputController.js?build=20260901d';
 import { LootSystem } from './LootSystem.js?build=20260826k';
 import { RunState } from './RunState.js?build=20260828f';
 import { Spawner } from './Spawner.js?build=20260828i';
@@ -18,7 +18,7 @@ import { UpgradeEffectSystem } from './UpgradeEffectSystem.js?build=20260828e';
 import { WorldObstacleSystem } from './WorldObstacleSystem.js?build=20260828i';
 import { PremiumWeaponAudio } from './PremiumWeaponAudio.js?build=20260901b';
 import { presentWeaponShot } from './WeaponPresentation.js?build=20260831a';
-import { PremiumVfxDirector } from './PremiumVfxDirector.js?build=20260901c';
+import { PremiumVfxDirector } from './PremiumVfxDirector.js?build=20260901d';
 import { gameDeviceProfile } from './deviceProfile.js?build=20260901c';
 import { movementMultiplier } from './movement.js?build=20260825r';
 import { updateMovementFeedback, updateShotFeedback, updateWeaponCharge } from './PlayerFeedback.js?build=20260831a';
@@ -29,7 +29,7 @@ import { applyHeroSkin, destroyHeroSkin, syncHeroSkin } from './SkinPresentation
 import {
   attachGroundShadow, createGameTextures, createPlayerLights, createReloadIndicator,
   syncGroundShadow, syncPlayerLights, syncReloadIndicator,
-} from './VisualEffects.js?build=20260826i';
+} from './VisualEffects.js?build=20260901d';
 
 export class GameScene extends Phaser.Scene {
   constructor() { super('game'); }

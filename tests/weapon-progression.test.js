@@ -3,8 +3,11 @@ import test from 'node:test';
 import { projectileTravelDistance, WEAPONS } from '../src/data/weapons.js';
 import { UPGRADES } from '../src/data/upgrades.js';
 import {
-  CombatSystem, PROJECTILE_RENDER_MULTIPLIER, projectileBodyRadius, projectileCollisionRadius, projectileScale,
+  CombatSystem, PROJECTILE_RENDER_MULTIPLIER, projectileBodyGeometry, projectileBodyRadius,
+  projectileCollisionRadius, projectileScale, usesSweptProjectileCollision,
+  visibleProjectileCollisionRadius,
 } from '../src/game/CombatSystem.js';
+import { PREMIUM_PROJECTILE_CORE_RATIO } from '../src/game/ProjectileGeometry.js';
 import { premiumProjectileScale, PREMIUM_PROJECTILE_RENDER_BOOST } from '../src/game/PremiumVfxDirector.js';
 import { shouldConsumeAmmo, upgradedProjectileCount } from '../src/game/WeaponMechanics.js';
 import { nextWeaponCharge } from '../src/game/PlayerFeedback.js';
@@ -40,7 +43,7 @@ test('Big Shot enlarges both projectile rendering and its collision footprint', 
   assert.ok(Math.abs(projectileCollisionRadius(bigShotSize) - 5.6) < 1e-9);
 });
 
-test('base projectiles render larger without silently widening their hit radius', () => {
+test('base projectiles keep authored hit size while premium damaging cores follow their visible size', () => {
   assert.equal(PROJECTILE_RENDER_MULTIPLIER, 1.9);
   assert.equal(projectileScale(WEAPONS.revolver.bulletSize), 1.9);
   assert.equal(projectileCollisionRadius(WEAPONS.revolver.bulletSize), 4);
@@ -49,12 +52,32 @@ test('base projectiles render larger without silently widening their hit radius'
   assert.ok(premiumProjectileScale(6, 'shotgun') >= .12);
   assert.ok(premiumProjectileScale(9, 'crossbow') >= .61);
   assert.ok(premiumProjectileScale(8, 'flame') >= .37);
+  const premiumScale = premiumProjectileScale(8, 'revolver');
+  assert.equal(
+    visibleProjectileCollisionRadius(8, premiumScale, 256, 256, PREMIUM_PROJECTILE_CORE_RATIO),
+    256 * premiumScale * PREMIUM_PROJECTILE_CORE_RATIO,
+  );
 });
 
 test('a premium atlas scale preserves the authored world collision radius', () => {
   const premiumScale = .085;
   const localBodyRadius = projectileBodyRadius(9, premiumScale);
   assert.ok(Math.abs(localBodyRadius * premiumScale - projectileCollisionRadius(9)) < 1e-9);
+});
+
+test('projectile body is centered on its visible anchor at every render scale', () => {
+  const body = projectileBodyGeometry({
+    size: 8, renderScale: .4, frameWidth: 256, frameHeight: 256,
+    originX: .6, originY: .45, visualCoreRatio: PREMIUM_PROJECTILE_CORE_RATIO,
+  });
+  assert.equal((body.offsetX + body.localRadius) * .4, 256 * .6 * .4);
+  assert.equal((body.offsetY + body.localRadius) * .4, 256 * .45 * .4);
+  assert.equal(body.worldRadius, 256 * .4 * PREMIUM_PROJECTILE_CORE_RATIO);
+});
+
+test('every authored weapon projectile uses swept collision on slow frames', () => {
+  for (const weapon of Object.values(WEAPONS)) assert.equal(usesSweptProjectileCollision(weapon.id), true);
+  assert.equal(usesSweptProjectileCollision(null), false);
 });
 
 test('crossbow charge grows while still and resets on movement', () => {
