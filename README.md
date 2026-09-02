@@ -31,6 +31,16 @@ Phaser runtime, starts after `Usion.init`, stores progression with
 `Usion.storage`, and submits survival duration in milliseconds with
 `Usion.leaderboard.submit` so longer runs rank higher.
 
+## Replay regression check
+
+Run `node scripts/serve-replay-test.mjs` and open `http://127.0.0.1:4174`.
+Click **Run moving-skin replay suite**. The local-only fixture exercises the real
+Phaser scenes and start/replay buttons through 25 moving/firing runs: all eight
+premium skins, four original heroes, and switching back to a previously used skin.
+It uses a no-op platform adapter, so test results never reach the leaderboard.
+Repeat at a phone landscape viewport (for example 844 × 390). This is browser
+viewport coverage, not a substitute for a physical iOS WebView check.
+
 ## Premium skin preview
 
 Each hunter has one original premium cosmetic pack. A pack changes the loadout

@@ -25,7 +25,7 @@ import { updateMovementFeedback, updateShotFeedback, updateWeaponCharge } from '
 import {
   applyOriginalPlayerHitbox, characterSizeScale, premiumPlayerDisplayHeight,
 } from './PlayerHitbox.js?build=20260901h';
-import { createDirectionalAnimations, facingVector, playDirectional } from './animations.js?build=20260828g';
+import { createDirectionalAnimations, facingVector, playDirectional, removeDirectionalAnimations } from './animations.js?build=20260902a';
 import { scoreForRun, survivalRecordMs } from './simulation.js?build=20260826j';
 import { applyHeroSkin, destroyHeroSkin, syncHeroSkin } from './SkinPresentation.js?build=20260901h';
 import {
@@ -350,6 +350,7 @@ export class GameScene extends Phaser.Scene {
     this.premiumVfx?.destroy();
     destroyHeroSkin(this.skinAura);
     if (this.state?.skin) {
+      removeDirectionalAnimations(this, this.state.skin.heroAtlas);
       this.textures.remove(this.state.skin.vfxKey);
       this.textures.remove(this.state.skin.heroAtlas.key);
       if (this.skinWeaponKey) this.textures.remove(this.skinWeaponKey);

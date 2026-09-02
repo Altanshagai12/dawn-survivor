@@ -14,6 +14,12 @@ export function createDirectionalAnimations(scene, atlas, frameRate = 10) {
   });
 }
 
+export function removeDirectionalAnimations(scene, atlas) {
+  // Animations are game-global and retain Frame objects even after scene shutdown.
+  // Release them before unloading the atlas, so replay builds fresh frame references.
+  DIRECTION_ROWS.forEach((direction) => scene.anims.remove(`${atlas.key}-${direction}`));
+}
+
 export function facingVector(input, fallback = { x: 0, y: 1 }, holdAim = false) {
   if ((input.firing || holdAim) && Math.hypot(input.aimX, input.aimY) > .001) {
     return { x: input.aimX, y: input.aimY };
