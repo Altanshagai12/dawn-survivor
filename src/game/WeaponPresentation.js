@@ -1,4 +1,4 @@
-import { triggerShotFeedback } from './PlayerFeedback.js?build=20260831a';
+import { triggerShotFeedback } from './PlayerFeedback.js?build=20260902e';
 
 export const WEAPON_EFFECT_PROFILES = Object.freeze({
   revolver: Object.freeze({ color: 0xffead8, tracer: 60, shake: .00105, duration: 105, visualScale: 1.4 }),

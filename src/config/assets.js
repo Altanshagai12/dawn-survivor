@@ -14,6 +14,16 @@ export const HERO_ATLASES = {
   hina: { key: 'hero-hina', file: `${base}/sprites/heroes/hero-kage-move-8dir-6f-atlas-isolated.webp`, frameWidth: 181, frameHeight: 181 },
 };
 
+// Same frame geometry and animation order as the original bodies, without a baked gun.
+export const WEAPONLESS_HERO_ATLASES = Object.fromEntries(
+  Object.entries(HERO_ATLASES).map(([id, atlas]) => [id, {
+    ...atlas,
+    key: `${atlas.key}-unarmed`,
+    file: `${base}/sprites/heroes/weaponless/${id}-atlas.webp?build=20260902e`,
+    weaponless: true,
+  }]),
+);
+
 export const ENEMY_ATLASES = {
   tentacle: { key: 'enemy-tentacle', file: `${base}/sprites/enemies/enemy-creeper-move-8dir-6f-atlas.webp`, frameWidth: 181, frameHeight: 181 },
   boomer: { key: 'enemy-boomer', file: `${base}/sprites/enemies/enemy-bomber-move-8dir-6f-atlas-clean.webp`, frameWidth: 181, frameHeight: 181 },

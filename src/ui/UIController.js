@@ -1,7 +1,7 @@
-import { weaponArtForSkin } from '../data/skins.js?build=20260901e';
-import { SkinShopController } from './SkinShopController.js?build=20260901e';
+import { selectedWeaponSkin } from '../data/weaponSkins.js?build=20260902d';
+import { WeaponLoadoutController } from './WeaponLoadoutController.js?build=20260902d';
 import {
-  damageSourceLabel, formatSurvivalTime, heroPassiveCopy, movementCopy, savedOrDefault,
+  damageSourceLabel, formatSurvivalTime, savedOrDefault,
   survivalLeaderboardEntries,
 } from './uiFormatters.js?build=20260828a';
 
@@ -58,18 +58,15 @@ export class UIController {
     this.onResume = null;
     this.onQuit = null;
     this.cacheElements();
-    this.skinShop = new SkinShopController({
-      profile, i18n, platform, commerce,
-      onSelectionChange: () => this.renderLoadout(),
-    });
+    this.loadout = new WeaponLoadoutController({ ui: this, platform });
     this.bindButtons();
     this.renderLoadout();
   }
 
   cacheElements() {
     const ids = [
-      'boot','menu','hud','choice-modal','pause-modal','result-modal','touch-controls','skin-modal',
-      'hero-list','weapon-list','hero-stat','hero-description','weapon-stat','weapon-description','movement-description','start-button','pause-button',
+      'boot','menu','hud','choice-modal','pause-modal','result-modal','touch-controls',
+      'hero-list','weapon-list','start-button','pause-button',
       'resume-button','quit-button','again-button','menu-button','choice-list','choice-kicker',
       'choice-title','choice-detail','choice-detail-icon','choice-detail-tree','choice-detail-name',
       'choice-detail-description','choice-detail-path','choice-confirm','reroll-button','hearts','timer','boss-bar','boss-name','boss-fill',
@@ -92,7 +89,7 @@ export class UIController {
     return {
       heroId: this.selectedHero,
       weaponId: this.selectedWeapon,
-      skinId: this.skinShop.selection(this.selectedHero),
+      skinId: selectedWeaponSkin(this.profile, this.selectedWeapon)?.id || null,
     };
   }
 
@@ -104,43 +101,11 @@ export class UIController {
   }
 
   renderLoadout() {
-    const loadoutSkin = this.skinShop.selected(this.selectedHero);
-    this.el['hero-list'].replaceChildren(...Object.values(this.heroes).map((hero) => {
-      const button = document.createElement('button');
-      button.className = `select-card${hero.id === this.selectedHero ? ' selected' : ''}`;
-      button.innerHTML = `<img src="${hero.portrait}" alt=""/><span>${this.i18n.lang === 'mn' ? hero.nameMn : hero.name}</span>`;
-      button.addEventListener('click', () => {
-        this.selectedHero = hero.id;
-        this.renderLoadout();
-      });
-      return button;
-    }));
-    this.el['weapon-list'].replaceChildren(...Object.values(this.weapons).map((weapon) => {
-      const button = document.createElement('button');
-      button.className = `select-card${weapon.id === this.selectedWeapon ? ' selected' : ''}${loadoutSkin ? ' select-card--skin-weapon' : ''}`;
-      button.dataset.weapon = weapon.id;
-      button.title = weapon.description;
-      const art = weaponArtForSkin(loadoutSkin, weapon);
-      button.innerHTML = `<img class="weapon-art${loadoutSkin ? ' weapon-art--skin' : ''}" src="${art}" alt=""/><span>${this.i18n.lang === 'mn' ? weapon.nameMn : weapon.name}</span>`;
-      button.addEventListener('click', () => {
-        this.selectedWeapon = weapon.id;
-        this.renderLoadout();
-      });
-      return button;
-    }));
-    const hero = this.heroes[this.selectedHero];
-    const weapon = this.weapons[this.selectedWeapon];
-    this.el['hero-stat'].textContent = `♥ ${hero.hp} · SPD ${hero.speed}`;
-    this.el['hero-description'].textContent = heroPassiveCopy(hero, this.i18n.lang);
-    this.el['weapon-stat'].textContent = `DMG ${weapon.damage} · RATE ${weapon.fireRate.toFixed(1)} · ${weapon.projectiles}× · ${weapon.magazine} RDS · ${weapon.reload.toFixed(1)}s`;
-    this.el['weapon-description'].textContent = this.i18n.lang === 'mn'
-      ? weapon.descriptionMn : weapon.description;
-    this.el['movement-description'].textContent = movementCopy(this.i18n.lang);
-    this.skinShop.render(this.selectedHero);
+    this.loadout.render();
   }
 
   hideAll() {
-    ['boot','menu','hud','choice-modal','pause-modal','result-modal','touch-controls','skin-modal']
+    ['boot','menu','hud','choice-modal','pause-modal','result-modal','touch-controls']
       .forEach((id) => this.el[id].classList.add('hidden'));
   }
 
@@ -151,7 +116,7 @@ export class UIController {
   }
 
   showGame() {
-    this.skinShop.disposePreviewMedia();
+    this.loadout.stopAudio();
     this.hideAll();
     this.el.hud.classList.remove('hidden');
     this.el['damage-source'].classList.add('hidden');

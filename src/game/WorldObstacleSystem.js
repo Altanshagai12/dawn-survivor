@@ -1,6 +1,6 @@
 import { TEN_MINUTES_BALANCE, WORLD_UNIT } from '../config/balance.js?build=20260828i';
 import { attachGroundShadow, syncGroundShadow } from './VisualEffects.js?build=20260825r';
-import { DAMAGE_SOURCE } from './EnemySystem.js?build=20260828f';
+import { DAMAGE_SOURCE } from './EnemySystem.js?build=20260902b';
 
 const environment = TEN_MINUTES_BALANCE.environment;
 export const TREE_CONTACT_DAMAGE = 1;

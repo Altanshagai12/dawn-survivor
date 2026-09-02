@@ -14,12 +14,10 @@ import { activePresentationRecipe, presentationCoverage } from '../src/game/Upgr
 import { AUDIO_BANK_FILES } from '../src/game/WeaponAudioProfiles.js';
 import { PremiumWeaponAudio, weaponSoundProfile } from '../src/game/PremiumWeaponAudio.js';
 import {
-  premiumPowerAccent, premiumShotLayout, PREMIUM_HERO_AURA_ALPHA,
+  premiumPowerAccent, premiumShotLayout,
   PREMIUM_PROJECTILE_RENDER_BOOST, PREMIUM_SHOT_EFFECT_BOOST,
 } from '../src/game/PremiumVfxDirector.js';
-import {
-  PLAYER_DISPLAY_HEIGHT, PREMIUM_PLAYER_SCREEN_HEIGHT, premiumPlayerDisplayHeight,
-} from '../src/game/PlayerHitbox.js';
+import { PLAYER_DISPLAY_HEIGHT } from '../src/game/PlayerHitbox.js';
 import { weaponEffectProfile } from '../src/game/WeaponPresentation.js';
 import { decodeReceiptClaims, settleSkinPurchase } from '../api/purchase-skin.js';
 
@@ -64,15 +62,11 @@ function framePrincipalAngle(raw, frame) {
   return .5 * Math.atan2(2 * xy, xx - yy);
 }
 
-test('premium gameplay sprites match the crisp mobile preview footprint', async () => {
-  const mobileZoom = .82;
-  assert.equal(premiumPlayerDisplayHeight(mobileZoom) * mobileZoom, PREMIUM_PLAYER_SCREEN_HEIGHT);
-  assert.equal(premiumPlayerDisplayHeight(1.05), PLAYER_DISPLAY_HEIGHT);
-  assert.ok(PREMIUM_HERO_AURA_ALPHA.back <= .12);
-  assert.ok(PREMIUM_HERO_AURA_ALPHA.mote <= .28);
+test('weapon skins leave the original hero footprint and sampling unchanged', async () => {
+  assert.equal(PLAYER_DISPLAY_HEIGHT, 78);
   const game = await readFile(new URL('../src/game/GameScene.js', import.meta.url), 'utf8');
-  assert.match(game, /setFilter\?\.\(Phaser\.Textures\.FilterMode\.NEAREST\)/);
-  assert.match(game, /premiumPlayerDisplayHeight\(this\.performance\.cameraZoom\)/);
+  assert.match(game, /const scale = PLAYER_DISPLAY_HEIGHT \/ atlas\.frameHeight/);
+  assert.doesNotMatch(game, /premiumPlayerDisplayHeight|FilterMode\.NEAREST/);
 });
 
 test('ships two complete premium hero, weapon, projectile, and firing-audio packs per hunter', async () => {
@@ -229,7 +223,7 @@ test('semantic combat paths retain premium presentation coverage and pooled budg
   const combat = sources.join('\n');
   for (const event of [
     'rear', 'fan', 'splinter', 'ricochet', 'summon', 'scythe', 'ice', 'fireball',
-    'shatter', 'glare', 'gale', 'blazing', 'shield', 'dash',
+    'shatter', 'glare', 'gale', 'blazing', 'shield',
   ]) {
     assert.match(combat, new RegExp(`['\"]${event}['\"]`), `missing ${event} presentation path`);
   }
@@ -262,7 +256,7 @@ test('skin intro voice is disabled and never creates an HTML audio element', () 
   audio.destroy();
 });
 
-test('the runtime lazy-loads only the selected premium atlas and selected audio bank', async () => {
+test('the runtime lazy-loads selected weapon VFX and audio without premium hero assets', async () => {
   const boot = await import('node:fs/promises').then(({ readFile }) => readFile(
     new URL('../src/game/BootScene.js', import.meta.url), 'utf8'));
   const game = await import('node:fs/promises').then(({ readFile }) => readFile(
@@ -272,17 +266,16 @@ test('the runtime lazy-loads only the selected premium atlas and selected audio 
   assert.doesNotMatch(boot, /PREMIUM_SKINS|vfxAtlas/);
   assert.match(game, /PREMIUM_SKINS\[this\.selection\?\.skinId\]/);
   assert.match(game, /this\.load\.spritesheet\(skin\.vfxKey, skin\.vfxAtlas/);
-  assert.match(game, /this\.load\.spritesheet\(skin\.heroAtlas\.key, skin\.heroAtlas\.file/);
-  assert.match(game, /createDirectionalAnimations\(this, skin\.heroAtlas/);
-  assert.match(game, /this\.playerAtlas = this\.state\.skin\?\.heroAtlas/);
+  assert.doesNotMatch(game, /skin\.heroAtlas|skin\?\.heroAtlas|skin\?\.heroId/);
+  assert.match(game, /this\.weaponlessHeroAtlas = this\.state\.skin \? WEAPONLESS_HERO_ATLASES\[this\.state\.hero\.id\] : null/);
+  assert.match(game, /this\.playerAtlas = this\.weaponlessHeroAtlas \|\| HERO_ATLASES\[this\.state\.hero\.id\]/);
   assert.match(game, /preloadSkin\?\.\(this\.state\.skin\)/);
   assert.doesNotMatch(game, /queueVoice\(['"]intro/);
-  assert.match(presentation, /if \(authoredHero\) scene\.player\.clearTint\(\)/);
-  assert.match(presentation, /skin\.vfxKey, 0/);
-  assert.match(presentation, /const orbitals = \[0, 1\]/);
+  assert.match(presentation, /scene\.add\.image\(scene\.player\.x, scene\.player\.y, scene\.skinWeaponKey\)/);
+  assert.doesNotMatch(presentation, /setTint\(|spriteTint|silhouette|orbitals|backSigil|heroAtlas/);
 });
 
-test('owned and equipped skin state is sanitized and remains hero-bound', () => {
+test('legacy owned and equipped skin state stays sanitized for one-time migration', () => {
   const normalized = normalizeSkinProfile({
     ownedSkins: ['shana-astral-warden', 'fake', 'shana-astral-warden'],
     equippedSkins: { shana: 'shana-astral-warden', hina: 'shana-astral-warden', diamond: 'fake' },
@@ -329,14 +322,16 @@ test('each premium skin remixes all core weapon visuals and audio without changi
   assert.equal(weaponArtForSkin(null, { id: 'revolver', art: 'base.webp' }), 'base.webp');
 });
 
-test('skin selection refreshes the loadout weapon cards after equip and reset', async () => {
+test('weapon selection renders independent carousel art and starts the selected weapon skin', async () => {
   const controller = await import('node:fs/promises').then(({ readFile }) => readFile(
-    new URL('../src/ui/SkinShopController.js', import.meta.url), 'utf8'));
+    new URL('../src/ui/WeaponLoadoutController.js', import.meta.url), 'utf8'));
   const ui = await import('node:fs/promises').then(({ readFile }) => readFile(
     new URL('../src/ui/UIController.js', import.meta.url), 'utf8'));
-  assert.match(controller, /onSelectionChange\?\.\(this\.heroId, skinId\)/);
-  assert.match(ui, /weaponArtForSkin\(loadoutSkin, weapon\)/);
-  assert.match(ui, /onSelectionChange: \(\) => this\.renderLoadout\(\)/);
+  assert.match(controller, /selectedWeaponSkin\(this\.profile, weapon\.id\)/);
+  assert.match(controller, /weaponArtForSkin\(options\[/);
+  assert.match(controller, /setWeaponSkin\(this\.profile, weaponId,/);
+  assert.match(ui, /selectedWeaponSkin\(this\.profile, this\.selectedWeapon\)/);
+  assert.doesNotMatch(ui, /SkinShopController|skinShop|selectedSkin\(/);
 });
 
 test('wallet purchase starts only on explicit purchase and persists entitlement after settlement', async () => {
@@ -401,12 +396,13 @@ test('server verifies the signed receipt boundary and settles the exact skin SKU
   }
 });
 
-test('skin shop has no preselected action and shows the full generated pack', async () => {
+test('weapon carousel exposes free skin selection without a hero-skin shop or purchase action', async () => {
   const html = await import('node:fs/promises').then(({ readFile }) => readFile(new URL('../index.html', import.meta.url), 'utf8'));
-  const controller = await import('node:fs/promises').then(({ readFile }) => readFile(new URL('../src/ui/SkinShopController.js', import.meta.url), 'utf8'));
-  assert.match(html, /id="skin-list"/);
-  assert.match(html, /id="skin-preview"/);
-  assert.match(html, /id="skin-action"/);
-  assert.match(controller, /premium\.addEventListener\('click', \(\) => this\.open\(skin\)\)/);
-  assert.doesNotMatch(controller, /requestPayment[^]*constructor/);
+  const controller = await readFile(new URL('../src/ui/WeaponLoadoutController.js', import.meta.url), 'utf8');
+  assert.match(html, /id="weapon-list" class="weapon-grid"/);
+  assert.doesNotMatch(html, /id="skin-(?:list|preview|action|modal)"/);
+  assert.match(controller, /bindSkinSwipe\(stage,/);
+  assert.match(controller, /class="weapon-neighbor weapon-neighbor--previous"/);
+  assert.match(controller, /class="weapon-neighbor weapon-neighbor--next"/);
+  assert.doesNotMatch(controller, /requestPayment|commerce\.purchase/);
 });

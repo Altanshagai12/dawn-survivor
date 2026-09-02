@@ -1,5 +1,5 @@
 import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260828i';
-import { DAMAGE_SOURCE } from './EnemySystem.js?build=20260828f';
+import { DAMAGE_SOURCE } from './EnemySystem.js?build=20260902b';
 
 const BODY_CLAMP_EPSILON = 0.01;
 

@@ -1,88 +1,65 @@
-function blendColor(from, to, amount) {
-  const mix = (shift) => Math.round(((from >> shift) & 255) * (1 - amount) + ((to >> shift) & 255) * amount);
-  return (mix(16) << 16) | (mix(8) << 8) | mix(0);
+import { weaponGrip, weaponHandPosition, weaponMuzzleUV } from './WeaponHandAnchors.js?build=20260902e';
+
+export const WEAPON_SKIN_ALPHA = .96;
+
+export function applyWeaponSkin(scene) {
+  if (!scene?.player || !scene.state?.skin || !scene.skinWeaponKey) return null;
+  const grip = weaponGrip(scene.state.skin.id, scene.state.weapon?.id);
+  const weapon = scene.add.image(scene.player.x, scene.player.y, scene.skinWeaponKey)
+    .setOrigin(grip.x, grip.y).setDepth(32).setAlpha(WEAPON_SKIN_ALPHA);
+  const presentation = { scene, weapon, grip, visibility: 1 };
+  syncWeaponSkin(presentation, scene.player);
+  return presentation;
 }
 
-export const HERO_SKIN_ALPHA = Object.freeze({
-  silhouette: .045,
-  sigil: .07,
-  orbital: .22,
-  weapon: .96,
-});
+export function restorePlayerTint(scene) {
+  if (scene?.player?.active) scene.player.clearTint();
+}
 
-export function applyHeroSkin(scene) {
-  const skin = scene?.state?.skin;
-  if (!scene?.player || !skin) return null;
-  const authoredHero = scene.playerAtlas?.key === skin.heroAtlas?.key;
-  if (authoredHero) scene.player.clearTint();
-  else scene.player.setTint(skin.spriteTint).setTintMode(Phaser.TintModes.MULTIPLY);
-  const silhouette = scene.add.sprite(
-    scene.player.x, scene.player.y, scene.player.texture.key, scene.player.frame.name,
-  ).setDepth(24.5).setTint(skin.primary).setAlpha(HERO_SKIN_ALPHA.silhouette)
-    .setBlendMode(Phaser.BlendModes.ADD);
-  const backSigil = scene.add.image(scene.player.x, scene.player.y, skin.vfxKey, 0)
-    .setDepth(23).setScale(.11).setAlpha(HERO_SKIN_ALPHA.sigil).setBlendMode(Phaser.BlendModes.ADD);
-  const orbitals = [0, 1].map((index) => scene.add.circle(
-    scene.player.x, scene.player.y, 1.55 + index * .18,
-    index === 1 ? skin.secondary : skin.primary, .42,
-  ).setStrokeStyle(.7, skin.impact, .48).setDepth(24.2).setBlendMode(Phaser.BlendModes.ADD));
-  const weapon = scene.add.image(scene.player.x, scene.player.y, scene.skinWeaponKey)
-    .setDepth(32).setScale(.075).setAlpha(.96);
+export function setWeaponSkinVisibility(presentation, multiplier = 1) {
+  if (!presentation) return;
+  presentation.visibility = Math.max(0, Math.min(1, multiplier));
+  presentation.weapon.setAlpha(WEAPON_SKIN_ALPHA * presentation.visibility);
+}
+
+function heldWeaponPose(presentation, player, aimAngle) {
+  const facing = presentation.scene.facing || { x: 0, y: 1 };
+  const angle = Number.isFinite(aimAngle) ? aimAngle : Math.atan2(facing.y, facing.x);
+  const hand = weaponHandPosition(presentation.scene.state?.hero?.id, player);
+  const height = player.displayHeight || (player.height || 181) * Math.abs(player.scaleY ?? 1);
+  const width = presentation.weapon.width || 768;
+  const depth = Number.isFinite(player.depth) ? player.depth : 25;
+  const flipY = Math.cos(angle) < 0;
+  const grip = presentation.grip || weaponGrip(presentation.scene.state?.skin?.id, presentation.scene.state?.weapon?.id);
+  return { ...hand, angle, flipY, grip, scale: height * .73 / width,
+    depth: depth + (Math.sin(angle) < -.2 ? -1 : 1) };
+}
+
+export function syncWeaponSkin(presentation, player, _deltaSeconds = 0, aimAngle) {
+  if (!presentation || !player?.active) return;
+  const pose = heldWeaponPose(presentation, player, aimAngle);
+  presentation.weapon.setPosition(pose.x, pose.y)
+    // Mirror the origin with the pixels so facing left cannot move the grip.
+    .setOrigin(pose.grip.x, pose.flipY ? 1 - pose.grip.y : pose.grip.y)
+    .setDepth(pose.depth).setFlipY(pose.flipY)
+    .setRotation(pose.angle).setScale(pose.scale);
+}
+
+export function heldWeaponMuzzle(scene, aimAngle) {
+  const presentation = scene?.weaponSkin;
+  if (!scene?.state?.skin || !scene.player?.active || !presentation?.weapon?.active) return null;
+  // Recompute from the current body frame, size, recoil and shot aim. Do not
+  // read yesterday's rendered weapon transform at the physics/VFX boundary.
+  const pose = heldWeaponPose(presentation, scene.player, aimAngle);
+  const muzzle = weaponMuzzleUV(scene.state.skin.id, scene.state.weapon?.id);
+  const x = (muzzle.x - pose.grip.x) * (presentation.weapon.width || 768) * pose.scale;
+  const y = (muzzle.y - pose.grip.y) * (presentation.weapon.height || 384) * pose.scale * (pose.flipY ? -1 : 1);
   return {
-    scene, skin, authoredHero, silhouette, backSigil, orbitals, weapon,
-    phase: 0, visibility: 1,
+    x: pose.x + x * Math.cos(pose.angle) - y * Math.sin(pose.angle),
+    y: pose.y + x * Math.sin(pose.angle) + y * Math.cos(pose.angle),
   };
 }
 
-export function restoreHeroSkin(scene) {
-  if (!scene?.player?.active) return;
-  if (scene.state?.skin?.heroAtlas?.key === scene.playerAtlas?.key) scene.player.clearTint();
-  else if (scene.state?.skin) scene.player.setTint(scene.state.skin.spriteTint).setTintMode(Phaser.TintModes.MULTIPLY);
-  else scene.player.clearTint();
-}
-
-export function setHeroSkinVisibility(aura, multiplier = 1) {
-  if (!aura) return;
-  aura.visibility = Math.max(0, Math.min(1, multiplier));
-  aura.silhouette?.setAlpha(HERO_SKIN_ALPHA.silhouette * aura.visibility);
-  aura.backSigil?.setAlpha(HERO_SKIN_ALPHA.sigil * aura.visibility);
-  aura.orbitals?.forEach((orbital) => orbital.setAlpha(HERO_SKIN_ALPHA.orbital * aura.visibility));
-  aura.weapon?.setAlpha(HERO_SKIN_ALPHA.weapon * aura.visibility);
-}
-
-export function syncHeroSkin(aura, player, deltaSeconds = 0) {
-  if (!aura || !player?.active) return;
-  aura.phase += deltaSeconds * 2.4;
-  const shimmer = .035 + (Math.sin(aura.phase * 1.7) + 1) * .015;
-  if (!aura.authoredHero) player.setTint(blendColor(aura.skin.spriteTint, aura.skin.primary, shimmer));
-  const facing = aura.scene.facing || { x: 0, y: 1 };
-  const angle = Math.atan2(facing.y, facing.x);
-  const rimPulse = 1.045 + Math.sin(aura.phase * 2.2) * .012;
-  aura.silhouette.setTexture(player.texture.key, player.frame.name)
-    .setPosition(player.x, player.y).setFlipX(player.flipX)
-    .setScale(player.scaleX * rimPulse, player.scaleY * rimPulse)
-    .setAlpha((.032 + Math.sin(aura.phase * 2.4) * .01) * aura.visibility);
-  aura.backSigil.setPosition(player.x, player.y + 1).setRotation(aura.phase * .12)
-    .setScale(.105 + Math.sin(aura.phase * 1.3) * .004)
-    .setAlpha((.052 + Math.sin(aura.phase * 1.15) * .012) * aura.visibility);
-  aura.orbitals.forEach((orbital, index) => {
-    const orbitalAngle = aura.phase * (.72 + index * .11) + index * Math.PI;
-    const front = Math.sin(orbitalAngle) > 0;
-    orbital.setPosition(
-      player.x + Math.cos(orbitalAngle) * (29 + index * 3),
-      player.y - 3 + Math.sin(orbitalAngle) * (10 + index * 1.5),
-    ).setDepth(front ? 24.2 : 22.5)
-      .setScale(.82 + Math.sin(orbitalAngle * 1.7) * .16)
-      .setAlpha((.11 + (front ? .08 : .025)) * aura.visibility);
-  });
-  aura.weapon.setPosition(player.x + facing.x * 19, player.y + facing.y * 15 - 2)
-    .setDepth(facing.y < -.2 ? 24 : 32).setFlipY(facing.x < 0)
-    .setRotation(angle).setScale(.074 + Math.sin(aura.phase * 2.8) * .002);
-}
-
-export function destroyHeroSkin(aura) {
-  aura?.silhouette?.destroy();
-  aura?.backSigil?.destroy();
-  aura?.orbitals?.forEach((orbital) => orbital.destroy());
-  aura?.weapon?.destroy();
+export function destroyWeaponSkin(presentation) {
+  presentation?.weapon?.destroy();
 }

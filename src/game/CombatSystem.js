@@ -3,7 +3,8 @@ import { CombatEffects } from './CombatEffects.js?build=20260828e';
 import { handleSpecialKill } from './KillProgression.js?build=20260825r';
 import { resolveProjectileLaunchHits, resolveProjectileTravelHits } from './ProjectileLaunchCollision.js?build=20260827e';
 import { shouldConsumeAmmo, upgradedProjectileCount } from './WeaponMechanics.js?build=20260825r';
-import { presentWeaponImpact, updateProjectilePresentation } from './WeaponPresentation.js?build=20260901e';
+import { presentWeaponImpact, updateProjectilePresentation } from './WeaponPresentation.js?build=20260902e';
+import { heldWeaponMuzzle, syncWeaponSkin } from './SkinPresentation.js?build=20260902e';
 import { skinProjectileTint } from '../data/skins.js?build=20260901e';
 import {
   PROJECTILE_RENDER_MULTIPLIER, projectileBodyGeometry, projectileBodyRadius,
@@ -58,6 +59,8 @@ export class CombatSystem {
     const state = this.scene.state;
     const weapon = state.weapon;
     const baseAngle = Math.atan2(aimY, aimX);
+    syncWeaponSkin(this.scene.weaponSkin, this.scene.player, 0, baseAngle);
+    const heldMuzzle = heldWeaponMuzzle(this.scene, baseAngle);
     const count = options.projectiles || upgradedProjectileCount(
       weapon.projectiles,
       state.mods.projectilesAdd || 0,
@@ -89,7 +92,8 @@ export class CombatSystem {
       const random = count === 1 ? Phaser.Math.FloatBetween(-.5, .5) : 0;
       const angle = baseAngle + Phaser.Math.DegToRad((centered + random * .3) * spread);
       shotAngles.push(angle);
-      this.spawnBullet(this.scene.player.x + Math.cos(angle) * 26, this.scene.player.y + Math.sin(angle) * 26, angle, {
+      this.spawnBullet(heldMuzzle?.x ?? this.scene.player.x + Math.cos(angle) * 26,
+        heldMuzzle?.y ?? this.scene.player.y + Math.sin(angle) * 26, angle, {
         ...shotSpec,
         launchOrigin: { x: this.scene.player.x, y: this.scene.player.y },
       });

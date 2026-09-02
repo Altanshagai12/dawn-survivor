@@ -1,5 +1,6 @@
 import { spawnRunDust } from './VisualEffects.js';
-import { characterSizeScale } from './PlayerHitbox.js?build=20260831a';
+import { characterSizeScale } from './PlayerHitbox.js?build=20260902b';
+import { heldWeaponMuzzle } from './SkinPresentation.js?build=20260902e';
 
 export function nextWeaponCharge(current, weapon, delta, moving) {
   if (!weapon.chargeSeconds || moving) return 0;
@@ -30,8 +31,9 @@ export function recoilPose(strength, angle) {
 
 export function triggerShotFeedback(scene, angle) {
   scene.shotRecoil = { angle, strength: 1 };
-  const x = scene.player.x + Math.cos(angle) * 18;
-  const y = scene.player.y + Math.sin(angle) * 18 - 3;
+  const muzzle = heldWeaponMuzzle(scene, angle);
+  const x = muzzle?.x ?? scene.player.x + Math.cos(angle) * 18;
+  const y = muzzle?.y ?? scene.player.y + Math.sin(angle) * 18 - 3;
   const lift = scene.add.rectangle(x, y, 15, 2, 0xe8fdff, .72)
     .setOrigin(0, .5).setRotation(angle).setDepth(35).setBlendMode(Phaser.BlendModes.ADD);
   scene.tweens.add({

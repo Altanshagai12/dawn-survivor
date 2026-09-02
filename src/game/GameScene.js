@@ -1,33 +1,33 @@
-import { HERO_ATLASES } from '../config/assets.js?build=20260901g';
+import { HERO_ATLASES, WEAPONLESS_HERO_ATLASES } from '../config/assets.js?build=20260902e';
 import { ENEMIES, RUN_SECONDS } from '../data/enemies.js?build=20260828i';
 import { HEROES } from '../data/heroes.js?build=20260828i';
-import { PREMIUM_SKINS } from '../data/skins.js?build=20260901e';
+import { PREMIUM_SKINS } from '../data/skins.js?build=20260902d';
 import { TOMES, sampleUpgradeCards } from '../data/upgrades.js?build=20260826b';
 import { WEAPONS } from '../data/weapons.js?build=20260827b';
 import { createCameraFittedBackground } from './BackgroundSystem.js?build=20260826d';
-import { CombatSystem } from './CombatSystem.js?build=20260901e';
-import { BossBarrierSystem } from './BossBarrierSystem.js?build=20260831b';
-import { CharacterAbilitySystem } from './CharacterAbilitySystem.js?build=20260828i';
-import { EnemySystem } from './EnemySystem.js?build=20260901f';
+import { CombatSystem } from './CombatSystem.js?build=20260902e';
+import { BossBarrierSystem } from './BossBarrierSystem.js?build=20260902b';
+import { CharacterAbilitySystem } from './CharacterAbilitySystem.js?build=20260902b';
+import { EnemySystem } from './EnemySystem.js?build=20260902e';
 import { InputController } from './InputController.js?build=20260901d';
 import { LootSystem } from './LootSystem.js?build=20260826k';
 import { RunState } from './RunState.js?build=20260828f';
 import { Spawner } from './Spawner.js?build=20260828i';
 import { SummonSystem } from './SummonSystem.js?build=20260828e';
 import { UpgradeEffectSystem } from './UpgradeEffectSystem.js?build=20260828e';
-import { WorldObstacleSystem } from './WorldObstacleSystem.js?build=20260828i';
+import { WorldObstacleSystem } from './WorldObstacleSystem.js?build=20260902b';
 import { PremiumWeaponAudio } from './PremiumWeaponAudio.js?build=20260901b';
-import { presentWeaponShot } from './WeaponPresentation.js?build=20260901e';
-import { PremiumVfxDirector } from './PremiumVfxDirector.js?build=20260901h';
+import { presentWeaponShot } from './WeaponPresentation.js?build=20260902e';
+import { PremiumVfxDirector } from './PremiumVfxDirector.js?build=20260902e';
 import { gameDeviceProfile } from './deviceProfile.js?build=20260901f';
 import { movementMultiplier } from './movement.js?build=20260825r';
-import { updateMovementFeedback, updateShotFeedback, updateWeaponCharge } from './PlayerFeedback.js?build=20260831a';
+import { updateMovementFeedback, updateShotFeedback, updateWeaponCharge } from './PlayerFeedback.js?build=20260902e';
 import {
-  applyOriginalPlayerHitbox, characterSizeScale, premiumPlayerDisplayHeight,
-} from './PlayerHitbox.js?build=20260901h';
+  applyOriginalPlayerHitbox, characterSizeScale, PLAYER_DISPLAY_HEIGHT,
+} from './PlayerHitbox.js?build=20260902b';
 import { createDirectionalAnimations, facingVector, playDirectional, removeDirectionalAnimations } from './animations.js?build=20260902a';
 import { scoreForRun, survivalRecordMs } from './simulation.js?build=20260826j';
-import { applyHeroSkin, destroyHeroSkin, syncHeroSkin } from './SkinPresentation.js?build=20260901h';
+import { applyWeaponSkin, destroyWeaponSkin, syncWeaponSkin } from './SkinPresentation.js?build=20260902e';
 import {
   attachGroundShadow, createGameTextures, createPlayerLights, createReloadIndicator,
   syncGroundShadow, syncPlayerLights, syncReloadIndicator,
@@ -47,20 +47,20 @@ export class GameScene extends Phaser.Scene {
     this.facing = { x: 0, y: 1 };
     this.aimHoldUntil = 0;
     this.activeVfx = 0;
+    this.skinWeaponKey = null;
+    this.weaponlessHeroAtlas = null;
   }
 
   preload() {
     const skin = PREMIUM_SKINS[this.selection?.skinId];
-    if (skin?.heroId !== this.selection?.heroId) return;
+    if (!skin?.id) return;
     this.skinWeaponKey = `skin-weapon-${skin.id}-${this.selection.weaponId}`;
     if (!this.textures.exists(skin.vfxKey)) {
       this.load.spritesheet(skin.vfxKey, skin.vfxAtlas, { frameWidth: 256, frameHeight: 256 });
     }
-    if (!this.textures.exists(skin.heroAtlas.key)) {
-      this.load.spritesheet(skin.heroAtlas.key, skin.heroAtlas.file, {
-        frameWidth: skin.heroAtlas.frameWidth,
-        frameHeight: skin.heroAtlas.frameHeight,
-      });
+    const atlas = WEAPONLESS_HERO_ATLASES[this.selection.heroId];
+    if (!this.textures.exists(atlas.key)) {
+      this.load.spritesheet(atlas.key, atlas.file, { frameWidth: atlas.frameWidth, frameHeight: atlas.frameHeight });
     }
     if (!this.textures.exists(this.skinWeaponKey)) {
       this.load.image(this.skinWeaponKey, skin.weaponArt[this.selection.weaponId]);
@@ -73,12 +73,8 @@ export class GameScene extends Phaser.Scene {
     this.profile = this.game.registry.get('profile');
     this.enemyDefinitions = ENEMIES;
     const selectedSkin = PREMIUM_SKINS[this.selection.skinId];
-    const skin = selectedSkin?.heroId === this.selection.heroId ? selectedSkin : null;
+    const skin = selectedSkin?.id ? selectedSkin : null;
     this.state = new RunState(HEROES[this.selection.heroId], WEAPONS[this.selection.weaponId], skin);
-    if (skin?.heroAtlas && this.textures.exists(skin.heroAtlas.key)) {
-      createDirectionalAnimations(this, skin.heroAtlas, 11);
-      this.textures.get(skin.heroAtlas.key)?.setFilter?.(Phaser.Textures.FilterMode.NEAREST);
-    }
     this.performance = gameDeviceProfile({
       coarse: matchMedia('(pointer: coarse)').matches,
       width: this.scale.width,
@@ -127,13 +123,12 @@ export class GameScene extends Phaser.Scene {
   }
 
   createPlayer() {
-    this.playerAtlas = this.state.skin?.heroAtlas || HERO_ATLASES[this.state.hero.id];
-    if (!this.textures.exists(this.playerAtlas.key)) this.playerAtlas = HERO_ATLASES[this.state.hero.id];
+    this.weaponlessHeroAtlas = this.state.skin ? WEAPONLESS_HERO_ATLASES[this.state.hero.id] : null;
+    this.playerAtlas = this.weaponlessHeroAtlas || HERO_ATLASES[this.state.hero.id];
     const atlas = this.playerAtlas;
+    if (this.weaponlessHeroAtlas) createDirectionalAnimations(this, atlas, 11);
     this.player = this.physics.add.sprite(0, 0, atlas.key, 24).setDepth(25);
-    const displayHeight = this.state.skin
-      ? premiumPlayerDisplayHeight(this.performance.cameraZoom) : 78;
-    const scale = displayHeight / atlas.frameHeight;
+    const scale = PLAYER_DISPLAY_HEIGHT / atlas.frameHeight;
     this.playerBaseScale = scale;
     applyOriginalPlayerHitbox(this.player, atlas, scale, characterSizeScale(this.state.mods));
     this.player.body.setMaxVelocity(500, 500);
@@ -144,7 +139,7 @@ export class GameScene extends Phaser.Scene {
       depth: 24,
       alpha: .44,
     });
-    this.skinAura = applyHeroSkin(this);
+    this.weaponSkin = applyWeaponSkin(this);
     this.cameras.main.startFollow(this.player, true, .11, .11);
     this.cameras.main.setZoom(this.performance.cameraZoom);
     this.playerLights = createPlayerLights(this, this.player, this.performance.lightScale);
@@ -175,15 +170,15 @@ export class GameScene extends Phaser.Scene {
     const facing = facingVector(input, this.facing, this.time.now < this.aimHoldUntil || this.state.reloading);
     this.facing = facing;
     playDirectional(this.player, this.playerAtlas.key, facing.x, facing.y,
-      Math.hypot(input.moveX, input.moveY) > .08, { mirrorLeft: !this.state.skin });
+      Math.hypot(input.moveX, input.moveY) > .08, { mirrorLeft: true });
     updateShotFeedback(this, deltaSeconds);
     syncGroundShadow(this.player);
-    syncHeroSkin(this.skinAura, this.player, deltaSeconds);
+    syncWeaponSkin(this.weaponSkin, this.player, deltaSeconds);
     syncPlayerLights(this.playerLights, this.player);
     syncReloadIndicator(this.reloadIndicator, this.player, this.state, deltaSeconds);
     updateWeaponCharge(this.state, deltaSeconds, input);
     updateMovementFeedback(this, deltaSeconds, input);
-    this.premiumVfx?.update(deltaSeconds, input);
+    this.premiumVfx?.update(deltaSeconds);
     this.combat.update(deltaMs, input);
     this.spawner.update(deltaSeconds);
     this.enemySystem.update(deltaSeconds);
@@ -348,12 +343,15 @@ export class GameScene extends Phaser.Scene {
     this.summons?.destroy();
     this.weaponAudio?.destroy();
     this.premiumVfx?.destroy();
-    destroyHeroSkin(this.skinAura);
+    destroyWeaponSkin(this.weaponSkin);
     if (this.state?.skin) {
-      removeDirectionalAnimations(this, this.state.skin.heroAtlas);
       this.textures.remove(this.state.skin.vfxKey);
-      this.textures.remove(this.state.skin.heroAtlas.key);
       if (this.skinWeaponKey) this.textures.remove(this.skinWeaponKey);
+    }
+    if (this.weaponlessHeroAtlas) {
+      removeDirectionalAnimations(this, this.weaponlessHeroAtlas);
+      this.textures.remove(this.weaponlessHeroAtlas.key);
+      this.weaponlessHeroAtlas = null;
     }
     this.time.paused = false;
     this.ui.hidePause();

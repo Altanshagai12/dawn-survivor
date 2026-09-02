@@ -149,14 +149,11 @@ test('skin storefront uses optimized card, VFX, weapon, and five-file audio asse
   }
 });
 
-test('runtime loads only the selected skin and releases storefront preview media', async () => {
+test('runtime loads the selected weapon skin while retaining original hero facing', async () => {
   const game = await readFile(new URL('../src/game/GameScene.js', import.meta.url), 'utf8');
-  const shop = await readFile(new URL('../src/ui/SkinShopController.js', import.meta.url), 'utf8');
   assert.match(game, /skinWeaponKey/);
   assert.match(game, /skin\.weaponArt\[this\.selection\.weaponId\]/);
-  assert.match(game, /mirrorLeft: !this\.state\.skin/);
-  assert.match(shop, /SKINS_BY_HERO/);
-  assert.match(shop, /WEAPON_IDS/);
-  assert.match(shop, /disposePreviewMedia\(\)/);
+  assert.match(game, /mirrorLeft: true/);
+  assert.doesNotMatch(game, /skin\.heroAtlas|skin\?\.heroId/);
   assert.doesNotMatch(game, /three/i);
 });

@@ -58,11 +58,11 @@ test('mobile boots directly into automatic landscape with dedicated Hina ability
   assert.match(css, /html\.mobile-rotated #app/);
   assert.match(css, /rotate\(90deg\)/);
   assert.match(css, /#game canvas[^}]*width:\s*100%\s*!important[^}]*height:\s*100%\s*!important/s);
-  assert.match(main, /GameScene\.js\?build=20260902a/);
+  assert.match(main, /GameScene\.js\?build=20260902e/);
   assert.match(main, /runLifecycle\.js\?build=20260901i/);
-  assert.match(main, /UIController\.js\?build=20260901i/);
-  assert.match(html, /main\.js\?build=20260902a/);
-  assert.match(html, /skin-shop\.css\?build=20260901b/);
+  assert.match(main, /UIController\.js\?build=20260902d/);
+  assert.match(html, /main\.js\?build=20260902e/);
+  assert.match(html, /loadout\.css\?build=20260902c/);
   assert.match(main, /resolution:\s*gameRenderResolution\(window\.devicePixelRatio, renderProfile\)/);
   assert.match(main, /render:\s*\{\s*antialias:\s*true,\s*pixelArt:\s*false,\s*roundPixels:\s*true\s*\}/);
   assert.doesNotMatch(css, /--app-viewport-(?:width|height)[^;]*\+\s*2px/);

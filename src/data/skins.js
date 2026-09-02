@@ -23,7 +23,7 @@ const shotgunRotationCorrections = Object.freeze({
 
 function skinWeaponArt(skinId) {
   return Object.freeze(Object.fromEntries(weaponIds.map((weaponId) => [
-    weaponId, `${base}/weapons/${skinId}/${weaponId}.webp?build=20260901e`,
+    weaponId, `${base}/weapons/${skinId}/${weaponId}.webp?build=20260902d`,
   ])));
 }
 

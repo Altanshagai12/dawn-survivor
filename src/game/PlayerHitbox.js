@@ -6,12 +6,6 @@ export const ORIGINAL_PLAYER_HITBOX = Object.freeze({
 });
 
 export const PLAYER_DISPLAY_HEIGHT = 78;
-export const PREMIUM_PLAYER_SCREEN_HEIGHT = 72;
-
-export function premiumPlayerDisplayHeight(cameraZoom = 1) {
-  const zoom = Number.isFinite(cameraZoom) && cameraZoom > 0 ? cameraZoom : 1;
-  return Math.max(PLAYER_DISPLAY_HEIGHT, PREMIUM_PLAYER_SCREEN_HEIGHT / zoom);
-}
 
 export function characterSizeScale(mods = {}) {
   return Math.max(0.1, 1 + (mods.playerSizeMul || 0));

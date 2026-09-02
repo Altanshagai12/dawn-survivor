@@ -1,0 +1,115 @@
+/* Loadout uses one fixed hero rail and four independent weapon groups. */
+#menu {
+  display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; justify-content: stretch; gap: 18px;
+  width: min(1180px, 100%); max-width: none; height: min(850px, 100%);
+  top: 50%; bottom: auto; left: 50%; transform: translate(-50%, -50%);
+  padding: 28px; overflow: hidden; background: radial-gradient(ellipse at 65% 10%, #1c142b 0, #0d0b13 58%);
+}
+.loadout-header { display: flex; align-items: center; }
+.loadout-header h1 { font-size: clamp(25px, 3.7vw, 44px); line-height: .95; letter-spacing: -.055em; }
+.loadout-header h1 span { display: inline; color: #d0c2dc; }
+.loadout-selection { display: grid; grid-template-columns: minmax(180px, .68fr) minmax(0, 2fr); min-height: 0; gap: 20px; }
+.loadout-section-title { display: flex; align-items: center; min-width: 0; color: #ccc1d6; font-size: 11px; line-height: 14px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+/* Both labels sit outside the borders in identical rows. The rail and grid share both edges. */
+.loadout-heroes, .loadout-weapons { display: grid; grid-template-rows: 14px minmax(0, 1fr); gap: 12px; min-height: 0; min-width: 0; }
+.hero-rail { display: grid; grid-template-rows: repeat(4, minmax(0, 1fr)); min-height: 0; gap: 8px; padding: 12px; border: 1px solid #302739; border-radius: 16px; background: #121019; }
+.hero-option { position: relative; display: flex; align-items: center; min-width: 0; min-height: 0; overflow: hidden; padding: 0; border: 1px solid transparent; border-radius: 11px; background: #1b1623; text-align: left; cursor: pointer; }
+.hero-option img { width: 47%; height: 100%; object-fit: cover; object-position: 50% 23%; opacity: .6; transition: opacity .18s; }
+.hero-option__copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 5px; padding: 8px; }
+.hero-option__copy strong { font-size: clamp(10px, 1.2vw, 14px); line-height: 1.15; }
+.hero-option__copy > span { font-size: 9px; color: #9d92a9; white-space: nowrap; }
+.selection-dot { width: 12px; height: 12px; border: 1px solid #52455f; border-radius: 50%; flex: 0 0 auto; }
+.hero-option > .selection-dot { position: absolute; right: 7px; top: 7px; width: 7px; height: 7px; }
+.hero-option.selected { border-color: #65e6ff; background: #17222b; }
+.hero-option.selected img { opacity: 1; }
+.hero-option.selected .selection-dot, .weapon-option.selected .selection-dot { border-color: var(--weapon-color, #65e6ff); background: var(--weapon-color, #65e6ff); box-shadow: 0 0 10px color-mix(in srgb, var(--weapon-color, #65e6ff) 40%, transparent); }
+.weapon-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 14px; min-height: 0; }
+.weapon-option { --weapon-color: #65e6ff; position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr) auto 6px; min-width: 0; min-height: 0; overflow: hidden; border: 1px solid #302739; border-radius: 16px; background: radial-gradient(ellipse at center, #282034, #15111d 72%); transition: border-color .18s, background .18s; }
+.weapon-option.selected { border-color: var(--weapon-color); background: radial-gradient(ellipse at center, color-mix(in srgb, var(--weapon-color) 10%, #21182d), #15111d 74%); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--weapon-color) 18%, transparent); }
+.weapon-select { display: flex; align-items: center; justify-content: space-between; gap: 7px; padding: 14px 16px 3px; width: 100%; border: 0; background: transparent; text-align: left; cursor: pointer; }
+.weapon-select > span { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.weapon-select strong { font-size: 12px; line-height: 1.25; letter-spacing: .015em; }
+.weapon-carousel { position: relative; min-height: 0; overflow: hidden; }
+.weapon-stage { position: relative; display: block; width: 100%; height: 100%; min-height: 0; padding: 0; border: 0; background: transparent; overflow: hidden; cursor: pointer; touch-action: none; }
+.weapon-option.selected .weapon-stage { cursor: grab; }
+.weapon-option.selected .weapon-stage:active { cursor: grabbing; }
+.weapon-stage img { position: absolute; top: 0; height: 100%; object-fit: contain; pointer-events: none; user-select: none; }
+.weapon-art { left: 50%; width: 76%; transform: translateX(-50%); filter: brightness(.83) saturate(.8); transition: filter .2s; }
+.weapon-option.selected .weapon-art { filter: brightness(1.1) saturate(1.1) drop-shadow(0 0 9px color-mix(in srgb, var(--weapon-color) 25%, transparent)); }
+.weapon-neighbor { width: 62%; opacity: 0; transform: scale(.68); transition: opacity .2s; }
+.weapon-neighbor--previous { left: -35%; }
+.weapon-neighbor--next { right: -35%; }
+.weapon-option.selected .weapon-neighbor { opacity: .32; }
+.skin-arrow { position: absolute; z-index: 2; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 34px; height: 44px; padding: 0; border: 1px solid #514160; border-radius: 9px; background: #100c18b8; font-size: 27px; line-height: 1; cursor: pointer; }
+.skin-arrow--previous { left: 9px; }
+.skin-arrow--next { right: 9px; }
+.skin-arrow:disabled { visibility: hidden; }
+.weapon-option__footer { display: flex; align-items: center; min-width: 0; gap: 8px; padding: 5px 15px 10px; }
+.weapon-option__footer > div { flex: 1; min-width: 0; }
+.weapon-skin-name { display: block; min-height: 24px; font-size: 11px; font-weight: 650; line-height: 1.2; }
+.weapon-audio { width: 30px; height: 30px; padding: 0; border: 1px solid #493751; border-radius: 50%; background: #1a1324; color: var(--weapon-color); cursor: pointer; }
+.weapon-audio:disabled { visibility: hidden; }
+.skin-pagination { display: flex; justify-content: center; align-items: start; gap: 4px; opacity: 0; }
+.weapon-option.selected .skin-pagination { opacity: 1; }
+.skin-pagination i { width: 4px; height: 3px; border-radius: 2px; background: #554060; }
+.skin-pagination i.current { width: 15px; background: var(--weapon-color); }
+.loadout-footer { display: flex; align-items: center; justify-content: flex-end; gap: 25px; }
+#loadout-save { min-height: 32px; margin-right: auto; padding: 0; border: 0; color: #ffafba; background: transparent; font-size: 11px; cursor: pointer; text-align: left; }
+#menu #start-button { width: 32%; min-height: 50px; flex: 0 0 auto; border-radius: 10px; font-size: 12px; }
+#menu button:focus-visible { outline: 2px solid #e8d4ff; outline-offset: -3px; }
+
+@media (max-width: 700px), (max-height: 600px) {
+  #menu { padding: 12px 18px; gap: 9px; }
+  .loadout-header h1 { font-size: 25px; }
+  .loadout-selection { grid-template-columns: minmax(140px, .65fr) minmax(0, 2fr); gap: 12px; }
+  .loadout-heroes, .loadout-weapons { gap: 7px; }
+  .loadout-section-title { font-size: 9px; }
+  .hero-rail { gap: 5px; padding: 9px; border-radius: 11px; }
+  .hero-option { border-radius: 7px; }
+  .hero-option__copy { gap: 2px; padding: 4px; }
+  .hero-option__copy strong { font-size: 10px; }
+  .hero-option__copy > span { font-size: 7px; }
+  .weapon-grid { gap: 8px; }
+  .weapon-option { display: block; border-radius: 11px; }
+  .weapon-select { position: relative; z-index: 2; padding: 7px 10px 0; }
+  .weapon-select > span { gap: 1px; }
+  .weapon-select strong { font-size: 10px; }
+  .weapon-carousel { position: absolute; inset: 12px 0 15px; }
+  .weapon-neighbor { width: 30%; transform: scale(.8); }
+  .weapon-neighbor--previous { left: -10%; }
+  .weapon-neighbor--next { right: -10%; }
+  .weapon-option__footer { position: absolute; z-index: 2; bottom: 4px; left: 0; width: 100%; padding: 0 9px; gap: 5px; pointer-events: none; }
+  .weapon-skin-name { min-height: 0; font-size: 9px; line-height: 1.1; }
+  .skin-pagination { position: absolute; bottom: 1px; left: 0; width: 100%; }
+  .weapon-audio { width: 24px; height: 24px; font-size: 11px; pointer-events: auto; }
+  .skin-arrow { width: 28px; height: 34px; font-size: 21px; border-radius: 7px; }
+  .skin-arrow--previous { left: 5px; }
+  .skin-arrow--next { right: 5px; }
+  .selection-dot { width: 8px; height: 8px; }
+  .loadout-footer { gap: 12px; }
+  #loadout-save { font-size: 9px; }
+  #menu #start-button { min-height: 36px; width: 34%; font-size: 10px; }
+}
+html.mobile-rotated #menu { padding: 10px 18px; gap: 8px; justify-content: normal; }
+/* The fallback is physically portrait but its game surface is landscape. */
+html.mobile-rotated .loadout-header h1 { font-size: 25px; }
+@media (max-height: 360px), (max-width: 360px) {
+  .loadout-header h1, html.mobile-rotated .loadout-header h1 { font-size: 21px; }
+  #menu #start-button { min-height: 32px; }
+}
+@media (max-width: 480px) and (orientation: portrait) {
+  html:not(.mobile-rotated) #menu { padding: 12px 10px; }
+  html:not(.mobile-rotated) .loadout-selection { grid-template-columns: 100px minmax(0, 1fr); gap: 7px; }
+  html:not(.mobile-rotated) .hero-rail { padding: 6px; }
+  html:not(.mobile-rotated) .hero-option { flex-direction: column; }
+  html:not(.mobile-rotated) .hero-option img { width: 100%; height: 65%; }
+  html:not(.mobile-rotated) .hero-option__copy { text-align: center; }
+  html:not(.mobile-rotated) .weapon-option__footer { flex-wrap: wrap; gap: 1px; }
+  html:not(.mobile-rotated) .weapon-option__footer > div { flex-basis: 100%; }
+  html:not(.mobile-rotated) .skin-arrow { width: 24px; height: 30px; }
+  html:not(.mobile-rotated) .skin-arrow--previous { left: 0; }
+  html:not(.mobile-rotated) .skin-arrow--next { right: 0; }
+  html:not(.mobile-rotated) .loadout-footer { display: block; }
+  html:not(.mobile-rotated) #menu #start-button { width: 100%; margin-top: 6px; }
+}
+@media (prefers-reduced-motion: reduce) { #menu * { transition: none !important; } }

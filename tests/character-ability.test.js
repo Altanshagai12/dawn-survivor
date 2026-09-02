@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { TEN_MINUTES_BALANCE } from '../src/config/balance.js';
+import { HERO_ATLASES } from '../src/config/assets.js';
+import { HEROES } from '../src/data/heroes.js';
+import { PREMIUM_SKINS } from '../src/data/skins.js';
+import { WEAPONS } from '../src/data/weapons.js';
+import { RunState } from '../src/game/RunState.js';
 import {
   CharacterAbilitySystem, dashCooldownState, movementDashDirection,
 } from '../src/game/CharacterAbilitySystem.js';
@@ -84,4 +89,50 @@ test('dash cooldown presentation starts ready and reaches half charge at one sec
     remainingMs: 1000,
     progress: .5,
   });
+});
+
+test('a cross-hero weapon skin leaves Hina dash and clone visuals original', () => {
+  const skin = PREMIUM_SKINS['shana-astral-warden'];
+  const state = new RunState(HEROES.hina, WEAPONS.shotgun, skin);
+  const bullets = [];
+  const clones = [];
+  const scene = {
+    time: { now: 1000 }, state,
+    player: { x: 20, y: 30, scaleX: .5, frame: { name: 24 }, setVelocity() {} },
+    add: {
+      sprite(x, y, key, frame) {
+        const clone = cloneSprite(x, y);
+        clone.texture = key;
+        clone.frame = frame;
+        clone.setTint = (tint) => { clone.tint = tint; return clone; };
+        clones.push(clone);
+        return clone;
+      },
+      image() { assert.fail('weapon cosmetics must not add a clone crest'); },
+    },
+    premiumVfx: { specialVolley() { assert.fail('dash/clone must not receive weapon VFX'); } },
+    weaponAudio: { playVoice() { assert.fail('dash must not receive a cosmetic hero voice'); } },
+    combat: { spawnBullet(x, y, angle, spec) { bullets.push(spec); } },
+    nearestEnemy: () => ({ x: 50, y: 30 }),
+    flashEffect() {},
+  };
+  const system = new CharacterAbilitySystem(scene);
+  system.startDash({ moveX: -1, moveY: 0, aimX: 1, aimY: 0 });
+  assert.equal(clones[0].texture, HERO_ATLASES.hina.key);
+  assert.equal(clones[0].tint, 0xaa70ff);
+  assert.equal(clones[0].frame, 24);
+  assert.equal(system.nextDashAt, 3000);
+  const previousPhaser = globalThis.Phaser;
+  globalThis.Phaser = { Math: { Angle: { Between: () => 0 } } };
+  try {
+    scene.time.now = 1120;
+    system.updateClones(scene.time.now);
+    assert.equal(bullets.length, 1);
+    assert.equal(bullets[0].skin, skin, 'clone weapon fire retains the selected weapon skin');
+    assert.equal(bullets[0].damage, WEAPONS.shotgun.damage);
+    assert.equal(bullets[0].speed, WEAPONS.shotgun.projectileSpeed);
+    assert.equal(bullets[0].life, WEAPONS.shotgun.projectileLife);
+  } finally {
+    globalThis.Phaser = previousPhaser;
+  }
 });

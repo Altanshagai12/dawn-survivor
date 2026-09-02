@@ -34,18 +34,43 @@ Phaser runtime, starts after `Usion.init`, stores progression with
 ## Replay regression check
 
 Run `node scripts/serve-replay-test.mjs` and open `http://127.0.0.1:4174`.
-Click **Run moving-skin replay suite**. The local-only fixture exercises the real
+Click **Run weapon-skin replay suite**. The local-only fixture exercises the real
 Phaser scenes and start/replay buttons through 25 moving/firing runs: all eight
-premium skins, four original heroes, and switching back to a previously used skin.
+weapon skins, four original heroes, and switching back to a previously used skin.
+Every run asserts the original hero (weaponless variant for a skin), the selected
+weapon skin, and all 48 live animation frames; premium hero atlases never load.
 It uses a no-op platform adapter, so test results never reach the leaderboard.
 Repeat at a phone landscape viewport (for example 844 × 390). This is browser
 viewport coverage, not a substitute for a physical iOS WebView check.
+For a Mongolian phone-layout preview, open
+`http://127.0.0.1:4174/?preview&phone&lang=mn` at 390 × 724. The local fixture
+emulates the coarse-pointer media query to exercise the real automatic CSS
+rotation and carousel input path; it does not change production device detection.
 
-## Premium skin preview
+For hand-attachment visual QA, add `&pose` to that local preview URL. Choose a
+hero, gun and skin, click **Show held weapon**, then inspect all eight directions
+and six frames. The inset magnifies the actual game framebuffer, not separate
+preview art. Weaponless source sheets and generation prompts are retained in
+`assets/sprites/heroes/weaponless/source/`; import with
+`node scripts/import-weaponless-heroes.mjs`.
 
-Each hunter has one original premium cosmetic pack. A pack changes the loadout
-art, animated hero aura and movement wake, every core weapon's muzzle/projectile/
-trail/impact/reload motif, heavy weapon-specific firing reports, and hit/ability audio cues.
+## Weapon skins and loadout
+
+Heroes always use their original body, animations, hitbox, and personal ability.
+The loadout groups four heroes in a left-hand rail and four weapons in a larger
+2×2 grid. Select a weapon, then swipe its image or use its arrows/Left/Right keys
+to equip a skin. The neighboring skins remain visible in its carousel. The sound
+button auditions that weapon's firing report.
+Hero and weapon headings sit outside their groups so both bordered areas share
+the same top and bottom edges. Only names and hero HP stay visible; additional
+descriptions are tooltips, and save feedback appears only when a retry is needed.
+
+Each of the four weapons independently saves an original or one of eight premium
+styles in `equippedWeaponSkins`. Changing hero does not change weapon skins.
+On the first load of an old profile, its selected hero's old skin is carried to
+all four weapons. Once the new map exists, legacy hero selections never override it.
+The choice changes weapon art, muzzle/projectile/trail/impact/reload presentation,
+and firing audio only; hero cosmetics are no longer loaded or shown.
 All 51 upgrades feed an authored presentation recipe, including rear/fan fire,
 splinters, ricochets, piercing, summons, elemental statuses, and Tomes. The current production trial uses
 `SKIN_ACCESS_MODE = 'free-preview'`: every pack can be equipped without a wallet
@@ -55,7 +80,7 @@ preview does not grant a durable paid entitlement.
 Gameplay VFX use generated transparent 4×4 atlases rendered through the existing
 Phaser 4.2.1 WebGL pipeline. Effects are pooled and capped separately from base
 combat VFX; mobile uses lower particle and audio-polyphony budgets. Only the
-equipped atlas and its 24-file layered WAV bank are loaded for a run. Three.js is
+equipped VFX atlas, weapon image, and firing-audio bank are loaded for a run. Three.js is
 intentionally not loaded because Usion supports one game engine per service and
 mixing a second renderer would break the platform runtime contract.
 
@@ -72,6 +97,12 @@ Deploy the repository to Vercel for the settlement function and configure:
   production GitHub Pages and Vercel origins.
 
 If the Vercel project uses another domain, update `SKIN_PURCHASE_ENDPOINT` in
-`src/data/skins.js` before publishing. Current catalog prices are 240, 250, 260,
-and 270 Usions credits; they are intentionally unique so a settled stateless
-receipt cannot be replayed for another cosmetic SKU.
+`src/data/skins.js` before publishing. Catalog SKU prices are intentionally unique
+so a settled stateless receipt cannot be replayed for another cosmetic SKU.
+The new carousel is free-preview only; paid purchase UI is not exposed.
+
+The eight choices are the existing four hunters' two packs, shared across every gun
+(plus Original), not six newly authored packs per weapon. Each pack retains its own
+weapon audio and VFX artwork; animation/timing recipes remain shared.
+Weapon-art repair sources and the alpha-preserving importer are documented in
+`assets/skins/premium/weapon-sheets/README.md`.

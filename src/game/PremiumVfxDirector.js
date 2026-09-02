@@ -1,21 +1,21 @@
 import { activePresentationRecipe, upgradePresentation } from './UpgradePresentationProfiles.js?build=20260828e';
-import { skinProjectileAnchor, skinProjectileRotation } from '../data/skins.js?build=20260901e';
+import { skinProjectileAnchor, skinProjectileRotation } from '../data/skins.js?build=20260902b';
 import { PREMIUM_PROJECTILE_CORE_RATIO, syncProjectileVisualRotation } from './ProjectileGeometry.js?build=20260901e';
+import { heldWeaponMuzzle } from './SkinPresentation.js?build=20260902e';
 
 const WEAPON_FRAMES = Object.freeze({ revolver: 1, shotgun: 7, crossbow: 3, flame: 4 });
 const PROJECTILE_FRAMES = Object.freeze({ revolver: 5, shotgun: 6, crossbow: 3, flame: 4 });
 const PROJECTILE_SCALES = Object.freeze({ revolver: .19, shotgun: .1, crossbow: .33, flame: .23 });
 const TRAIL_FRAMES = Object.freeze({ revolver: 5, shotgun: 6, crossbow: 10, flame: 4 });
 const IMPACT_FRAMES = Object.freeze({ revolver: 1, shotgun: 7, crossbow: 10, flame: 4 });
-const STATUS_FRAMES = Object.freeze({ burn: 12, freeze: 13, lightning: 14, curse: 15, dash: 15 });
+const STATUS_FRAMES = Object.freeze({ burn: 12, freeze: 13, lightning: 14, curse: 15 });
 const SPECIAL_FRAMES = Object.freeze({
-  dash: 15, fan: 11, rear: 10, splinter: 7, summon: 6, clone: 15,
+  fan: 11, rear: 10, splinter: 7, summon: 6,
   ice: 13, fireball: 12, glare: 14, gale: 15, blazing: 12, shield: 14,
   scythe: 10, shatter: 13,
 });
 export const PREMIUM_PROJECTILE_RENDER_BOOST = 1.65;
 export const PREMIUM_SHOT_EFFECT_BOOST = 1.12;
-export const PREMIUM_HERO_AURA_ALPHA = Object.freeze({ back: .12, mote: .28 });
 
 export function premiumProjectileScale(size = 8, weaponId = 'revolver', powerScale = 1) {
   const base = PROJECTILE_SCALES[weaponId] ?? PROJECTILE_SCALES.revolver;
@@ -51,28 +51,7 @@ export class PremiumVfxDirector {
     this.skin = skin;
     this.pool = [];
     this.active = [];
-    this.nextMoveTrailAt = 0;
     this.cap = scene.performance?.premiumVfxCap || (scene.performance?.mobile ? 42 : 96);
-    this.aura = [];
-    if (skin && scene.textures.exists(skin.vfxKey)) this.createAura();
-  }
-
-  createAura() {
-    const back = this.scene.add.image(0, 0, this.skin.vfxKey, 0)
-      .setDepth(21).setBlendMode(Phaser.BlendModes.ADD).setAlpha(PREMIUM_HERO_AURA_ALPHA.back);
-    back.premiumBaseAlpha = PREMIUM_HERO_AURA_ALPHA.back;
-    this.aura.push(back);
-    for (let index = 0; index < 1; index += 1) {
-      const mote = this.scene.add.image(0, 0, this.skin.vfxKey, 6)
-        .setDepth(24).setBlendMode(Phaser.BlendModes.ADD).setAlpha(PREMIUM_HERO_AURA_ALPHA.mote);
-      mote.premiumBaseAlpha = PREMIUM_HERO_AURA_ALPHA.mote;
-      this.aura.push(mote);
-    }
-  }
-
-  setPlayerVisibility(multiplier = 1) {
-    const visibility = Phaser.Math.Clamp(multiplier, 0, 1);
-    this.aura.forEach((node) => node.setAlpha((node.premiumBaseAlpha ?? 1) * visibility));
   }
 
   obtain() {
@@ -119,7 +98,7 @@ export class PremiumVfxDirector {
     entry.node.setVisible(false);
   }
 
-  update(delta, input = {}) {
+  update(delta) {
     if (!this.skin) return;
     const deltaMs = delta * 1000;
     this.active.forEach((entry) => {
@@ -137,36 +116,6 @@ export class PremiumVfxDirector {
       entry.node.setAlpha(entry.startAlpha * (1 - progress));
     });
     this.active = this.active.filter((entry) => entry.active);
-    this.updateAura();
-    this.updateMovement(input);
-  }
-
-  updateAura() {
-    if (!this.aura.length || !this.scene.player?.active) return;
-    const now = this.scene.time.now;
-    const recipe = activePresentationRecipe(this.scene.state);
-    const pulse = 1 + Math.sin(now * .004) * .055;
-    const baseScale = (.22 + Math.min(.065, recipe.heroTier * .006)) * pulse;
-    const [back, ...motes] = this.aura;
-    back.setPosition(this.scene.player.x, this.scene.player.y + 5).setScale(baseScale).setRotation(now * .00025);
-    motes.forEach((mote, index) => {
-      const angle = now * .0011 + index * Math.PI * 2 / motes.length;
-      const radius = 31 + recipe.heroTier * .6;
-      mote.setPosition(this.scene.player.x + Math.cos(angle) * radius,
-        this.scene.player.y + Math.sin(angle) * radius * .7)
-        .setScale(.042 + index * .005).setRotation(angle);
-    });
-  }
-
-  updateMovement(input) {
-    if (this.scene.time.now < this.nextMoveTrailAt || Math.hypot(input.moveX || 0, input.moveY || 0) < .35) return;
-    const recipe = activePresentationRecipe(this.scene.state);
-    this.nextMoveTrailAt = this.scene.time.now + Math.max(45, (this.scene.performance?.mobile ? 110 : 72) - recipe.trailRate * 7);
-    this.emit(recipe.fire ? 12 : 6, this.scene.player.x - (input.moveX || 0) * 18,
-      this.scene.player.y - (input.moveY || 0) * 18 + 9, {
-        scale: .045 + recipe.trailRate * .004, endScale: .11, duration: 250,
-        rotation: Math.atan2(input.moveY || 0, input.moveX || 0), depth: 22,
-      });
   }
 
   projectileFrame(weaponId) { return PROJECTILE_FRAMES[weaponId] ?? 5; }
@@ -190,8 +139,9 @@ export class PremiumVfxDirector {
     const { weapon } = this.scene.state;
     const recipe = activePresentationRecipe(this.scene.state);
     const layout = premiumShotLayout(this.skin, weapon.id, angle);
-    const x = this.scene.player.x + Math.cos(angle) * layout.muzzleOffset;
-    const y = this.scene.player.y + Math.sin(angle) * layout.muzzleOffset;
+    const muzzle = heldWeaponMuzzle(this.scene, angle);
+    const x = muzzle?.x ?? this.scene.player.x + Math.cos(angle) * layout.muzzleOffset;
+    const y = muzzle?.y ?? this.scene.player.y + Math.sin(angle) * layout.muzzleOffset;
     this.emit(layout.muzzleFrame, x, y, {
       rotation: layout.muzzleRotation, depth: layout.muzzleDepth,
       scale: (weapon.id === 'shotgun' ? .09 : .15) * PREMIUM_SHOT_EFFECT_BOOST,
@@ -292,9 +242,7 @@ export class PremiumVfxDirector {
   }
 
   destroy() {
-    this.aura.forEach((node) => node.destroy());
     this.pool.forEach(({ node }) => node.destroy());
-    this.aura = [];
     this.pool = [];
     this.active = [];
   }

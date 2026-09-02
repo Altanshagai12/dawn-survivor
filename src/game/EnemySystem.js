@@ -1,7 +1,7 @@
 import { BOSS_ATLASES, ENEMY_ATLASES } from '../config/assets.js?build=20260825r';
 import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260828i';
 import { playDirectional } from './animations.js?build=20260828g';
-import { restoreHeroSkin, setHeroSkinVisibility } from './SkinPresentation.js?build=20260901f';
+import { restorePlayerTint, setWeaponSkinVisibility } from './SkinPresentation.js?build=20260902e';
 import { syncGroundShadow } from './VisualEffects.js?build=20260825r';
 
 export const PLAYER_INVULNERABILITY_MS = TEN_MINUTES_BALANCE.player.hitIFramesMs;
@@ -14,19 +14,6 @@ export const DAMAGE_SOURCE = Object.freeze({
   BARRIER: 'barrier-contact',
   UNKNOWN: 'unknown',
 });
-
-export const PREMIUM_INVULNERABILITY_ALPHA = 1;
-export const PREMIUM_INVULNERABILITY_EFFECT_ALPHA = .38;
-
-export function invulnerabilityVisualAlpha(dimmed, premium = false) {
-  if (!dimmed) return 1;
-  return premium ? PREMIUM_INVULNERABILITY_ALPHA : .28;
-}
-
-export function invulnerabilityEffectAlpha(dimmed, premium = false) {
-  if (!dimmed) return 1;
-  return premium ? PREMIUM_INVULNERABILITY_EFFECT_ALPHA : .28;
-}
 
 export class EnemySystem {
   constructor(scene) {
@@ -249,12 +236,9 @@ export class EnemySystem {
     const elapsed = Math.max(0, now - this.playerInvulnerableStartedAt);
     const dimmed = invulnerable
       && Math.floor(elapsed / PLAYER_INVULNERABILITY_BLINK_MS) % 2 === 0;
-    const premium = Boolean(this.scene.state?.skin);
-    const bodyVisibility = invulnerabilityVisualAlpha(dimmed, premium);
-    const effectVisibility = invulnerabilityEffectAlpha(dimmed, premium);
-    if (this.scene.player?.active) this.scene.player.setAlpha(bodyVisibility);
-    setHeroSkinVisibility(this.scene.skinAura, effectVisibility);
-    this.scene.premiumVfx?.setPlayerVisibility?.(effectVisibility);
+    const visibility = dimmed ? .28 : 1;
+    if (this.scene.player?.active) this.scene.player.setAlpha(visibility);
+    setWeaponSkinVisibility(this.scene.weaponSkin, visibility);
     return invulnerable;
   }
 
@@ -268,8 +252,7 @@ export class EnemySystem {
     this.playerInvulnerableUntil = now + PLAYER_INVULNERABILITY_MS;
     this.updatePlayerInvulnerability(now);
     this.scene.player.setTint(result.blocked ? 0x65e6ff : 0xffffff).setTintMode(Phaser.TintModes.FILL);
-    this.scene.time.delayedCall(110, () => restoreHeroSkin(this.scene));
-    if (!result.blocked) this.scene.weaponAudio?.playVoice('hurt', this.scene.state.skin);
+    this.scene.time.delayedCall(110, () => restorePlayerTint(this.scene));
     this.scene.cameras.main.shake(150, result.blocked ? .003 : .008);
     if (result.dead) this.scene.endRun(false);
     return true;

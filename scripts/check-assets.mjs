@@ -5,6 +5,7 @@ import {
   BOSS_ATLASES,
   ENEMY_ATLASES,
   HERO_ATLASES,
+  WEAPONLESS_HERO_ATLASES,
   STATIC_ASSETS,
   WEAPON_ART,
 } from '../src/config/assets.js';
@@ -43,6 +44,7 @@ async function assertFile(relativePath) {
 
 const atlases = [
   ...Object.values(HERO_ATLASES),
+  ...Object.values(WEAPONLESS_HERO_ATLASES),
   ...Object.values(ENEMY_ATLASES),
   ...Object.values(BOSS_ATLASES),
 ];
