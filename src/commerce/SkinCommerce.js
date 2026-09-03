@@ -1,23 +1,27 @@
 import { matchesSkinCatalog, skinPaymentDescription, skinProduct, SKIN_STORE_CATALOG } from '../data/skinProducts.js?build=20260903d';
 import { applySkinEntitlements, hasWeaponSkinAccess, setWeaponSkin } from '../data/weaponSkins.js?build=20260903d';
+import { waitForCommerceAuth } from './auth.js?build=20260903e';
 
 function failure(code, cause) { return Object.assign(new Error(code, { cause }), { code }); }
 
 export class SkinCommerce {
-  constructor({ platform, profile, fetcher = globalThis.fetch }) {
+  constructor({ platform, profile, fetcher = globalThis.fetch, authWait = waitForCommerceAuth }) {
     this.platform = platform;
     this.profile = profile;
     this.fetcher = fetcher;
+    this.authWait = authWait;
     this.ready = false;
     this.pendingOrder = null;
     this.operation = null;
     this.refreshing = null;
   }
 
-  async request(path, body) {
-    const token = this.platform.getAuthToken?.();
+  async request(path, body, refreshedToken = null) {
+    const token = refreshedToken || await this.authWait(this.platform);
     const serviceId = this.platform.config?.serviceId;
-    if (!this.platform.embedded || !token || !serviceId) throw failure('purchase-unavailable');
+    if (!this.platform.embedded || !token || !serviceId) {
+      throw failure(this.platform.embedded || this.platform.awaitingHost ? 'authentication-pending' : 'purchase-unavailable');
+    }
     // Scoped credentials are only sent to the existing Usions backend, never the old game endpoint.
     const base = 'https://mobile.mongolai.mn';
     const controller = new AbortController();
@@ -32,6 +36,13 @@ export class SkinCommerce {
       if (!response.ok) {
         const code = typeof data.detail?.code === 'string' ? data.detail.code
           : typeof data.detail === 'string' ? data.detail : 'store-unavailable';
+        // Only replay a read, only once, and only with a genuinely new token.
+        // A verified guest must sign in, not wait for a refresh indefinitely.
+        if (response.status === 401 && code !== 'LOGIN_REQUIRED' && body === undefined && !refreshedToken) {
+          clearTimeout(timeout);
+          const next = await this.authWait(this.platform, token);
+          if (next && next !== token) return this.request(path, body, next);
+        }
         throw failure(code);
       }
       return data;

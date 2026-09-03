@@ -10,6 +10,8 @@ const COPY = {
     save: 'Save', equal: 'Same price as buying the remaining weapons separately.',
     loading: 'Checking ownership…', working: 'Confirming purchase…', refresh: 'Refresh ownership',
     unavailable: 'Open this game inside Usion to buy. If already in Usion, the shop is temporarily unavailable. Previews remain free.',
+    login: 'Sign in to Usion, then reopen the game to buy. Previews remain free.',
+    connecting: 'Waiting for Usion sign-in details. Refresh ownership to try again. Previews remain free.',
     success: 'Purchase confirmed. Your weapon skin is now available.',
     pending: 'A previous purchase needs attention. Resume it before starting another purchase.',
     resume: 'Resume purchase', recover: 'Recover purchase', cancel: 'Cancel unpaid order',
@@ -27,6 +29,8 @@ const COPY = {
     save: 'Хэмнэлт', equal: 'Үлдсэн буунуудыг тусад нь авахтай ижил үнэ.',
     loading: 'Эзэмшлийг шалгаж байна…', working: 'Худалдан авалтыг баталгаажуулж байна…', refresh: 'Эзэмшлийг шинэчлэх',
     unavailable: 'Худалдан авахын тулд Usion дотроос нээнэ үү. Usion дотор байгаа бол дэлгүүр түр боломжгүй байна. Зураг, дууг үнэгүй үзэж болно.',
+    login: 'Худалдан авахын тулд Usion-д нэвтрээд тоглоомоо дахин нээнэ үү. Зураг, дууг үнэгүй үзэж болно.',
+    connecting: 'Usion-оос нэвтрэлтийн мэдээлэл хүлээж байна. Эзэмшлийг шинэчлэх дээр дарж дахин шалгана уу.',
     success: 'Худалдан авалт баталгаажлаа. Бууны skin ашиглах боломжтой боллоо.',
     pending: 'Өмнөх худалдан авалт дуусаагүй байна. Шинэ худалдан авалтаас өмнө үргэлжлүүлнэ үү.',
     resume: 'Худалдан авалтыг үргэлжлүүлэх', recover: 'Худалдан авалтыг сэргээх', cancel: 'Төлөөгүй захиалгыг цуцлах',
@@ -227,6 +231,8 @@ export class WeaponPurchaseModal {
   }
   errorText(error) {
     const code = String(error?.code || error?.message || '').toLowerCase().replaceAll('_', '-');
+    if (code === 'login-required') return this.copy.login;
+    if (code === 'authentication-pending') return this.copy.connecting;
     if (code.includes('unavailable')) return this.copy.unavailable;
     if (code.includes('refunded')) return this.copy.refunded;
     if (code.includes('cancelled') || code === 'cancelled') return this.copy.cancelled;

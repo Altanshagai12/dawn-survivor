@@ -57,6 +57,6 @@ export function commerceFixture() {
     throw new Error(`Unknown fixture endpoint ${url}`);
   };
   const profile = normalizeWeaponSkinProfile({});
-  const commerce = new SkinCommerce({ platform, profile, fetcher });
+  const commerce = new SkinCommerce({ platform, profile, fetcher, authWait: async (p) => p.getAuthToken() });
   return { state, platform, profile, fetcher, commerce };
 }

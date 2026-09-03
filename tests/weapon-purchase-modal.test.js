@@ -11,6 +11,15 @@ const skin = Object.values(PREMIUM_SKINS)[0];
 const grant = (id, selected = skin) => `weapon:${id}:${selected.id}`;
 const deferred = () => { let resolve, reject; const promise = new Promise((yes, no) => { resolve = yes; reject = no; }); return { promise, resolve, reject }; };
 
+test('login-required and pending credentials are not mislabeled as a store outage', (t) => {
+  for (const lang of ['en', 'mn']) {
+    const { modal } = setup(t, { lang });
+    assert.equal(modal.errorText({ code: 'LOGIN_REQUIRED' }), modal.copy.login);
+    assert.equal(modal.errorText({ code: 'authentication-pending' }), modal.copy.connecting);
+    assert.notEqual(modal.copy.login, modal.copy.unavailable);
+  }
+});
+
 function fakeDocument() {
   const doc = { activeElement: null, listeners: new Map() };
   function element(tag = 'div') {
