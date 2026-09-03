@@ -1,8 +1,10 @@
 import { activePresentationRecipe, upgradePresentation } from './UpgradePresentationProfiles.js?build=20260828e';
 import { skinProjectileAnchor, skinProjectileRotation } from '../data/skins.js?build=20260902b';
-import { projectileCollisionRadius, syncProjectileVisualRotation } from './ProjectileGeometry.js?build=20260903b';
-import { skinProjectileEnvelope } from '../data/skinProjectileBounds.js?build=20260903b';
+import { syncProjectileVisualRotation } from './ProjectileGeometry.js?build=20260903c';
+import { premiumProjectileScale, premiumProjectileCoreScale } from './PremiumProjectileSizing.js?build=20260903c';
 import { heldWeaponMuzzle } from './SkinPresentation.js?build=20260902e';
+
+export { premiumProjectileScale, premiumProjectileCoreScale };
 
 const WEAPON_FRAMES = Object.freeze({ revolver: 1, shotgun: 7, crossbow: 3, flame: 4 });
 const PROJECTILE_FRAMES = Object.freeze({ revolver: 5, shotgun: 6, crossbow: 3, flame: 4 });
@@ -13,10 +15,6 @@ const SPECIAL_FRAMES = Object.freeze({
   ice: 13, fireball: 12, glare: 14, gale: 15, blazing: 12, shield: 14,
   scythe: 10, shatter: 13,
 });
-
-export function premiumProjectileScale(size = 8, weaponId = 'revolver', skin = null) {
-  return projectileCollisionRadius(size) / skinProjectileEnvelope(skin, weaponId);
-}
 
 export function premiumShotLayout(weaponId = 'revolver', trajectoryAngle = 0) {
   const shotgun = weaponId === 'shotgun';
@@ -37,6 +35,9 @@ export class PremiumVfxDirector {
     this.pool = [];
     this.active = [];
     this.cap = scene.performance?.premiumVfxCap || (scene.performance?.mobile ? 42 : 96);
+    // Arcade Body.postUpdate writes the final sprite transform after Scene.update.
+    // Follow it here so fast projectiles never outrun their decorative layer.
+    scene.events?.on('postupdate', this.syncFollowers, this);
   }
 
   obtain() {
@@ -69,6 +70,13 @@ export class PremiumVfxDirector {
     entry.vy = options.vy || 0;
     entry.spin = options.spin || 0;
     entry.priority = options.priority || 0;
+    entry.follow = options.follow || null;
+    if (entry.follow) {
+      const owner = entry.follow;
+      owner.once?.('destroy', () => {
+        if (entry.follow === owner) this.release(entry);
+      });
+    }
     entry.node.setTexture(this.skin.vfxKey, frame).setPosition(x, y)
       .setOrigin(options.originX ?? .5, options.originY ?? .5)
       .setDepth(options.depth ?? 37).setRotation(options.rotation || 0)
@@ -80,7 +88,16 @@ export class PremiumVfxDirector {
 
   release(entry) {
     entry.active = false;
+    entry.follow = null;
     entry.node.setVisible(false);
+  }
+
+  syncFollowers() {
+    this.active.forEach((entry) => {
+      if (!entry.active || !entry.follow) return;
+      if (!entry.follow.active) { this.release(entry); return; }
+      entry.node.setPosition(entry.follow.x, entry.follow.y).setRotation(entry.follow.rotation);
+    });
   }
 
   update(delta) {
@@ -88,6 +105,10 @@ export class PremiumVfxDirector {
     const deltaMs = delta * 1000;
     this.active.forEach((entry) => {
       if (!entry.active) return;
+      if (entry.follow) {
+        if (!entry.follow.active) { this.release(entry); return; }
+        return;
+      }
       entry.age += deltaMs;
       if (entry.age >= entry.duration) { this.release(entry); return; }
       const progress = easeOut(entry.age / entry.duration);
@@ -107,31 +128,42 @@ export class PremiumVfxDirector {
 
   styleProjectile(bullet, size, weaponId) {
     if (!bullet?.skin || !this.skin || !weaponId) return;
-    const scale = premiumProjectileScale(size, weaponId, bullet.skin);
+    const scale = premiumProjectileCoreScale(size, weaponId, bullet.skin);
     const anchor = skinProjectileAnchor(this.skin, weaponId);
     bullet.setTexture(this.skin.vfxKey, this.projectileFrame(weaponId))
       .setOrigin(anchor.x, anchor.y)
       .setScale(scale)
       .setBlendMode(Phaser.BlendModes.ADD);
     bullet.premiumVfxScale = scale;
+    bullet.premiumVfxSize = size;
     bullet.visualRotationOffset = skinProjectileRotation(this.skin, weaponId);
     syncProjectileVisualRotation(bullet, bullet.trajectoryAngle || 0);
+    const power = activePresentationRecipe(this.scene.state).powerScale;
+    bullet.premiumAuraScale = premiumProjectileScale(size, weaponId, bullet.skin, power);
+    // The full-bright core is guaranteed to hit. Larger, softer ornamentation
+    // restores skin identity without making its glow a separate damage body.
+    this.emit(this.projectileFrame(weaponId), bullet.x, bullet.y, {
+      follow: bullet, rotation: bullet.rotation, originX: anchor.x, originY: anchor.y,
+      scale: bullet.premiumAuraScale, endScale: bullet.premiumAuraScale,
+      alpha: .38, depth: 29, priority: 1,
+    });
   }
 
   shot(angle, authoredAngles = []) {
     const { weapon } = this.scene.state;
     const recipe = activePresentationRecipe(this.scene.state);
     const size = weapon.bulletSize * this.scene.state.multiplierStats.bulletSize;
-    const radius = projectileCollisionRadius(size);
-    const coreScale = premiumProjectileScale(size, weapon.id, this.skin);
+    const tightRadius = size / 2;
+    const coreScale = premiumProjectileCoreScale(size, weapon.id, this.skin);
     const layout = premiumShotLayout(weapon.id, angle);
     const muzzle = heldWeaponMuzzle(this.scene, angle);
     const x = muzzle?.x ?? this.scene.player.x + Math.cos(angle) * layout.muzzleOffset;
     const y = muzzle?.y ?? this.scene.player.y + Math.sin(angle) * layout.muzzleOffset;
     this.emit(layout.muzzleFrame, x, y, {
       rotation: layout.muzzleRotation, depth: layout.muzzleDepth,
-      scale: radius / 80, endScale: radius / 56,
-      duration: 90, alpha: .55, priority: 3,
+      scale: ((weapon.id === 'shotgun' ? .09 : .15) * 1.12 + tightRadius / 80) / 2,
+      endScale: (.28 * 1.12 + tightRadius / 56) / 2,
+      duration: weapon.id === 'flame' ? 165 : 123, alpha: .7, priority: 3,
     });
     const tracerAngles = authoredAngles.length ? authoredAngles : [angle];
     tracerAngles.forEach((shotAngle) => {
@@ -150,7 +182,7 @@ export class PremiumVfxDirector {
     if (recipe.powerScale > 1.1) {
       this.emit(layout.muzzleFrame, x, y, {
         rotation: layout.muzzleRotation, depth: layout.muzzleDepth,
-        scale: radius / 100, endScale: radius / 72, duration: 80, alpha: .3,
+        scale: tightRadius / 100, endScale: tightRadius / 72, duration: 80, alpha: .3,
       });
     }
   }
@@ -167,16 +199,18 @@ export class PremiumVfxDirector {
     this.emit(this.projectileFrame(bullet.weaponId),
       bullet.x - Math.cos(angle) * offset, bullet.y - Math.sin(angle) * offset, {
         rotation: bullet.rotation, originX: anchor.x, originY: anchor.y,
-        scale: bullet.premiumVfxScale * .65, endScale: bullet.premiumVfxScale * .1,
-        duration: 95, alpha: .3, depth: 29,
+        scale: (bullet.premiumAuraScale || bullet.premiumVfxScale) * .65,
+        endScale: bullet.premiumVfxScale * .1, duration: 95, alpha: .2, depth: 29,
       });
   }
 
   impact(bullet, x, y) {
     const recipe = activePresentationRecipe(this.scene.state);
-    const radius = bullet?.collisionRadius || projectileCollisionRadius(this.scene.state.weapon.bulletSize);
+    const tightRadius = (bullet?.premiumVfxSize || this.scene.state.weapon.bulletSize) / 2;
     this.emit(IMPACT_FRAMES[bullet?.weaponId] ?? 7, x, y, {
-      scale: radius / 80, endScale: radius / 48, duration: 135, alpha: .65, priority: 2,
+      scale: (.1 * recipe.powerScale * 1.12 + tightRadius / 80) / 2,
+      endScale: (.3 * recipe.powerScale * 1.12 + tightRadius / 48) / 2,
+      duration: 185, alpha: .78, priority: 2,
     });
     if (bullet?.burnChance || recipe.fire) this.status('burn', x, y, .08);
     if (bullet?.freezeChance || recipe.frost) this.status('freeze', x, y, .075);
@@ -227,7 +261,8 @@ export class PremiumVfxDirector {
   }
 
   destroy() {
-    this.pool.forEach(({ node }) => node.destroy());
+    this.scene.events?.off('postupdate', this.syncFollowers, this);
+    this.pool.forEach((entry) => { this.release(entry); entry.node.destroy(); });
     this.pool = [];
     this.active = [];
   }

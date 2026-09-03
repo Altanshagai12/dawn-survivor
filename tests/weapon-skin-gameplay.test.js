@@ -6,7 +6,7 @@ import { PREMIUM_SKINS, skinProjectileAnchor, skinProjectileRotation } from '../
 import { WEAPONS } from '../src/data/weapons.js';
 import { RunState } from '../src/game/RunState.js';
 import { PLAYER_DISPLAY_HEIGHT, playerHitboxGeometry } from '../src/game/PlayerHitbox.js';
-import { PremiumVfxDirector, premiumProjectileScale } from '../src/game/PremiumVfxDirector.js';
+import { PremiumVfxDirector, premiumProjectileScale, premiumProjectileCoreScale } from '../src/game/PremiumVfxDirector.js';
 import { restorePlayerTint, syncWeaponSkin } from '../src/game/SkinPresentation.js';
 
 globalThis.Phaser = {
@@ -176,23 +176,34 @@ test('weapon skins retain projectile, muzzle, impact, trail and reload VFX witho
     const bullet = Object.assign(node(), { skin, weaponId: weapon.id, damage: 17, trajectoryAngle: .47 });
     director.styleProjectile(bullet, weapon.bulletSize, weapon.id);
     assert.equal(bullet.texture.key, skin.vfxKey);
-    assert.equal(bullet.scaleX, premiumProjectileScale(weapon.bulletSize, weapon.id, skin));
+    assert.equal(bullet.scaleX, premiumProjectileCoreScale(weapon.bulletSize, weapon.id, skin));
+    assert.equal(bullet.premiumAuraScale, premiumProjectileScale(weapon.bulletSize, weapon.id, skin));
+    const aura = director.active.find((entry) => entry.follow === bullet);
+    assert.equal(aura.node.scaleX, bullet.premiumAuraScale);
+    assert.ok(aura.node.alpha < .5, 'cosmetic outer energy stays softer than the opaque hit core');
     assert.equal(bullet.rotation, .47 + skinProjectileRotation(skin, weapon.id));
     assert.equal(bullet.originX, skinProjectileAnchor(skin, weapon.id).x);
     assert.equal(bullet.damage, 17);
     director.shot(.47);
     assert.ok(director.active.length >= 2, 'muzzle and tracer are preserved');
+    const muzzle = director.active.find(({ priority }) => priority === 3);
+    const tightRadius = weapon.bulletSize / 2;
+    assert.equal(muzzle.startScaleX, ((weapon.id === 'shotgun' ? .09 : .15) * 1.12 + tightRadius / 80) / 2);
+    assert.equal(muzzle.endScaleX, (.28 * 1.12 + tightRadius / 56) / 2);
     let count = director.active.length;
     director.trail(bullet);
     assert.ok(director.active.length > count);
     count = director.active.length;
     director.impact(bullet, 25, 30);
     assert.ok(director.active.length > count);
+    assert.equal(director.active[count].startScaleX, (.1 * 1.12 + tightRadius / 80) / 2);
+    assert.equal(director.active[count].endScaleX, (.3 * 1.12 + tightRadius / 48) / 2);
     count = director.active.length;
     director.reload('start');
     director.reload('complete');
     assert.equal(director.active.length, count + 2);
     assert.ok(images.every(({ texture }) => texture.key === skin.vfxKey));
+    bullet.active = false;
     director.update(1);
     assert.equal(director.active.length, 0);
     assert.ok(images.every(({ visible }) => !visible));

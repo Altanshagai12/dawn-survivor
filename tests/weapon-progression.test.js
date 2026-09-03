@@ -3,7 +3,7 @@ import test from 'node:test';
 import { projectileTravelDistance, WEAPONS } from '../src/data/weapons.js';
 import { UPGRADES } from '../src/data/upgrades.js';
 import {
-  CombatSystem, PROJECTILE_RENDER_MULTIPLIER, projectileBodyGeometry, projectileBodyRadius,
+  CombatSystem, PROJECTILE_RENDER_MULTIPLIER, PROJECTILE_HIT_RADIUS_MULTIPLIER, projectileBodyGeometry, projectileBodyRadius,
   projectileCollisionRadius, projectileScale, syncProjectileVisualRotation, usesSweptProjectileCollision,
   visibleProjectileCollisionRadius,
 } from '../src/game/CombatSystem.js';
@@ -39,19 +39,21 @@ test('weapons preserve their authored near-to-far projectile travel roles', () =
 test('Big Shot enlarges both projectile rendering and its collision footprint', () => {
   const bigShotSize = WEAPONS.revolver.bulletSize * 1.4;
   assert.ok(Math.abs(projectileScale(bigShotSize) - 2.66) < 1e-9);
-  assert.ok(Math.abs(projectileCollisionRadius(bigShotSize) - 5.6) < 1e-9);
+  assert.ok(Math.abs(projectileCollisionRadius(bigShotSize) - 7) < 1e-9);
 });
 
 test('projectile physics ignores skin art size, origin and cosmetic power multipliers', () => {
   assert.equal(PROJECTILE_RENDER_MULTIPLIER, 1.9);
+  assert.equal(PROJECTILE_HIT_RADIUS_MULTIPLIER, 1.25);
   assert.equal(projectileScale(WEAPONS.revolver.bulletSize), 1.9);
-  assert.equal(projectileCollisionRadius(WEAPONS.revolver.bulletSize), 4);
+  assert.deepEqual(Object.values(WEAPONS).map(({ bulletSize }) => projectileCollisionRadius(bulletSize)),
+    [5, 3.75, 5.625, 8.125]);
   for (const weapon of Object.values(WEAPONS)) for (const multiplier of [.45, 1, 1.4, 2.8]) {
     const size = weapon.bulletSize * multiplier;
     const scale = premiumProjectileScale(size, weapon.id);
-    assert.equal(visibleProjectileCollisionRadius(size, scale, 256, 256, .3), size / 2);
+    assert.equal(visibleProjectileCollisionRadius(size, scale, 256, 256, .3), size / 2 * 1.25);
     assert.equal(projectileBodyGeometry({ size, renderScale: scale * 10, frameWidth: 256,
-      frameHeight: 256, originX: .3, originY: .7, visualCoreRatio: 1 }).worldRadius, size / 2);
+      frameHeight: 256, originX: .3, originY: .7, visualCoreRatio: 1 }).worldRadius, size / 2 * 1.25);
   }
 });
 
@@ -68,7 +70,7 @@ test('projectile body is centered on its visible anchor at every render scale', 
   });
   assert.equal((body.offsetX + body.localRadius) * .4, 256 * .6 * .4);
   assert.equal((body.offsetY + body.localRadius) * .4, 256 * .45 * .4);
-  assert.equal(body.worldRadius, 4);
+  assert.equal(body.worldRadius, 5);
 });
 
 test('every authored weapon projectile uses swept collision on slow frames', () => {

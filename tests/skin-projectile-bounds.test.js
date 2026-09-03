@@ -5,9 +5,9 @@ import sharp from 'sharp';
 import { PREMIUM_SKINS, skinProjectileAnchor } from '../src/data/skins.js';
 import { WEAPONS } from '../src/data/weapons.js';
 import { skinProjectileEnvelope } from '../src/data/skinProjectileBounds.js';
-import { premiumProjectileScale } from '../src/game/PremiumVfxDirector.js';
+import { premiumProjectileCoreScale, premiumProjectileScale } from '../src/game/PremiumVfxDirector.js';
 
-test('all 32 skin projectile pixel envelopes fit the original hit radius, including size upgrades', async () => {
+test('all 32 opaque skin projectile cores fit the shared 25% larger hit radius, including size upgrades', async () => {
   const frames = { revolver: 5, shotgun: 6, crossbow: 3, flame: 4 };
   for (const skin of Object.values(PREMIUM_SKINS)) {
     const path = fileURLToPath(new URL(`../${skin.vfxAtlas.split('?')[0]}`, import.meta.url));
@@ -27,10 +27,31 @@ test('all 32 skin projectile pixel envelopes fit the original hit radius, includ
       assert.equal(skinProjectileEnvelope(skin, weapon.id), Math.ceil(envelope), `${skin.id}/${weapon.id} stored envelope matches pixels`);
       for (const sizeMultiplier of [.45, 1, 1.4, 2.8]) {
         const size = weapon.bulletSize * sizeMultiplier;
-        const scale = premiumProjectileScale(size, weapon.id, skin);
-        assert.ok(envelope * scale <= size / 2, 'visible projectile cannot overpromise its damage radius');
-        assert.ok(envelope * scale > size / 2 * .98, 'art is fitted, not arbitrarily miniaturized');
+        const scale = premiumProjectileCoreScale(size, weapon.id, skin);
+        const radius = size / 2 * 1.25;
+        assert.ok(envelope * scale <= radius, 'opaque core cannot overpromise its damage radius');
+        assert.ok(envelope * scale > radius * .98, 'opaque core is fitted to the shared hitbox');
       }
+    }
+  }
+});
+
+test('all 32 outer skin effects are the exact midpoint between pre-parity and tight sizes', () => {
+  // Frozen release references: fb2dc15 (large) and 19a7bed (tight).
+  // Do not derive the tight reference from the newly increased collision radius.
+  const legacyBase = { revolver: .19, shotgun: .1, crossbow: .33, flame: .23 };
+  for (const skin of Object.values(PREMIUM_SKINS)) for (const weapon of Object.values(WEAPONS)) {
+    for (const sizeMultiplier of [.45, 1, 1.4, 2.8]) for (const powerScale of [1, 1.72]) {
+      const size = weapon.bulletSize * sizeMultiplier;
+      const oldScale = legacyBase[weapon.id] * Math.max(.72, size / 8) * 1.65 * powerScale;
+      const tightScale = size / (2 * skinProjectileEnvelope(skin, weapon.id));
+      const expected = (oldScale + tightScale) / 2;
+      const actual = premiumProjectileScale(size, weapon.id, skin, powerScale);
+      assert.ok(Math.abs(actual - expected) < 1e-12,
+        `${skin.id}/${weapon.id}/${sizeMultiplier}/${powerScale}: exact arithmetic midpoint`);
+      assert.ok(actual > tightScale && actual < oldScale, 'midpoint preserves recognizable skin art');
+      assert.ok(premiumProjectileCoreScale(size, weapon.id, skin) < actual,
+        'outer energy stays distinct from the fitted, opaque hit core');
     }
   }
 });

@@ -7,13 +7,13 @@ import { presentWeaponImpact, updateProjectilePresentation } from './WeaponPrese
 import { syncWeaponSkin } from './SkinPresentation.js?build=20260902e';
 import { skinProjectileTint } from '../data/skins.js?build=20260901e';
 import {
-  PROJECTILE_RENDER_MULTIPLIER, projectileBodyGeometry, projectileBodyRadius,
+  PROJECTILE_RENDER_MULTIPLIER, PROJECTILE_HIT_RADIUS_MULTIPLIER, projectileBodyGeometry, projectileBodyRadius,
   projectileCollisionRadius, projectileScale, syncProjectileVisualRotation, usesSweptProjectileCollision,
   visibleProjectileCollisionRadius,
-} from './ProjectileGeometry.js?build=20260903b';
+} from './ProjectileGeometry.js?build=20260903c';
 
 export {
-  PROJECTILE_RENDER_MULTIPLIER, projectileBodyGeometry, projectileBodyRadius,
+  PROJECTILE_RENDER_MULTIPLIER, PROJECTILE_HIT_RADIUS_MULTIPLIER, projectileBodyGeometry, projectileBodyRadius,
   projectileCollisionRadius, projectileScale, syncProjectileVisualRotation, usesSweptProjectileCollision,
   visibleProjectileCollisionRadius,
 };

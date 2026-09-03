@@ -48,6 +48,10 @@ export function installWeaponPosePreview({ game, ui, heroes, weapons, skins }) {
   document.body.append(zoom);
   const context = zoom.getContext('2d');
   game.events.on('postrender', () => {
+    const scene = game.scene.getScene('game');
+    const followers = scene.premiumVfx?.active.filter((entry) => entry.active && entry.follow?.active) || [];
+    panel.dataset.maxAuraOffset = String(Math.max(0, ...followers.map(({ node, follow }) => Math.hypot(node.x - follow.x, node.y - follow.y))));
+    panel.dataset.liveAuras = String(followers.length);
     const source = game.canvas;
     const ratio = source.width / game.scale.width;
     const width = 144 * ratio, height = 120 * ratio;
@@ -92,7 +96,8 @@ export function installWeaponPosePreview({ game, ui, heroes, weapons, skins }) {
       if (bounds.checked) {
         scene.add.graphics().lineStyle(.5, 0x65ffba, .9).strokeCircle(bullet.body.center.x, bullet.body.center.y, actual).setDepth(90);
       }
-      return `${bullet.weaponId}: hit r=${actual.toFixed(2)}${visible == null ? '' : `, art r=${visible.toFixed(2)}`}`;
+      const aura = bullet.skin ? skinProjectileEnvelope(bullet.skin, bullet.weaponId) * (bullet.premiumAuraScale || 0) : null;
+      return `${bullet.weaponId}: hit r=${actual.toFixed(2)}${visible == null ? '' : `, core r=${visible.toFixed(2)}, glow r=${aura.toFixed(2)}`}`;
     }).join(' | ') || 'No active projectiles';
     fire.disabled = false;
   };

@@ -50,7 +50,8 @@ rotation and carousel input path; it does not change production device detection
 For hand-attachment visual QA, add `&pose` to that local preview URL. Choose a
 hero, gun and skin, click **Show held weapon**, then inspect all eight directions
 and six frames. Choose **Big Shot** and **Hitboxes** to compare the measured
-projectile art and physics radius with and without a skin. The inset magnifies
+the opaque core, softer outer glow and physics radius with and without a skin.
+The fixture also measures aura/core alignment at postrender. The inset magnifies
 the actual game framebuffer, not separate preview art. Weaponless source sheets and generation prompts are retained in
 `assets/sprites/heroes/weaponless/source/`; import with
 `node scripts/import-weaponless-heroes.mjs`.
@@ -76,9 +77,14 @@ and firing audio only; hero cosmetics are no longer loaded or shown.
 Skin and original shots share damage, velocity, lifetime, spread, count, and
 collision radius. Front shots use the original 26-unit launch offset per pellet,
 rear shots 22; cosmetic hand/barrel poses never change the ballistic path.
-Each skin's measured visible projectile envelope is fitted inside the original
-hit radius, including Big Shot and Magic Lens builds. Muzzle flashes remain
-attached to the held gun but cannot add reach or damage.
+All projectile hit radii are now 1.25 times the original size/2 for equal aim
+forgiveness (base revolver/shotgun/crossbow/flame radii: 5/3.75/5.625/8.125).
+Each skin's opaque projectile core fits inside that shared hit circle, including
+Big Shot and Magic Lens builds. Its softer outer energy is the exact arithmetic
+midpoint of the pre-parity fb2dc15 and tight 19a7bed art scales; this layer follows
+the real projectile and vanishes on impact/expiry, never adding damage or reach.
+Muzzle and impact sizes also split the two released scales. Faint trails are
+decorative; muzzle flashes stay attached to the held gun.
 All 51 upgrades feed an authored presentation recipe, including rear/fan fire,
 splinters, ricochets, piercing, summons, elemental statuses, and Tomes. The current production trial uses
 `SKIN_ACCESS_MODE = 'free-preview'`: every pack can be equipped without a wallet

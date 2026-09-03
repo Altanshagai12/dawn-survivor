@@ -1,11 +1,13 @@
 export const PROJECTILE_RENDER_MULTIPLIER = 1.9;
+// Shared aim forgiveness, never a cosmetic-specific advantage.
+export const PROJECTILE_HIT_RADIUS_MULTIPLIER = 1.25;
 
 export function projectileScale(size = 7) {
   return size / 8 * PROJECTILE_RENDER_MULTIPLIER;
 }
 
 export function projectileCollisionRadius(size = 7) {
-  return size / 2;
+  return size / 2 * PROJECTILE_HIT_RADIUS_MULTIPLIER;
 }
 
 export function usesSweptProjectileCollision(weaponId) {

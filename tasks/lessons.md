@@ -1,6 +1,8 @@
 # Lessons
 
-- Cosmetic parity requires actual spawn/collision tests, not just equal weapon stats. All skins must share the original projectile origin, velocity, lifetime, radius and hit results; never derive physics from art dimensions or a held gun's muzzle. Fit each skin's measured visible pixel envelope into the canonical collider and keep upgrade/lens presentation multipliers from enlarging it.
+- Cosmetic parity requires actual spawn/collision tests, not just equal weapon stats. All skins must share the projectile origin, velocity, lifetime, radius and hit results; never derive physics from art dimensions or a held gun's muzzle. Fit the full-bright core into the shared collider. A deliberately softer outer cosmetic layer can restore readable skin identity without changing collision, and any requested hit-radius rebalance must apply equally to unskinned bullets.
+- Fitting an entire ornate projectile (including its decorative glow) into a small hitbox destroys skin readability on phones. Compare historical and current rendered sizes numerically; when restoring a requested midpoint, freeze both reference scales and separate the bright damaging core from softer outer VFX. Verify gameplay parity and phone-scale visual value together.
+- A visual sprite attached to a physics projectile must follow after Arcade's postUpdate writes the final Game Object position, not just during Scene.update. Assert zero core/effect offset at postrender and tear down both follow listeners and pooled ownership on replay.
 
 - Removing surplus loadout copy must not remove information needed to choose a hero. Keep each ability and its trigger visible on every card in both languages; hover-only tooltips are inaccessible on touch screens. Verify short landscape and CSS-rotated layouts without shrinking essential copy into unreadable stat text.
 

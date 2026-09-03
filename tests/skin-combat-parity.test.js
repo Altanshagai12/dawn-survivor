@@ -144,12 +144,12 @@ test('real spawned skin bullets match original physics across every hero, gun, d
   }
 });
 
-test('original authored radii and origin distances remain the authority, independent of cosmetics', () => {
+test('shared 25% larger radii and original origin distances remain independent of cosmetics', () => {
   for (const weapon of Object.values(WEAPONS)) for (const skin of [null, ...Object.values(PREMIUM_SKINS)]) {
     for (const mode of ['normal', 'upgraded']) {
       const scene = sceneFor('hina', weapon.id, skin, -.83, mode);
       fire(scene, -.83);
-      const expectedRadius = weapon.bulletSize * (mode === 'normal' ? 1 : 1.4) / 2;
+      const expectedRadius = weapon.bulletSize * (mode === 'normal' ? 1 : 1.4) / 2 * 1.25;
       for (const bullet of scene.created) {
         near(bullet.collisionRadius, expectedRadius);
         near(bullet.body.radius * bullet.scaleX, expectedRadius);
@@ -175,7 +175,7 @@ test('explicitly unskinned and weaponless summon bullets cannot inherit premium 
         const scene = sceneFor('hina', weapon.id, skin, .7);
         const actual = scene.combat.spawnBullet(55, -81, .7, spec);
         assert.deepEqual(physicsSnapshot(actual), physicsSnapshot(original), `${skin.id}/${weapon.id}/${variant.sourceType}`);
-        near(actual.collisionRadius, spec.size / 2);
+        near(actual.collisionRadius, spec.size / 2 * 1.25);
         if (!variant.weaponId || variant.skin === null) {
           assert.equal(actual.texture.key, variant.texture);
           near(actual.scaleX, original.scaleX);
@@ -206,7 +206,7 @@ function collisionRun(heroId, weapon, skin, angle, upgraded) {
   const scene = sceneFor(heroId, weapon.id, skin, angle, upgraded ? 'upgraded' : 'normal');
   // Isolate the real launch/travel collision from optional ricochet and random statuses.
   scene.state.flags = {}; scene.state.mods = {};
-  const size = weapon.bulletSize * (upgraded ? 1.4 : 1), radius = size / 2;
+  const size = weapon.bulletSize * (upgraded ? 1.4 : 1), oldRadius = size / 2, radius = oldRadius * 1.25;
   const speed = weapon.projectileSpeed * (upgraded ? 1.2 : 1), range = speed * weapon.projectileLife;
   const targetRadius = 5;
   function target(id, forward, side) {
@@ -219,6 +219,7 @@ function collisionRun(heroId, weapon, skin, angle, upgraded) {
   }
   target('near', 12, 0);
   target('edge-hit', 70, targetRadius + radius - .001);
+  target('new-forgiveness-hit', 95, targetRadius + (oldRadius + radius) / 2);
   target('edge-miss', 110, targetRadius + radius + .001);
   target('range-hit', 26 + range - 1, 0);
   target('beyond-range', 26 + range + targetRadius + radius + .01, 0);
@@ -240,12 +241,25 @@ test('real launch and travel sweeps have identical close, edge, miss and maximum
     for (const angle of [-2.4, -.17, 1.8]) for (const upgraded of [false, true]) {
       const original = collisionRun(heroId, weapon, null, angle, upgraded);
       assert.equal(original.nearHp, 10000 - weapon.damage, 'near target must be hit during launch sweep');
-      assert.deepEqual(original.hp.map(([, hp]) => hp < 10000), [true, true, false, true, false]);
+      assert.deepEqual(original.hp.map(([, hp]) => hp < 10000), [true, true, true, false, true, false]);
       assert.equal(original.active, false, 'bullet must expire at the same authored lifetime');
       for (const skin of Object.values(PREMIUM_SKINS)) {
         assert.deepEqual(collisionRun(heroId, weapon, skin, angle, upgraded), original,
           `${heroId}/${weapon.id}/${skin.id}/${angle}/${upgraded}`);
       }
+    }
+  }
+});
+
+test('the added 25% edge forgiveness hits equally with or without skins without widening beyond its boundary', () => {
+  for (const weapon of Object.values(WEAPONS)) for (const skin of [null, ...Object.values(PREMIUM_SKINS)]) {
+    for (const upgraded of [false, true]) {
+      const result = collisionRun('hina', weapon, skin, .73, upgraded);
+      const hp = Object.fromEntries(result.hp);
+      assert.equal(hp['new-forgiveness-hit'], 10000 - weapon.damage,
+        `${weapon.id}/${skin?.id || 'base'}: target outside the old edge but inside the new edge must hit`);
+      assert.equal(hp['edge-miss'], 10000, 'a target just outside the new edge must still miss');
+      assert.equal(hp['beyond-range'], 10000, 'shared hitbox tuning must not extend projectile travel');
     }
   }
 });
