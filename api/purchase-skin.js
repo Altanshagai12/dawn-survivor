@@ -3,6 +3,15 @@ import { PREMIUM_SKINS, SKIN_CATALOG_VERSION } from '../src/data/skins.js';
 const DEFAULT_USION_API = 'https://mobile.mongolai.mn';
 const DEFAULT_ORIGINS = ['https://altanshagai12.github.io', 'https://dawn-survivor.vercel.app'];
 
+// Preserve the old pack receipt/refund contract independently of the new 500/1000
+// weapon store. New purchases exclusively use platform orders, never this API.
+const LEGACY_PACK_PRICES = Object.freeze({
+  'shana-astral-warden': 240, 'diamond-bloodmoon-regent': 250,
+  'scarlett-sunforge-phoenix': 260, 'hina-void-lotus': 270,
+  'shana-celestial-dragon-sovereign': 520, 'diamond-obsidian-eclipse-valkyrie': 540,
+  'scarlett-prismatic-tempest-seraph': 560, 'hina-nine-tail-chrono-kitsune': 580,
+});
+
 function json(res, status, body) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -53,14 +62,14 @@ export async function settleSkinPurchase({ skinId, receiptToken }, fetcher = fet
   const serviceId = process.env.USION_SERVICE_ID;
   const claims = decodeReceiptClaims(receiptToken);
   if (!skin || !serviceId || !claims) return { status: 400, body: { ok: false, error: 'invalid-purchase' } };
-  if (claims.sid !== serviceId || Number(claims.amt) !== skin.priceCredits) {
+  if (claims.sid !== serviceId || Number(claims.amt) !== LEGACY_PACK_PRICES[skinId]) {
     return { status: 400, body: { ok: false, error: 'receipt-mismatch' } };
   }
 
   const verified = await callReceiptApi('verify-pending', {
     receipt_token: receiptToken,
     expected_service_id: serviceId,
-    expected_amount: skin.priceCredits,
+    expected_amount: LEGACY_PACK_PRICES[skinId],
   }, fetcher);
   if (!verified.ok && verified.status !== 409) {
     return { status: 402, body: { ok: false, error: 'receipt-invalid' } };
@@ -84,7 +93,7 @@ export async function refundSkinPurchase({ skinId, receiptToken }, fetcher = fet
   const serviceId = process.env.USION_SERVICE_ID;
   const claims = decodeReceiptClaims(receiptToken);
   if (!skin || !serviceId || !claims) return { status: 400, body: { ok: false, error: 'invalid-purchase' } };
-  if (claims.sid !== serviceId || Number(claims.amt) !== skin.priceCredits) {
+  if (claims.sid !== serviceId || Number(claims.amt) !== LEGACY_PACK_PRICES[skinId]) {
     return { status: 400, body: { ok: false, error: 'receipt-mismatch' } };
   }
   const refunded = await callReceiptApi('refund', { receipt_token: receiptToken }, fetcher);

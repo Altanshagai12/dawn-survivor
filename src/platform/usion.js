@@ -20,6 +20,7 @@ function localAdapter() {
     },
     async friends() { return []; },
     async hasCredits() { return false; },
+    getAuthToken() { return null; },
     async requestPayment() { throw new Error('Usion wallet is unavailable outside the host'); },
     releaseBack() {},
   };
@@ -32,6 +33,7 @@ export async function initPlatform() {
     return {
       embedded: true,
       config,
+      getAuthToken() { return window.Usion.user?.getToken?.() || window.Usion.config?.authToken || null; },
       async loadProfile() {
         try { return await window.Usion.storage.get(STORAGE_KEY); } catch { return null; }
       },

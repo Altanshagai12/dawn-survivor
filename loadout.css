@@ -53,6 +53,9 @@
 .weapon-skin-name { display: block; min-height: 24px; font-size: 11px; font-weight: 650; line-height: 1.2; }
 .weapon-audio { width: 30px; height: 30px; padding: 0; border: 1px solid #493751; border-radius: 50%; background: #1a1324; color: var(--weapon-color); cursor: pointer; }
 .weapon-audio:disabled { visibility: hidden; }
+.weapon-buy { flex-shrink: 0; pointer-events: auto; min-height: 32px; padding: 4px 8px; border: 1px solid #5d4b70; border-radius: 8px; background: #281d35; color: #f3e9ff; font-size: 11px; cursor: pointer; }
+.weapon-buy:disabled { background: transparent; border-color: transparent; color: #b8adbf; cursor: default; }
+.weapon-buy[hidden] { display: none; }
 .skin-pagination { display: flex; justify-content: center; align-items: start; gap: 4px; opacity: 0; }
 .weapon-option.selected .skin-pagination { opacity: 1; }
 .skin-pagination i { width: 4px; height: 3px; border-radius: 2px; background: #554060; }
@@ -87,6 +90,7 @@
   .weapon-skin-name { min-height: 0; font-size: 9px; line-height: 1.1; }
   .skin-pagination { position: absolute; bottom: 1px; left: 0; width: 100%; }
   .weapon-audio { width: 24px; height: 24px; font-size: 11px; pointer-events: auto; }
+  .weapon-buy { min-height: 28px; padding: 3px 5px; font-size: 9px; }
   .skin-arrow { width: 28px; height: 34px; font-size: 21px; border-radius: 7px; }
   .skin-arrow--previous { left: 5px; }
   .skin-arrow--next { right: 5px; }

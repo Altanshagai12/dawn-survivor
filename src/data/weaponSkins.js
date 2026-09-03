@@ -1,40 +1,44 @@
-import {
-  hasSkinAccess, normalizeSkinProfile, PREMIUM_SKINS, selectedSkin,
-} from './skins.js?build=20260902d';
+import { normalizeSkinProfile, PREMIUM_SKINS } from './skins.js?build=20260903d';
+import { SKIN_WEAPON_IDS, weaponSkinGrant } from './skinProducts.js?build=20260903d';
 
-const WEAPON_IDS = Object.freeze(['revolver', 'shotgun', 'crossbow', 'flame']);
+// Preferences are client-writable; paid access is restored only from the authenticated API.
+// Keep verified ownership out of serialized Usion/local storage profiles.
+const verifiedAccess = new WeakMap();
 
-function accessibleSkin(profile, skinId) {
-  return typeof skinId === 'string' && Object.hasOwn(PREMIUM_SKINS, skinId)
-    && hasSkinAccess(profile, skinId) ? PREMIUM_SKINS[skinId] : null;
+export function applySkinEntitlements(profile, grants) {
+  verifiedAccess.set(profile, new Set(Array.isArray(grants) ? grants.filter((v) => typeof v === 'string') : []));
+}
+
+export function hasWeaponSkinAccess(profile, weaponId, skinId) {
+  if (skinId === null && SKIN_WEAPON_IDS.includes(weaponId)) return true;
+  const grant = weaponSkinGrant(weaponId, skinId);
+  return Boolean(grant && verifiedAccess.get(profile)?.has(grant));
 }
 
 export function normalizeWeaponSkinProfile(profile) {
-  const migrate = !Object.hasOwn(profile, 'equippedWeaponSkins');
   normalizeSkinProfile(profile);
-  const legacySkin = migrate ? selectedSkin(profile, profile.selectedHero || 'shana') : null;
   const equipped = profile.equippedWeaponSkins;
   const mapping = equipped && typeof equipped === 'object' && !Array.isArray(equipped)
     ? equipped : {};
-  profile.equippedWeaponSkins = Object.fromEntries(WEAPON_IDS.map((weaponId) => [
-    weaponId, migrate ? legacySkin?.id || null : accessibleSkin(profile, mapping[weaponId])?.id || null,
+  // Retain valid preferences while ownership loads; legacy free trials never grant access.
+  profile.equippedWeaponSkins = Object.fromEntries(SKIN_WEAPON_IDS.map((weaponId) => [
+    weaponId, typeof mapping[weaponId] === 'string' && Object.hasOwn(PREMIUM_SKINS, mapping[weaponId])
+      ? mapping[weaponId] : null,
   ]));
   return profile;
 }
 
 export function selectedWeaponSkin(profile, weaponId) {
-  if (!WEAPON_IDS.includes(weaponId)) return null;
-  return accessibleSkin(profile, profile.equippedWeaponSkins?.[weaponId]);
+  const skinId = profile.equippedWeaponSkins?.[weaponId];
+  return hasWeaponSkinAccess(profile, weaponId, skinId) ? PREMIUM_SKINS[skinId] || null : null;
 }
 
-export function weaponSkinOptions(profile, weaponId) {
-  if (!WEAPON_IDS.includes(weaponId)) return [];
-  return [null, ...Object.values(PREMIUM_SKINS).filter((skin) => hasSkinAccess(profile, skin.id))];
+export function weaponSkinOptions(_profile, weaponId) {
+  return SKIN_WEAPON_IDS.includes(weaponId) ? [null, ...Object.values(PREMIUM_SKINS)] : [];
 }
 
 export function setWeaponSkin(profile, weaponId, skinId) {
-  if (!WEAPON_IDS.includes(weaponId)) return false;
-  if (skinId !== null && !accessibleSkin(profile, skinId)) return false;
+  if (!hasWeaponSkinAccess(profile, weaponId, skinId)) return false;
   normalizeWeaponSkinProfile(profile);
   profile.equippedWeaponSkins[weaponId] = skinId;
   return true;

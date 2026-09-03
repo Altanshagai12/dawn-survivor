@@ -70,8 +70,8 @@ appears only when a retry is needed.
 
 Each of the four weapons independently saves an original or one of eight premium
 styles in `equippedWeaponSkins`. Changing hero does not change weapon skins.
-On the first load of an old profile, its selected hero's old skin is carried to
-all four weapons. Once the new map exists, legacy hero selections never override it.
+Legacy free-trial choices never grant paid ownership. Valid weapon preferences
+are retained, but a skin only equips after authenticated server ownership restores.
 The choice changes weapon art, muzzle/projectile/trail/impact/reload presentation,
 and firing audio only; hero cosmetics are no longer loaded or shown.
 Skin and original shots share damage, velocity, lifetime, spread, count, and
@@ -86,10 +86,11 @@ the real projectile and vanishes on impact/expiry, never adding damage or reach.
 Muzzle and impact sizes also split the two released scales. Faint trails are
 decorative; muzzle flashes stay attached to the held gun.
 All 51 upgrades feed an authored presentation recipe, including rear/fan fire,
-splinters, ricochets, piercing, summons, elemental statuses, and Tomes. The current production trial uses
-`SKIN_ACCESS_MODE = 'free-preview'`: every pack can be equipped without a wallet
-request, while the choice is saved with `Usion.storage` across devices. Free
-preview does not grant a durable paid entitlement.
+splinters, ricochets, piercing, summons, elemental statuses, and Tomes. Original
+weapons remain free. Every weapon skin costs **500₮**, or **1,000₮ for all four
+weapons of one theme**. Pictures/audio remain free to preview. The purchase modal
+shows all four weapons and their owned state; owning three hides the costlier
+bundle so the remaining individual weapon can be bought for 500₮.
 
 Gameplay VFX use generated transparent 4×4 atlases rendered through the existing
 Phaser 4.2.1 WebGL pipeline. Effects are pooled and capped separately from base
@@ -98,22 +99,41 @@ equipped VFX atlas, weapon image, and firing-audio bank are loaded for a run. Th
 intentionally not loaded because Usion supports one game engine per service and
 mixing a second renderer would break the platform runtime contract.
 
-The dormant paid path fails closed: the game checks the receipt service before it opens the
-Usions confirmation dialog. `Usion.wallet.requestPayment` creates the escrow;
-`api/purchase-skin.js` verifies the exact service + SKU amount and settles it.
-The game never imports or calls this commerce path while free-preview mode is active.
+### Wallet store deployment
 
-Deploy the repository to Vercel for the settlement function and configure:
+Gameplay remains a static GitHub Pages deployment. Checkout uses the **generic
+Usions commerce API**, not a new Vercel/Railway game service. Deployment order:
 
-- `USION_SERVICE_ID` — the registered Dawn Survivor service id (required).
-- `USION_API_BASE` — optional; defaults to `https://mobile.mongolai.mn`.
-- `DAWN_ALLOWED_ORIGINS` — optional comma-separated origins; defaults to the
-  production GitHub Pages and Vercel origins.
+1. Deploy the platform commerce/order endpoints, reserved-key wallet binding and
+   indexes, including settlement's exact user/amount/service validation.
+2. Generate the game-owned catalog using `node scripts/print-skin-catalog.mjs`.
+   It contains 32 individual products and 8 bundles. As this service's owner,
+   PUT that JSON to `/commerce/{serviceId}/catalog` using existing service-owner
+   authentication. No game catalog data belongs in the platform repository.
+3. Verify the authenticated `/commerce/{serviceId}/state` response reports the
+   exact version, 500/1000 prices and grants from `src/data/skinProducts.js`.
+4. Deploy the game and verify mobile/web previews and free gameplay. Any real
+   purchase test needs the user's explicit amount confirmation; do not auto-charge.
 
-If the Vercel project uses another domain, update `SKIN_PURCHASE_ENDPOINT` in
-`src/data/skins.js` before publishing. Catalog SKU prices are intentionally unique
-so a settled stateless receipt cannot be replayed for another cosmetic SKU.
-The new carousel is free-preview only; paid purchase UI is not exposed.
+The client fails closed when identity/backend/catalog validation is unavailable,
+while free gameplay and image/audio previews still work. `requestPayment` uses
+the frozen server order's amount/key and the existing host's confirmation and
+wallet-recharge UI. A low balance must not be prechecked in the game: that would
+hide the host's Recharge action. No new native/OTA SDK method is needed.
+
+Ownership lives in server-only commerce accounts, not `ownedSkins`, cloud KV or
+local storage. Scoped identity and exact transaction/order binding prevent price,
+SKU and purchaser substitution. A lost callback/receipt is recovered from the
+server's order/debit on refresh without charging again. Unpaid orders can be
+cancelled; settled purchases remain owned if saving the equip preference fails.
+The old `api/purchase-skin.js` is not called by the new store. Its original unique
+pack receipt amounts are preserved solely for compatibility, independent of the
+new equal-priced products.
+
+For payment-free browser QA, open `/tests/weapon-store-preview.html?phone=1` at
+390×724. This fixture uses an in-memory protocol simulator; it never contacts the
+wallet. `npm test` also exercises duplicate clicks, rejected/forged order data,
+callback loss, storage/network failures and cross-device restore without money.
 
 The eight choices are the existing four hunters' two packs, shared across every gun
 (plus Original), not six newly authored packs per weapon. Each pack retains its own

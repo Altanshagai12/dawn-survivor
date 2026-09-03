@@ -1,155 +1,107 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-
-import { hasSkinAccess, PREMIUM_SKINS } from '../src/data/skins.js?build=20260902d';
+import { PREMIUM_SKINS } from '../src/data/skins.js?build=20260903d';
 import {
-  normalizeWeaponSkinProfile, selectedWeaponSkin, setWeaponSkin, weaponSkinOptions,
-} from '../src/data/weaponSkins.js';
+  applySkinEntitlements, hasWeaponSkinAccess, normalizeWeaponSkinProfile,
+  selectedWeaponSkin, setWeaponSkin, weaponSkinOptions,
+} from '../src/data/weaponSkins.js?build=20260903d';
+import { skinProduct, SKIN_WEAPON_IDS, SKIN_STORE_CATALOG, matchesSkinCatalog } from '../src/data/skinProducts.js?build=20260903d';
 
-const WEAPON_IDS = ['revolver', 'shotgun', 'crossbow', 'flame'];
-const ASTRAL = 'shana-astral-warden';
-const BLOODMOON = 'diamond-bloodmoon-regent';
-const LOTUS = 'hina-void-lotus';
+const A = 'shana-astral-warden';
+const B = 'diamond-bloodmoon-regent';
+const allWeapons = (id = null) => Object.fromEntries(SKIN_WEAPON_IDS.map((weapon) => [weapon, id]));
 
-function allWeapons(skinId = null) {
-  return Object.fromEntries(WEAPON_IDS.map((weaponId) => [weaponId, skinId]));
-}
+test('catalog has 32 individual weapon skins at500 and8 same-theme bundles at1000', () => {
+  assert.equal(SKIN_STORE_CATALOG.products.length, 40);
+  assert.equal(new Set(SKIN_STORE_CATALOG.products.map((p) => p.id)).size, 40);
+  for (const skin of Object.values(PREMIUM_SKINS)) {
+    for (const weapon of SKIN_WEAPON_IDS) {
+      const single = skinProduct(skin.id, weapon);
+      assert.equal(single.amount, 500);
+      assert.deepEqual(single.grants, [`weapon:${weapon}:${skin.id}`]);
+    }
+    const bundle = skinProduct(skin.id, 'revolver', true);
+    assert.equal(bundle.amount, 1000);
+    assert.equal(bundle.grants.length, 4);
+  }
+  assert.ok(matchesSkinCatalog(SKIN_STORE_CATALOG));
+  for (const modify of [
+    (c) => { c.version = 'old'; }, (c) => { c.products.pop(); },
+    (c) => { c.products[0].amount = 1; }, (c) => { c.products[0].grants = c.products[1].grants; },
+  ]) {
+    const catalog = structuredClone(SKIN_STORE_CATALOG);
+    modify(catalog);
+    assert.equal(matchesSkinCatalog(catalog), false);
+  }
+});
 
-test('new profiles get all four base weapons without paid ownership', () => {
-  const profile = {};
-  assert.equal(normalizeWeaponSkinProfile(profile), profile);
+test('original weapons remain free, all paid skins remain browseable without access', () => {
+  const profile = normalizeWeaponSkinProfile({});
   assert.deepEqual(profile.equippedWeaponSkins, allWeapons());
-  assert.deepEqual(profile.ownedSkins, []);
-  assert.deepEqual(profile.equippedSkins, {});
-  assert.equal(profile.pendingSkinPurchase, null);
+  for (const weapon of SKIN_WEAPON_IDS) {
+    assert.equal(weaponSkinOptions(profile, weapon).length, 9);
+    assert.ok(setWeaponSkin(profile, weapon, null));
+    assert.equal(setWeaponSkin(profile, weapon, A), false);
+    assert.equal(selectedWeaponSkin(profile, weapon), null);
+  }
 });
 
-test('migration carries the selected hero skin to all four weapons and keeps legacy choices', () => {
-  const legacy = { shana: ASTRAL, diamond: BLOODMOON, hina: LOTUS };
-  const profile = normalizeWeaponSkinProfile({ selectedHero: 'diamond', equippedSkins: legacy });
-  assert.deepEqual(profile.equippedWeaponSkins, allWeapons(BLOODMOON));
-  assert.deepEqual(profile.equippedSkins, legacy);
-  assert.deepEqual(profile.ownedSkins, []);
-});
-
-test('migration defaults an absent selected hero to Shana, not another equipped hero', () => {
-  const profile = normalizeWeaponSkinProfile({ equippedSkins: { shana: ASTRAL, hina: LOTUS } });
-  assert.deepEqual(profile.equippedWeaponSkins, allWeapons(ASTRAL));
-  const unequipped = normalizeWeaponSkinProfile({ selectedHero: 'scarlett', equippedSkins: { hina: LOTUS } });
-  assert.deepEqual(unequipped.equippedWeaponSkins, allWeapons());
-});
-
-test('migration is idempotent and hero changes cannot reapply legacy skins', () => {
+test('legacy hero trial and serialized ownership cannot grant a paid weapon', () => {
   const profile = normalizeWeaponSkinProfile({
-    selectedHero: 'shana', equippedSkins: { shana: ASTRAL, hina: LOTUS },
+    selectedHero: 'shana', ownedSkins: [A], ownedWeaponSkins: allWeapons(A),
+    equippedSkins: { shana: A }, equippedWeaponSkins: allWeapons(A),
   });
-  const normalized = structuredClone(profile);
-  normalizeWeaponSkinProfile(profile);
-  assert.deepEqual(profile, normalized);
-  profile.selectedHero = 'hina';
-  profile.equippedSkins.shana = 'shana-celestial-dragon-sovereign';
-  normalizeWeaponSkinProfile(profile);
-  assert.deepEqual(profile.equippedWeaponSkins, allWeapons(ASTRAL));
+  for (const weapon of SKIN_WEAPON_IDS) assert.equal(selectedWeaponSkin(profile, weapon), null);
+  assert.deepEqual(normalizeWeaponSkinProfile({ equippedSkins: { shana: A } }).equippedWeaponSkins, allWeapons());
 });
 
-test('existing canonical maps retain null and never fill missing entries from legacy choices', () => {
-  const profile = normalizeWeaponSkinProfile({
-    equippedSkins: { shana: ASTRAL },
-    equippedWeaponSkins: { revolver: null, shotgun: BLOODMOON },
-  });
-  assert.deepEqual(profile.equippedWeaponSkins, { ...allWeapons(), shotgun: BLOODMOON });
+test('verified single unlock grants only its exact gun and skin', () => {
+  const profile = normalizeWeaponSkinProfile({});
+  applySkinEntitlements(profile, skinProduct(A, 'shotgun').grants);
+  assert.ok(setWeaponSkin(profile, 'shotgun', A));
+  assert.equal(selectedWeaponSkin(profile, 'shotgun'), PREMIUM_SKINS[A]);
+  assert.equal(setWeaponSkin(profile, 'revolver', A), false);
+  assert.equal(setWeaponSkin(profile, 'shotgun', B), false);
+});
+
+test('bundle grants all4guns, independent of selected hero', () => {
+  const profile = normalizeWeaponSkinProfile({ selectedHero: 'hina' });
+  applySkinEntitlements(profile, skinProduct(A, 'revolver', true).grants);
+  for (const weapon of SKIN_WEAPON_IDS) assert.ok(setWeaponSkin(profile, weapon, A));
+  profile.selectedHero = 'diamond';
   normalizeWeaponSkinProfile(profile);
+  assert.deepEqual(profile.equippedWeaponSkins, allWeapons(A));
+  assert.ok(setWeaponSkin(profile, 'shotgun', null));
+  assert.deepEqual(profile.equippedWeaponSkins, { ...allWeapons(A), shotgun: null });
+});
+
+test('verified access is not serializable and cannot leak to another profile/account', () => {
+  const profile = normalizeWeaponSkinProfile({ equippedWeaponSkins: allWeapons(A) });
+  applySkinEntitlements(profile, skinProduct(A, 'revolver', true).grants);
+  assert.equal(selectedWeaponSkin(profile, 'revolver'), PREMIUM_SKINS[A]);
+  const restored = normalizeWeaponSkinProfile(JSON.parse(JSON.stringify(profile)));
+  assert.equal(selectedWeaponSkin(restored, 'revolver'), null);
+  applySkinEntitlements(restored, skinProduct(A, 'revolver').grants);
+  assert.equal(selectedWeaponSkin(restored, 'revolver'), PREMIUM_SKINS[A]);
+  assert.equal(selectedWeaponSkin(restored, 'shotgun'), null);
+  applySkinEntitlements(profile, []);
   assert.equal(selectedWeaponSkin(profile, 'revolver'), null);
 });
 
-test('invalid existing canonical values reset to base without resurrecting legacy choices', () => {
-  for (const equippedWeaponSkins of [null, undefined, false, 'invalid', [], {}]) {
-    const profile = normalizeWeaponSkinProfile({
-      equippedSkins: { shana: ASTRAL }, equippedWeaponSkins,
-    });
-    assert.deepEqual(profile.equippedWeaponSkins, allWeapons());
-  }
+test('unknown/prototype values never become products, options or access', () => {
   const profile = normalizeWeaponSkinProfile({
-    equippedSkins: { shana: ASTRAL },
-    equippedWeaponSkins: {
-      revolver: 'not-a-skin', shotgun: 'constructor', crossbow: '__proto__', flame: 1,
-      unknownWeapon: ASTRAL,
-    },
+    equippedWeaponSkins: { revolver: 'constructor', shotgun: '__proto__', crossbow: {}, flame: A },
   });
-  assert.deepEqual(profile.equippedWeaponSkins, allWeapons());
-});
-
-test('every weapon offers base plus every accessible pack regardless of selected hero', () => {
-  const profile = normalizeWeaponSkinProfile({ selectedHero: 'hina' });
-  const expected = [null, ...Object.values(PREMIUM_SKINS)
-    .filter((skin) => hasSkinAccess(profile, skin.id))];
-  assert.equal(Object.keys(PREMIUM_SKINS).length, 8);
-  for (const weaponId of WEAPON_IDS) {
-    assert.deepEqual(weaponSkinOptions(profile, weaponId), expected);
-    profile.selectedHero = 'diamond';
-    assert.deepEqual(weaponSkinOptions(profile, weaponId), expected);
+  assert.deepEqual(profile.equippedWeaponSkins, { ...allWeapons(), flame: A });
+  for (const value of ['unknown', 'constructor', '__proto__', null, undefined, 1, {}, []]) {
+    assert.equal(setWeaponSkin(profile, value, A), false);
+    assert.equal(selectedWeaponSkin(profile, value), null);
+    assert.deepEqual(weaponSkinOptions(profile, value), []);
+    assert.equal(skinProduct(A, value), null);
+    if (value !== null) {
+      assert.equal(setWeaponSkin(profile, 'revolver', value), false);
+      assert.equal(hasWeaponSkinAccess(profile, 'revolver', value), false);
+      assert.equal(skinProduct(value, 'revolver'), null);
+    }
   }
-  assert.deepEqual(profile.ownedSkins, []);
-});
-
-test('skin selection is independent per weapon and can cross the former hero boundary', () => {
-  const profile = normalizeWeaponSkinProfile({ selectedHero: 'hina' });
-  assert.equal(setWeaponSkin(profile, 'revolver', ASTRAL), true);
-  assert.equal(setWeaponSkin(profile, 'shotgun', BLOODMOON), true);
-  assert.equal(selectedWeaponSkin(profile, 'revolver'), PREMIUM_SKINS[ASTRAL]);
-  assert.equal(selectedWeaponSkin(profile, 'shotgun'), PREMIUM_SKINS[BLOODMOON]);
-  assert.equal(selectedWeaponSkin(profile, 'crossbow'), null);
-  assert.deepEqual(profile.equippedWeaponSkins, {
-    revolver: ASTRAL, shotgun: BLOODMOON, crossbow: null, flame: null,
-  });
-  profile.selectedHero = 'scarlett';
-  normalizeWeaponSkinProfile(profile);
-  assert.equal(selectedWeaponSkin(profile, 'revolver'), PREMIUM_SKINS[ASTRAL]);
-  assert.equal(selectedWeaponSkin(profile, 'shotgun'), PREMIUM_SKINS[BLOODMOON]);
-});
-
-test('base selection clears only one weapon and stays cleared after normalization', () => {
-  const profile = normalizeWeaponSkinProfile({ equippedSkins: { shana: ASTRAL } });
-  assert.equal(setWeaponSkin(profile, 'shotgun', null), true);
-  normalizeWeaponSkinProfile(profile);
-  assert.deepEqual(profile.equippedWeaponSkins, { ...allWeapons(ASTRAL), shotgun: null });
-  assert.equal(selectedWeaponSkin(profile, 'shotgun'), null);
-  assert.deepEqual(profile.equippedSkins, { shana: ASTRAL });
-});
-
-test('unknown weapon IDs and invalid skin IDs are rejected without changing the profile', () => {
-  const profile = normalizeWeaponSkinProfile({ equippedWeaponSkins: allWeapons(ASTRAL) });
-  const snapshot = structuredClone(profile);
-  for (const weaponId of ['unknown', 'constructor', '__proto__', null, undefined, {}, 1]) {
-    assert.equal(setWeaponSkin(profile, weaponId, BLOODMOON), false);
-    assert.equal(selectedWeaponSkin(profile, weaponId), null);
-    assert.deepEqual(weaponSkinOptions(profile, weaponId), []);
-  }
-  for (const skinId of ['unknown', 'constructor', '__proto__', '', undefined, {}, [], 1]) {
-    assert.equal(setWeaponSkin(profile, 'revolver', skinId), false);
-  }
-  assert.deepEqual(profile, snapshot);
-});
-
-test('selection validates canonical skin IDs instead of trusting profile data or legacy fallback', () => {
-  const profile = {
-    equippedSkins: { shana: ASTRAL },
-    equippedWeaponSkins: { revolver: 'constructor', shotgun: null, crossbow: 'unknown', flame: LOTUS },
-  };
-  assert.equal(selectedWeaponSkin(profile, 'revolver'), null);
-  assert.equal(selectedWeaponSkin(profile, 'shotgun'), null);
-  assert.equal(selectedWeaponSkin(profile, 'crossbow'), null);
-  assert.equal(selectedWeaponSkin(profile, 'flame'), PREMIUM_SKINS[LOTUS]);
-  assert.equal(selectedWeaponSkin({ equippedSkins: { shana: ASTRAL } }, 'revolver'), null);
-});
-
-test('equipping skins does not grant ownership, settle payment, or rewrite legacy equipped choices', () => {
-  const pendingSkinPurchase = { skinId: BLOODMOON, receiptToken: 'pending-receipt' };
-  const profile = normalizeWeaponSkinProfile({
-    ownedSkins: [LOTUS, LOTUS, 'unknown'], equippedSkins: { shana: ASTRAL }, pendingSkinPurchase,
-  });
-  assert.equal(setWeaponSkin(profile, 'revolver', BLOODMOON), true);
-  assert.deepEqual(profile.ownedSkins, [LOTUS]);
-  assert.deepEqual(profile.equippedSkins, { shana: ASTRAL });
-  assert.equal(profile.pendingSkinPurchase, pendingSkinPurchase);
 });

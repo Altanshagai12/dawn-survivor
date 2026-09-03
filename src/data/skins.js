@@ -43,12 +43,11 @@ function skinPackArt(skinId) {
 }
 
 export const SKIN_CATALOG_VERSION = 'premium-v2';
-export const SKIN_PURCHASE_ENDPOINT = 'https://dawn-survivor.vercel.app/api/purchase-skin';
-export const SKIN_ACCESS_MODE = 'free-preview';
+export const SKIN_ACCESS_MODE = 'paid';
 
 export const PREMIUM_SKINS = Object.freeze({
   'shana-astral-warden': Object.freeze({
-    id: 'shana-astral-warden', heroId: 'shana', priceCredits: 240,
+    id: 'shana-astral-warden', heroId: 'shana', priceCredits: 500,
     rarity: 'legendary',
     name: 'Astral Warden', nameMn: 'Огторгуйн харуул',
     description: 'Crystal starlight remixes every weapon, impact, trail, and firing report.',
@@ -63,7 +62,7 @@ export const PREMIUM_SKINS = Object.freeze({
     audioBank: `${base}/audio/astral`,
   }),
   'diamond-bloodmoon-regent': Object.freeze({
-    id: 'diamond-bloodmoon-regent', heroId: 'diamond', priceCredits: 250,
+    id: 'diamond-bloodmoon-regent', heroId: 'diamond', priceCredits: 500,
     rarity: 'legendary',
     name: 'Bloodmoon Regent', nameMn: 'Цусан сарын эзэн',
     description: 'Crimson lunar force gives every weapon a heavier report and moon-scar impact.',
@@ -78,7 +77,7 @@ export const PREMIUM_SKINS = Object.freeze({
     audioBank: `${base}/audio/bloodmoon`,
   }),
   'scarlett-sunforge-phoenix': Object.freeze({
-    id: 'scarlett-sunforge-phoenix', heroId: 'scarlett', priceCredits: 260,
+    id: 'scarlett-sunforge-phoenix', heroId: 'scarlett', priceCredits: 500,
     rarity: 'legendary',
     name: 'Sunforge Phoenix', nameMn: 'Нарны дархны галт шувуу',
     description: 'Forged feathers turn every shot into a bright phoenix-grade spectacle.',
@@ -93,7 +92,7 @@ export const PREMIUM_SKINS = Object.freeze({
     audioBank: `${base}/audio/sunforge`,
   }),
   'hina-void-lotus': Object.freeze({
-    id: 'hina-void-lotus', heroId: 'hina', priceCredits: 270,
+    id: 'hina-void-lotus', heroId: 'hina', priceCredits: 500,
     rarity: 'legendary',
     name: 'Void Lotus Shogun', nameMn: 'Хоосон лянхуаны шогүн',
     description: 'Spectral petals reshape every projectile and give the dash a deep void echo.',
@@ -108,7 +107,7 @@ export const PREMIUM_SKINS = Object.freeze({
     audioBank: `${base}/audio/void-lotus`,
   }),
   'shana-celestial-dragon-sovereign': Object.freeze({
-    id: 'shana-celestial-dragon-sovereign', heroId: 'shana', priceCredits: 520,
+    id: 'shana-celestial-dragon-sovereign', heroId: 'shana', priceCredits: 500,
     rarity: 'mythic',
     name: 'Celestial Dragon Sovereign', nameMn: 'Тэнгэрийн лууны дээд эзэн',
     description: 'Ivory-jade dragon arms, four sovereign weapons, and a radiant draconic combat score.',
@@ -124,7 +123,7 @@ export const PREMIUM_SKINS = Object.freeze({
     audioBank: `${base}/audio/celestial-dragon`,
   }),
   'diamond-obsidian-eclipse-valkyrie': Object.freeze({
-    id: 'diamond-obsidian-eclipse-valkyrie', heroId: 'diamond', priceCredits: 540,
+    id: 'diamond-obsidian-eclipse-valkyrie', heroId: 'diamond', priceCredits: 500,
     rarity: 'mythic',
     name: 'Obsidian Eclipse Valkyrie', nameMn: 'Хар хиртэлтийн валькири',
     description: 'Obsidian lunar weapons collapse into black-sun impacts with a heavy eclipse report.',
@@ -140,7 +139,7 @@ export const PREMIUM_SKINS = Object.freeze({
     audioBank: `${base}/audio/obsidian-eclipse`,
   }),
   'scarlett-prismatic-tempest-seraph': Object.freeze({
-    id: 'scarlett-prismatic-tempest-seraph', heroId: 'scarlett', priceCredits: 560,
+    id: 'scarlett-prismatic-tempest-seraph', heroId: 'scarlett', priceCredits: 500,
     rarity: 'mythic',
     name: 'Prismatic Tempest Seraph', nameMn: 'Солонгон шуурганы сераф',
     description: 'White-gold storm arms split every shot into prismatic thunder and crystal-wing impacts.',
@@ -156,7 +155,7 @@ export const PREMIUM_SKINS = Object.freeze({
     audioBank: `${base}/audio/prismatic-tempest`,
   }),
   'hina-nine-tail-chrono-kitsune': Object.freeze({
-    id: 'hina-nine-tail-chrono-kitsune', heroId: 'hina', priceCredits: 580,
+    id: 'hina-nine-tail-chrono-kitsune', heroId: 'hina', priceCredits: 500,
     rarity: 'mythic',
     name: 'Nine-Tail Chrono Kitsune', nameMn: 'Есөн сүүлт цагийн кицүнэ',
     description: 'Kitsune clockwork reshapes all four weapons into foxfire and time-rift signatures.',
@@ -182,8 +181,9 @@ export const SKIN_BY_HERO = Object.freeze(Object.fromEntries(
   Object.entries(SKINS_BY_HERO).map(([heroId, skins]) => [heroId, skins[0]]),
 ));
 
-export function hasSkinAccess(profile, skinId) {
-  return SKIN_ACCESS_MODE === 'free-preview' || profile.ownedSkins?.includes(skinId);
+export function hasSkinAccess(_profile, _skinId) {
+  // Retired hero-pack ownership cannot grant individual paid weapon skins.
+  return false;
 }
 
 export function normalizeSkinProfile(profile) {

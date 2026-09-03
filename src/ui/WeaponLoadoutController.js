@@ -1,14 +1,15 @@
-import { weaponArtForSkin } from '../data/skins.js?build=20260902d';
-import { normalizeWeaponSkinProfile, selectedWeaponSkin, setWeaponSkin, weaponSkinOptions } from '../data/weaponSkins.js?build=20260902d';
+import { weaponArtForSkin } from '../data/skins.js?build=20260903d';
+import { hasWeaponSkinAccess, normalizeWeaponSkinProfile, selectedWeaponSkin, setWeaponSkin, weaponSkinOptions } from '../data/weaponSkins.js?build=20260903d';
+import { WeaponPurchaseModal } from './WeaponPurchaseModal.js?build=20260903d';
 import { heroPassiveCopy } from './uiFormatters.js?build=20260828a';
 import { bindSkinSwipe } from './skinSwipe.js?build=20260902b';
 
 const COPY = {
   en: { original: 'Original', previous: 'Previous skin', next: 'Next skin',
-    swipe: 'Swipe to equip a skin', audio: 'Play weapon sound', saved: 'Loadout saved', saving: 'Saving…',
+    swipe: 'Swipe to preview a skin', buy: '500₮ · Buy', equipped: 'In use', equip: 'Equip', audio: 'Play weapon sound', saved: 'Loadout saved', saving: 'Saving…',
     failed: 'Could not save. Tap to retry.' },
   mn: { original: 'Энгийн', previous: 'Өмнөх skin', next: 'Дараах skin',
-    swipe: 'Swipe хийж skin солино', audio: 'Бууны дуу сонсох', saved: 'Сонголт хадгалагдлаа', saving: 'Хадгалж байна…',
+    swipe: 'Swipe хийж skin үзнэ', buy: '500₮ · Авах', equipped: 'Идэвхтэй', equip: 'Идэвхжүүлэх', audio: 'Бууны дуу сонсох', saved: 'Сонголт хадгалагдлаа', saving: 'Хадгалж байна…',
     failed: 'Хадгалсангүй. Дарж дахин оролдоно уу.' },
 };
 
@@ -21,9 +22,11 @@ const ABILITIES = {
 };
 
 export class WeaponLoadoutController {
-  constructor({ ui, platform }) {
+  constructor({ ui, platform, commerce }) {
     this.ui = ui;
     this.platform = platform;
+    this.commerce = commerce;
+    this.browsedSkins = new Map();
     this.profile = normalizeWeaponSkinProfile(ui.profile);
     this.copy = COPY[ui.i18n.lang === 'mn' ? 'mn' : 'en'];
     this.saveQueue = Promise.resolve();
@@ -79,13 +82,17 @@ export class WeaponLoadoutController {
         <img class="weapon-art" alt="" draggable="false" /><img class="weapon-neighbor weapon-neighbor--next" alt="" draggable="false" /></button>
         <button type="button" class="skin-arrow skin-arrow--next">›</button></div>
         <div class="weapon-option__footer"><div><strong class="weapon-skin-name"></strong></div>
+        <button type="button" class="weapon-buy"></button>
         <button type="button" class="weapon-audio">♪</button></div>
         <div class="skin-pagination" aria-hidden="true"></div>`;
       const stage = card.querySelector('.weapon-stage');
       const select = () => this.selectWeapon(weapon.id);
       card.querySelector('.weapon-select').addEventListener('click', select);
       card.querySelector('.weapon-select').title = this.ui.i18n.lang === 'mn' ? weapon.descriptionMn : weapon.description;
-      stage.addEventListener('click', select);
+      stage.addEventListener('click', () => {
+        if (this.ui.selectedWeapon === weapon.id && this.previewSkin(weapon.id)) this.activatePreview(weapon.id);
+        else select();
+      });
       stage.setAttribute('aria-label', this.name(weapon));
       bindSkinSwipe(stage, {
         active: () => this.ui.selectedWeapon === weapon.id,
@@ -100,6 +107,7 @@ export class WeaponLoadoutController {
       const audio = card.querySelector('.weapon-audio');
       audio.setAttribute('aria-label', `${this.copy.audio} · ${this.name(weapon)}`);
       audio.addEventListener('click', () => this.audition(weapon.id));
+      card.querySelector('.weapon-buy').addEventListener('click', () => this.activatePreview(weapon.id));
       this.cards.set(weapon.id, card);
       return card;
     });
@@ -118,13 +126,41 @@ export class WeaponLoadoutController {
   cycleSkin(weaponId, step) {
     if (this.ui.selectedWeapon !== weaponId) return;
     const options = weaponSkinOptions(this.profile, weaponId);
-    const current = selectedWeaponSkin(this.profile, weaponId);
+    const current = this.previewSkin(weaponId);
     const index = options.findIndex((skin) => (skin?.id || null) === (current?.id || null));
     const next = options[(index + step + options.length) % options.length];
-    if (!setWeaponSkin(this.profile, weaponId, next?.id || null)) return;
+    this.browsedSkins.set(weaponId, next?.id || null);
+    const equipped = setWeaponSkin(this.profile, weaponId, next?.id || null);
     this.stopAudio();
     this.render();
-    this.save();
+    if (equipped) this.save();
+  }
+
+  previewSkin(weaponId) {
+    if (!this.browsedSkins.has(weaponId)) return selectedWeaponSkin(this.profile, weaponId);
+    return weaponSkinOptions(this.profile, weaponId).find((skin) => skin?.id === this.browsedSkins.get(weaponId)) || null;
+  }
+
+  isPreviewLocked(weaponId) {
+    return !hasWeaponSkinAccess(this.profile, weaponId, this.previewSkin(weaponId)?.id || null);
+  }
+
+  openShop(weaponId) {
+    const skin = this.previewSkin(weaponId);
+    if (!skin || !this.commerce) return;
+    this.stopAudio();
+    this.shop ||= new WeaponPurchaseModal({ profile: this.profile, commerce: this.commerce,
+      weapons: this.ui.weapons, i18n: this.ui.i18n, onChange: () => this.render() });
+    this.shop.open(weaponId, skin);
+  }
+
+  activatePreview(weaponId) {
+    if (this.ui.selectedWeapon !== weaponId) return;
+    if (this.isPreviewLocked(weaponId)) return this.openShop(weaponId);
+    if (setWeaponSkin(this.profile, weaponId, this.previewSkin(weaponId)?.id || null)) {
+      this.render();
+      this.save();
+    }
   }
 
   render() {
@@ -139,7 +175,7 @@ export class WeaponLoadoutController {
   renderWeapon(card, weapon) {
     const selected = this.ui.selectedWeapon === weapon.id;
     const options = weaponSkinOptions(this.profile, weapon.id);
-    const skin = selectedWeaponSkin(this.profile, weapon.id);
+    const skin = this.previewSkin(weapon.id);
     const index = options.findIndex((item) => (item?.id || null) === (skin?.id || null));
     card.classList.toggle('selected', selected);
     card.dataset.skin = skin?.id || 'original';
@@ -152,6 +188,14 @@ export class WeaponLoadoutController {
       card.querySelector(selector).src = weaponArtForSkin(options[(index + offset + options.length) % options.length], weapon);
     }
     card.querySelector('.weapon-skin-name').textContent = skinName;
+    const buy = card.querySelector('.weapon-buy');
+    const locked = this.isPreviewLocked(weapon.id);
+    card.classList.toggle('skin-locked', locked);
+    buy.hidden = !skin;
+    const equipped = selectedWeaponSkin(this.profile, weapon.id)?.id === skin?.id;
+    buy.textContent = locked ? this.copy.buy : equipped ? this.copy.equipped : this.copy.equip;
+    buy.disabled = !selected || (!locked && equipped);
+    buy.setAttribute('aria-label', `${skinName} · ${this.name(weapon)} · ${buy.textContent}`);
     card.querySelectorAll('.skin-arrow').forEach((button) => { button.disabled = !selected; });
     card.querySelector('.weapon-audio').disabled = !selected || !skin;
     card.querySelector('.skin-pagination').innerHTML = options.map((_, i) => `<i${i === index ? ' class="current"' : ''}></i>`).join('');
@@ -175,7 +219,7 @@ export class WeaponLoadoutController {
   }
 
   audition(weaponId) {
-    const skin = selectedWeaponSkin(this.profile, weaponId);
+    const skin = this.previewSkin(weaponId);
     if (!skin) return;
     this.stopAudio();
     this.audio = new Audio(`${skin.audioBank}/${weaponId}.wav?build=20260901b`);

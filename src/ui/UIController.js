@@ -1,5 +1,5 @@
-import { selectedWeaponSkin } from '../data/weaponSkins.js?build=20260902d';
-import { WeaponLoadoutController } from './WeaponLoadoutController.js?build=20260903a';
+import { selectedWeaponSkin } from '../data/weaponSkins.js?build=20260903d';
+import { WeaponLoadoutController } from './WeaponLoadoutController.js?build=20260903d';
 import {
   damageSourceLabel, formatSurvivalTime, savedOrDefault,
   survivalLeaderboardEntries,
@@ -58,7 +58,7 @@ export class UIController {
     this.onResume = null;
     this.onQuit = null;
     this.cacheElements();
-    this.loadout = new WeaponLoadoutController({ ui: this, platform });
+    this.loadout = new WeaponLoadoutController({ ui: this, platform, commerce });
     this.bindButtons();
     this.renderLoadout();
   }
@@ -105,6 +105,7 @@ export class UIController {
   }
 
   hideAll() {
+    this.loadout.shop?.close();
     ['boot','menu','hud','choice-modal','pause-modal','result-modal','touch-controls']
       .forEach((id) => this.el[id].classList.add('hidden'));
   }

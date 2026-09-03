@@ -4,7 +4,6 @@ import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import sharp from 'sharp';
 
-import { SkinCommerce } from '../src/commerce/SkinCommerce.js';
 import {
   hasSkinAccess, normalizeSkinProfile, PREMIUM_SKINS, selectedSkin, SKIN_ACCESS_MODE,
   skinProjectileAnchor, skinProjectileRotation, SKINS_BY_HERO, SKIN_CATALOG_VERSION, weaponArtForSkin,
@@ -69,7 +68,6 @@ test('weapon skins leave the original hero footprint and sampling unchanged', as
 test('ships two complete premium hero, weapon, projectile, and firing-audio packs per hunter', async () => {
   assert.deepEqual(Object.keys(SKINS_BY_HERO).sort(), ['diamond', 'hina', 'scarlett', 'shana']);
   assert.ok(Object.values(SKINS_BY_HERO).every((skins) => skins.length === 2));
-  const prices = new Set();
   for (const skin of Object.values(PREMIUM_SKINS)) {
     assert.ok(SKINS_BY_HERO[skin.heroId].includes(skin));
     assert.ok(skin.primary && skin.secondary && skin.impact && skin.spriteTint);
@@ -77,8 +75,7 @@ test('ships two complete premium hero, weapon, projectile, and firing-audio pack
     assert.ok(skin.heroAtlas?.key && skin.heroAtlas?.file);
     assert.ok(skin.heroAtlas.frameWidth > 0 && skin.heroAtlas.frameHeight > 0);
     assert.equal('voice' in skin, false, 'gameplay skins must not ship an intro voice hook');
-    assert.ok(!prices.has(skin.priceCredits), 'each stateless receipt SKU needs a unique price');
-    prices.add(skin.priceCredits);
+    assert.equal(skin.priceCredits, 500);
     for (const asset of [skin.packArt, skin.cardArt, skin.vfxAtlas, skin.heroAtlas.file]) {
       const path = asset.split('?')[0].replace(/^\.\//, '../');
       const url = new URL(path, import.meta.url);
@@ -271,25 +268,19 @@ test('legacy owned and equipped skin state stays sanitized for one-time migratio
     equippedSkins: { shana: 'shana-astral-warden', hina: 'shana-astral-warden', diamond: 'fake' },
   });
   assert.deepEqual(normalized.ownedSkins, ['shana-astral-warden']);
-  assert.deepEqual(normalized.equippedSkins, { shana: 'shana-astral-warden' });
-  assert.equal(selectedSkin(normalized, 'shana').id, 'shana-astral-warden');
+  assert.deepEqual(normalized.equippedSkins, {});
+  assert.equal(selectedSkin(normalized, 'shana'), null);
   assert.equal(selectedSkin(normalized, 'hina'), null);
 });
 
-test('free preview exposes every skin without granting durable paid ownership', async () => {
-  assert.equal(SKIN_ACCESS_MODE, 'free-preview');
+test('legacy free-preview saves cannot grant paid ownership', () => {
+  assert.equal(SKIN_ACCESS_MODE, 'paid');
   const state = profile();
   const skin = PREMIUM_SKINS['shana-astral-warden'];
-  assert.equal(hasSkinAccess(state, skin.id), true);
-  assert.deepEqual(state.ownedSkins, []);
+  state.ownedSkins.push(skin.id);
   state.equippedSkins.shana = skin.id;
-  assert.equal(selectedSkin(state, 'shana'), skin);
-
-  const main = await import('node:fs/promises').then(({ readFile }) => readFile(new URL('../src/main.js', import.meta.url), 'utf8'));
-  const controller = await import('node:fs/promises').then(({ readFile }) => readFile(new URL('../src/ui/SkinShopController.js', import.meta.url), 'utf8'));
-  assert.match(main, /if \(SKIN_ACCESS_MODE === 'paid'\)/);
-  assert.match(controller, /if \(hasSkinAccess\(this\.profile, skin\.id\)\)/);
-  assert.ok(controller.indexOf('hasSkinAccess(this.profile, skin.id)') < controller.indexOf('this.commerce.purchase(skin.id)'));
+  assert.equal(hasSkinAccess(state, skin.id), false);
+  assert.equal(selectedSkin(state, 'shana'), null);
 });
 
 test('each premium skin remixes all core weapon visuals and audio without changing damage stats', () => {
@@ -315,55 +306,19 @@ test('weapon selection renders independent carousel art and starts the selected 
     new URL('../src/ui/WeaponLoadoutController.js', import.meta.url), 'utf8'));
   const ui = await import('node:fs/promises').then(({ readFile }) => readFile(
     new URL('../src/ui/UIController.js', import.meta.url), 'utf8'));
-  assert.match(controller, /selectedWeaponSkin\(this\.profile, weapon\.id\)/);
+  assert.match(controller, /this\.previewSkin\(weapon\.id\)/);
   assert.match(controller, /weaponArtForSkin\(options\[/);
   assert.match(controller, /setWeaponSkin\(this\.profile, weaponId,/);
   assert.match(ui, /selectedWeaponSkin\(this\.profile, this\.selectedWeapon\)/);
   assert.doesNotMatch(ui, /SkinShopController|skinShop|selectedSkin\(/);
 });
 
-test('wallet purchase starts only on explicit purchase and persists entitlement after settlement', async () => {
-  const saved = [];
-  const payments = [];
-  const calls = [];
-  const state = profile();
-  const skin = PREMIUM_SKINS['shana-astral-warden'];
-  const platform = {
-    embedded: true,
-    async saveProfile(value) { saved.push(structuredClone(value)); return true; },
-    async hasCredits(amount) { return amount === skin.priceCredits; },
-    async requestPayment(amount, reason, options) {
-      payments.push({ amount, reason, options });
-      return { success: true, receiptToken: 'header.payload.signature' };
-    },
-  };
-  const fetcher = async (_url, options = {}) => {
-    calls.push(options);
-    if (options.method === 'GET') return response({ ready: true, catalogVersion: SKIN_CATALOG_VERSION });
-    const body = JSON.parse(options.body);
-    assert.equal(body.action, 'settle');
-    assert.equal(body.skinId, skin.id);
-    return response({ ok: true, skinId: skin.id, transactionId: 'tx-1' });
-  };
-  const commerce = new SkinCommerce({ platform, profile: state, fetcher, endpoint: 'https://example.test/api' });
-  assert.equal(payments.length, 0);
-  const result = await commerce.purchase(skin.id);
-  assert.equal(result.ok, true);
-  assert.equal(payments.length, 1);
-  assert.equal(payments[0].amount, skin.priceCredits);
-  assert.match(payments[0].options.idempotencyKey, new RegExp(skin.id));
-  assert.deepEqual(state.ownedSkins, [skin.id]);
-  assert.equal(state.equippedSkins.shana, skin.id);
-  assert.equal(state.pendingSkinPurchase, null);
-  assert.ok(saved.some((entry) => entry.pendingSkinPurchase?.receiptToken));
-});
-
-test('server verifies the signed receipt boundary and settles the exact skin SKU', async () => {
+test('legacy pack endpoint retains its original receipt amounts', async () => {
   const previous = process.env.USION_SERVICE_ID;
   process.env.USION_SERVICE_ID = 'dawn-service';
   const skin = PREMIUM_SKINS['diamond-bloodmoon-regent'];
-  const receiptToken = fakeReceipt({ serviceId: 'dawn-service', amount: skin.priceCredits });
-  assert.equal(decodeReceiptClaims(receiptToken).amt, skin.priceCredits);
+  const receiptToken = fakeReceipt({ serviceId: 'dawn-service', amount: 250 });
+  assert.equal(decodeReceiptClaims(receiptToken).amt, 250);
   const calls = [];
   const fetcher = async (url, options) => {
     const body = JSON.parse(options.body);
@@ -376,7 +331,7 @@ test('server verifies the signed receipt boundary and settles the exact skin SKU
     assert.equal(result.status, 200);
     assert.deepEqual(result.body, { ok: true, skinId: skin.id, transactionId: 'tx-1' });
     assert.equal(calls.length, 2);
-    assert.equal(calls[0].body.expected_amount, skin.priceCredits);
+    assert.equal(calls[0].body.expected_amount, 250);
     assert.equal(calls[0].body.expected_service_id, 'dawn-service');
   } finally {
     if (previous == null) delete process.env.USION_SERVICE_ID;
@@ -384,7 +339,7 @@ test('server verifies the signed receipt boundary and settles the exact skin SKU
   }
 });
 
-test('weapon carousel exposes free skin selection without a hero-skin shop or purchase action', async () => {
+test('weapon carousel exposes previews and delegates explicit checkout to the weapon modal', async () => {
   const html = await import('node:fs/promises').then(({ readFile }) => readFile(new URL('../index.html', import.meta.url), 'utf8'));
   const controller = await readFile(new URL('../src/ui/WeaponLoadoutController.js', import.meta.url), 'utf8');
   assert.match(html, /id="weapon-list" class="weapon-grid"/);

@@ -1,0 +1,80 @@
+/* Mounted inside #app: the purchase dialog follows its mobile landscape rotation. */
+.weapon-shop {
+  position: absolute;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  color: #f5f0e8;
+  background: rgba(4, 3, 8, .92);
+}
+.weapon-shop[hidden], .weapon-shop [hidden] { display: none !important; }
+.weapon-shop__panel {
+  width: min(920px, 100%);
+  max-height: 100%;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding: 20px;
+  border: 1px solid #4b405a;
+  border-radius: 18px;
+  background: #100d18;
+  box-shadow: 0 20px 80px #0009;
+}
+.weapon-shop__header { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; padding-bottom: 4px; background: #100d18; }
+.weapon-shop__heading { min-width: 0; }
+.weapon-shop__eyebrow { margin: 0 0 4px; color: #77e5f8; text-transform: uppercase; font-size: 10px; letter-spacing: .14em; font-weight: 800; }
+.weapon-shop__title { margin: 0; font-size: clamp(17px, 2.8vw, 26px); line-height: 1.15; }
+.weapon-shop__body { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: start; gap: 20px; }
+.weapon-shop__gallery, .weapon-shop__details { min-width: 0; }
+.weapon-shop__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.weapon-shop button { cursor: pointer; border: 1px solid #4c405d; border-radius: 10px; min-height: 44px; padding: 9px 12px; color: inherit; background: #21192d; font-size: 12px; font-weight: 700; line-height: 1.3; touch-action: manipulation; }
+.weapon-shop button:focus-visible { outline: 2px solid #79ecff; outline-offset: 3px; }
+.weapon-shop button:disabled { cursor: default; opacity: .5; }
+.weapon-shop .weapon-shop__close { flex: 0 0 44px; padding: 0; font-size: 26px; background: #ffffff08; }
+.weapon-shop .weapon-shop__weapon { display: flex; flex-direction: column; align-items: center; padding: 8px; min-width: 0; background: radial-gradient(ellipse at center, #302241, #15111e 75%); }
+.weapon-shop__weapon[aria-pressed="true"] { border-color: #70eaff; box-shadow: inset 0 0 0 1px #70eaff; }
+.weapon-shop__art { width: 100%; height: 92px; object-fit: contain; display: block; }
+.weapon-shop__weapon-name { font-size: 11px; margin-top: 4px; }
+.weapon-shop__badge { display: block; min-height: 13px; color: #78e6fa; font-size: 9px; }
+.weapon-shop__badge.is-owned { color: #a6e19a; }
+.weapon-shop__details { display: flex; flex-direction: column; gap: 9px; }
+.weapon-shop .weapon-shop__buy { color: #0e0c13; background: #f3ede6; border-color: #f3ede6; }
+.weapon-shop .weapon-shop__bundle { border-color: #ab78d9; background: #442458; }
+.weapon-shop .weapon-shop__audio, .weapon-shop .weapon-shop__refresh, .weapon-shop .weapon-shop__cancel { background: transparent; }
+.weapon-shop__preview-note, .weapon-shop__policy, .weapon-shop__savings, .weapon-shop__status, .weapon-shop__pending-copy { margin: 0; font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
+.weapon-shop__preview-note { margin-top: 9px; color: #b6aabe; text-align: center; }
+.weapon-shop__policy { color: #b6aabe; }
+.weapon-shop__savings { color: #e8c890; }
+.weapon-shop__status:empty { display: none; }
+.weapon-shop__status { color: #beeaf1; }
+.weapon-shop__recovery { display: grid; gap: 8px; padding: 10px; border: 1px solid #806a39; border-radius: 10px; background: #6f501517; }
+.weapon-shop__pending-copy { color: #f1dba7; }
+@media (max-width: 600px) and (orientation: portrait) {
+  html:not(.mobile-rotated) .weapon-shop__body { grid-template-columns: 1fr; }
+}
+@media (max-height: 450px) {
+  .weapon-shop { padding: 8px; }
+  .weapon-shop__panel { padding: 12px; border-radius: 12px; }
+  .weapon-shop__header { margin-bottom: 9px; }
+  .weapon-shop__body { gap: 12px; }
+  .weapon-shop__grid { gap: 6px; }
+  .weapon-shop__art { height: 63px; }
+  .weapon-shop__details { gap: 6px; }
+}
+html.mobile-rotated .weapon-shop { padding: 8px; }
+html.mobile-rotated .weapon-shop__panel { padding: 12px; border-radius: 12px; }
+html.mobile-rotated .weapon-shop__header { margin-bottom: 9px; }
+html.mobile-rotated .weapon-shop__body { gap: 12px; }
+html.mobile-rotated .weapon-shop__grid { gap: 6px; }
+html.mobile-rotated .weapon-shop__art { height: 63px; }
+html.mobile-rotated .weapon-shop__details { gap: 6px; }
+@media (max-height: 300px), (max-width: 300px) and (orientation: portrait) {
+  .weapon-shop__panel { padding: 8px; }
+  .weapon-shop__header { margin-bottom: 6px; }
+  .weapon-shop__title { font-size: 17px; }
+  .weapon-shop__art { height: 45px; }
+  .weapon-shop__details { gap: 5px; }
+}

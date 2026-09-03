@@ -1,16 +1,16 @@
 import { HEROES } from './data/heroes.js?build=20260828i';
-import { SKIN_ACCESS_MODE } from './data/skins.js?build=20260902d';
-import { normalizeWeaponSkinProfile } from './data/weaponSkins.js?build=20260902d';
+import { SkinCommerce } from './commerce/SkinCommerce.js?build=20260903d';
+import { normalizeWeaponSkinProfile } from './data/weaponSkins.js?build=20260903d';
 import { WEAPONS } from './data/weapons.js?build=20260827b';
 import { BootScene } from './game/BootScene.js?build=20260901g';
 import { GameScene } from './game/GameScene.js?build=20260903c';
 import { gameRenderResolution } from './game/deviceProfile.js?build=20260901f';
 import { installVisibleResume } from './game/runtimeLifecycle.js?build=20260825r';
 import { singleFlight, startFreshRun } from './game/runLifecycle.js?build=20260901i';
-import { defaultProfile, initPlatform } from './platform/usion.js?build=20260828a';
+import { defaultProfile, initPlatform } from './platform/usion.js?build=20260903d';
 import { createI18n } from './ui/i18n.js?build=20260826l';
 import { installInteractionGuards } from './ui/interactionGuards.js?build=20260826h';
-import { UIController } from './ui/UIController.js?build=20260903a';
+import { UIController } from './ui/UIController.js?build=20260903d';
 import { gameViewportSize, installAutoLandscape, requestLandscape } from './ui/orientation.js?build=20260826b';
 
 async function boot() {
@@ -19,14 +19,11 @@ async function boot() {
   const platform = await initPlatform();
   const stored = await platform.loadProfile();
   const profile = normalizeWeaponSkinProfile({ ...defaultProfile(), ...(stored || {}) });
-  let commerce = null;
-  if (SKIN_ACCESS_MODE === 'paid') {
-    const { SkinCommerce } = await import('./commerce/SkinCommerce.js?build=20260901b');
-    commerce = new SkinCommerce({ platform, profile });
-    await commerce.recoverPending().catch((error) => console.warn('Skin delivery recovery pending', error));
-  }
+  const commerce = new SkinCommerce({ platform, profile });
   const i18n = createI18n(platform.config.language);
   const ui = new UIController({ heroes: HEROES, weapons: WEAPONS, i18n, profile, platform, commerce });
+  // A store outage must not delay or freeze the free game.
+  void commerce.refresh().then(() => ui.renderLoadout()).catch(() => {});
 
   const viewport = gameViewportSize();
   const renderProfile = {

@@ -11,7 +11,7 @@ test('loads the official Usion SDK before the exact supported Phaser build', asy
   assert.ok(html.indexOf(sdk) < html.indexOf(phaser));
 });
 
-test('deployment keeps static gameplay, free-preview gating, and a dormant settlement boundary', async () => {
+test('static gameplay uses authenticated platform commerce and preserves legacy refund code', async () => {
   const vercel = JSON.parse(await readFile(new URL('../vercel.json', import.meta.url), 'utf8'));
   assert.equal(vercel.cleanUrls, true);
   assert.equal(vercel.trailingSlash, false);
@@ -22,8 +22,8 @@ test('deployment keeps static gameplay, free-preview gating, and a dormant settl
   assert.match(purchaseApi, /already_settled/);
   const skins = await readFile(new URL('../src/data/skins.js', import.meta.url), 'utf8');
   const main = await readFile(new URL('../src/main.js', import.meta.url), 'utf8');
-  assert.match(skins, /SKIN_ACCESS_MODE = 'free-preview'/);
-  assert.match(main, /if \(SKIN_ACCESS_MODE === 'paid'\)/);
+  assert.match(skins, /SKIN_ACCESS_MODE = 'paid'/);
+  assert.match(main, /new SkinCommerce/);
 });
 
 test('runtime uses Phaser 4 group iteration and real Usion SDK calls', async () => {
@@ -60,9 +60,9 @@ test('mobile boots directly into automatic landscape with dedicated Hina ability
   assert.match(css, /#game canvas[^}]*width:\s*100%\s*!important[^}]*height:\s*100%\s*!important/s);
   assert.match(main, /GameScene\.js\?build=20260903c/);
   assert.match(main, /runLifecycle\.js\?build=20260901i/);
-  assert.match(main, /UIController\.js\?build=20260903a/);
-  assert.match(html, /main\.js\?build=20260903c/);
-  assert.match(html, /loadout\.css\?build=20260903a/);
+  assert.match(main, /UIController\.js\?build=20260903d/);
+  assert.match(html, /main\.js\?build=20260903d/);
+  assert.match(html, /loadout\.css\?build=20260903d/);
   assert.match(main, /resolution:\s*gameRenderResolution\(window\.devicePixelRatio, renderProfile\)/);
   assert.match(main, /render:\s*\{\s*antialias:\s*true,\s*pixelArt:\s*false,\s*roundPixels:\s*true\s*\}/);
   assert.doesNotMatch(css, /--app-viewport-(?:width|height)[^;]*\+\s*2px/);

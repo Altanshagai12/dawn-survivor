@@ -3,7 +3,8 @@ import test from 'node:test';
 
 import { HEROES } from '../src/data/heroes.js';
 import { WEAPONS } from '../src/data/weapons.js';
-import { weaponSkinOptions } from '../src/data/weaponSkins.js';
+import { applySkinEntitlements, weaponSkinOptions } from '../src/data/weaponSkins.js?build=20260903d';
+import { SKIN_STORE_CATALOG } from '../src/data/skinProducts.js?build=20260903d';
 import { bindSkinSwipe, skinSwipeStep } from '../src/ui/skinSwipe.js';
 import { UIController } from '../src/ui/UIController.js';
 import { WeaponLoadoutController } from '../src/ui/WeaponLoadoutController.js';
@@ -62,6 +63,7 @@ function loadout(t, saveProfile = async () => true, language = 'en') {
     el: Object.fromEntries(['hero-list', 'weapon-list'].map((id) => [id, element()])),
   };
   const controller = new WeaponLoadoutController({ ui, platform: { saveProfile } });
+  applySkinEntitlements(ui.profile, SKIN_STORE_CATALOG.products.flatMap((p) => p.grants));
   controller.render();
   return controller;
 }
@@ -220,6 +222,25 @@ test('gun choices remain independent when changing heroes and the game selection
   assert.deepEqual(UIController.prototype.selection.call(controller.ui), {
     heroId: 'hina', weaponId: 'flame', skinId: null,
   });
+  await controller.saveQueue;
+});
+
+test('locked previews never equip and restored ownership offers a real Equip action', async (t) => {
+  const controller = loadout(t);
+  applySkinEntitlements(controller.profile, []);
+  controller.cycleSkin('revolver', 1);
+  const skinId = controller.previewSkin('revolver').id;
+  const card = controller.cards.get('revolver');
+  assert.equal(controller.profile.equippedWeaponSkins.revolver, null);
+  assert.equal(UIController.prototype.selection.call(controller.ui).skinId, null);
+  assert.equal(card.querySelector('.weapon-buy').textContent, controller.copy.buy);
+  applySkinEntitlements(controller.profile, [`weapon:revolver:${skinId}`]);
+  controller.render();
+  assert.equal(card.querySelector('.weapon-buy').textContent, controller.copy.equip);
+  assert.equal(card.querySelector('.weapon-buy').disabled, false);
+  card.querySelector('.weapon-buy').fire('click');
+  assert.equal(UIController.prototype.selection.call(controller.ui).skinId, skinId);
+  assert.equal(card.querySelector('.weapon-buy').textContent, controller.copy.equipped);
   await controller.saveQueue;
 });
 

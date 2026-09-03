@@ -132,6 +132,7 @@ test('loadout audition and in-game shot playback use the equipped gun skin bank'
       AUDIO_BANK_FILES.map((bank) => `${skin.audioBank}/${bank}.wav`));
     for (const weaponId of weaponIds) {
       const controller = { profile: { equippedWeaponSkins: { [weaponId]: skin.id } },
+        previewSkin: () => skin,
         stopAudio: WeaponLoadoutController.prototype.stopAudio };
       WeaponLoadoutController.prototype.audition.call(controller, weaponId);
       assert.equal(controller.audio.src.split('?')[0], `${skin.audioBank}/${weaponId}.wav`);
