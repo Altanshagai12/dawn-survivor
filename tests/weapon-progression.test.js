@@ -7,8 +7,7 @@ import {
   projectileCollisionRadius, projectileScale, syncProjectileVisualRotation, usesSweptProjectileCollision,
   visibleProjectileCollisionRadius,
 } from '../src/game/CombatSystem.js';
-import { PREMIUM_PROJECTILE_CORE_RATIO } from '../src/game/ProjectileGeometry.js';
-import { premiumProjectileScale, PREMIUM_PROJECTILE_RENDER_BOOST } from '../src/game/PremiumVfxDirector.js';
+import { premiumProjectileScale } from '../src/game/PremiumVfxDirector.js';
 import { shouldConsumeAmmo, upgradedProjectileCount } from '../src/game/WeaponMechanics.js';
 import { nextWeaponCharge } from '../src/game/PlayerFeedback.js';
 import { RunState } from '../src/game/RunState.js';
@@ -43,20 +42,17 @@ test('Big Shot enlarges both projectile rendering and its collision footprint', 
   assert.ok(Math.abs(projectileCollisionRadius(bigShotSize) - 5.6) < 1e-9);
 });
 
-test('base projectiles keep authored hit size while premium damaging cores follow their visible size', () => {
+test('projectile physics ignores skin art size, origin and cosmetic power multipliers', () => {
   assert.equal(PROJECTILE_RENDER_MULTIPLIER, 1.9);
   assert.equal(projectileScale(WEAPONS.revolver.bulletSize), 1.9);
   assert.equal(projectileCollisionRadius(WEAPONS.revolver.bulletSize), 4);
-  assert.equal(PREMIUM_PROJECTILE_RENDER_BOOST, 1.65);
-  assert.ok(premiumProjectileScale(8, 'revolver') >= .31);
-  assert.ok(premiumProjectileScale(6, 'shotgun') >= .12);
-  assert.ok(premiumProjectileScale(9, 'crossbow') >= .61);
-  assert.ok(premiumProjectileScale(8, 'flame') >= .37);
-  const premiumScale = premiumProjectileScale(8, 'revolver');
-  assert.equal(
-    visibleProjectileCollisionRadius(8, premiumScale, 256, 256, PREMIUM_PROJECTILE_CORE_RATIO),
-    256 * premiumScale * PREMIUM_PROJECTILE_CORE_RATIO,
-  );
+  for (const weapon of Object.values(WEAPONS)) for (const multiplier of [.45, 1, 1.4, 2.8]) {
+    const size = weapon.bulletSize * multiplier;
+    const scale = premiumProjectileScale(size, weapon.id);
+    assert.equal(visibleProjectileCollisionRadius(size, scale, 256, 256, .3), size / 2);
+    assert.equal(projectileBodyGeometry({ size, renderScale: scale * 10, frameWidth: 256,
+      frameHeight: 256, originX: .3, originY: .7, visualCoreRatio: 1 }).worldRadius, size / 2);
+  }
 });
 
 test('a premium atlas scale preserves the authored world collision radius', () => {
@@ -68,11 +64,11 @@ test('a premium atlas scale preserves the authored world collision radius', () =
 test('projectile body is centered on its visible anchor at every render scale', () => {
   const body = projectileBodyGeometry({
     size: 8, renderScale: .4, frameWidth: 256, frameHeight: 256,
-    originX: .6, originY: .45, visualCoreRatio: PREMIUM_PROJECTILE_CORE_RATIO,
+    originX: .6, originY: .45,
   });
   assert.equal((body.offsetX + body.localRadius) * .4, 256 * .6 * .4);
   assert.equal((body.offsetY + body.localRadius) * .4, 256 * .45 * .4);
-  assert.equal(body.worldRadius, 256 * .4 * PREMIUM_PROJECTILE_CORE_RATIO);
+  assert.equal(body.worldRadius, 4);
 });
 
 test('every authored weapon projectile uses swept collision on slow frames', () => {

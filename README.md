@@ -49,8 +49,9 @@ rotation and carousel input path; it does not change production device detection
 
 For hand-attachment visual QA, add `&pose` to that local preview URL. Choose a
 hero, gun and skin, click **Show held weapon**, then inspect all eight directions
-and six frames. The inset magnifies the actual game framebuffer, not separate
-preview art. Weaponless source sheets and generation prompts are retained in
+and six frames. Choose **Big Shot** and **Hitboxes** to compare the measured
+projectile art and physics radius with and without a skin. The inset magnifies
+the actual game framebuffer, not separate preview art. Weaponless source sheets and generation prompts are retained in
 `assets/sprites/heroes/weaponless/source/`; import with
 `node scripts/import-weaponless-heroes.mjs`.
 
@@ -62,8 +63,9 @@ The loadout groups four heroes in a left-hand rail and four weapons in a larger
 to equip a skin. The neighboring skins remain visible in its carousel. The sound
 button auditions that weapon's firing report.
 Hero and weapon headings sit outside their groups so both bordered areas share
-the same top and bottom edges. Only names and hero HP stay visible; additional
-descriptions are tooltips, and save feedback appears only when a retry is needed.
+the same top and bottom edges. Hero name, HP and a concise localized ability
+description stay visible on touch screens without hovering. Save feedback
+appears only when a retry is needed.
 
 Each of the four weapons independently saves an original or one of eight premium
 styles in `equippedWeaponSkins`. Changing hero does not change weapon skins.
@@ -71,6 +73,12 @@ On the first load of an old profile, its selected hero's old skin is carried to
 all four weapons. Once the new map exists, legacy hero selections never override it.
 The choice changes weapon art, muzzle/projectile/trail/impact/reload presentation,
 and firing audio only; hero cosmetics are no longer loaded or shown.
+Skin and original shots share damage, velocity, lifetime, spread, count, and
+collision radius. Front shots use the original 26-unit launch offset per pellet,
+rear shots 22; cosmetic hand/barrel poses never change the ballistic path.
+Each skin's measured visible projectile envelope is fitted inside the original
+hit radius, including Big Shot and Magic Lens builds. Muzzle flashes remain
+attached to the held gun but cannot add reach or damage.
 All 51 upgrades feed an authored presentation recipe, including rear/fan fire,
 splinters, ricochets, piercing, summons, elemental statuses, and Tomes. The current production trial uses
 `SKIN_ACCESS_MODE = 'free-preview'`: every pack can be equipped without a wallet

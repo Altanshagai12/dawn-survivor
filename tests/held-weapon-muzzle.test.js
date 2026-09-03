@@ -115,7 +115,7 @@ function capturedShots(scene, angle) {
   return shots;
 }
 
-test('every front gun fires from its held mouth without changing shot stats, spread or count', () => {
+test('every skin keeps the original ballistic origin, shot stats, spread and count', () => {
   for (const heroId of Object.keys(HEROES)) for (const skin of Object.values(PREMIUM_SKINS)) {
     for (const weaponId of Object.keys(WEAPONS)) for (const upgraded of [false, true]) {
       const scene = sceneFor(heroId, weaponId, skin);
@@ -125,21 +125,20 @@ test('every front gun fires from its held mouth without changing shot stats, spr
         if (upgraded) target.state.mods = { damageMul: .4, bulletSizeMul: .4, projectileSpeedMul: .2, projectilesAdd: 1, spreadAdd: 4 };
         aimPose(target, angle, upgraded ? 1.5 : 1, 3);
       }
-      const muzzle = heldWeaponMuzzle(scene, angle);
       const actual = capturedShots(scene, angle), original = capturedShots(base, angle);
       assert.equal(actual.length, original.length);
       if (weaponId === 'shotgun' && !upgraded) assert.equal(actual.length, 4);
       actual.forEach((shot, index) => {
-        near(shot.x, muzzle.x); near(shot.y, muzzle.y);
+        near(shot.x, original[index].x); near(shot.y, original[index].y);
         near(shot.angle, original[index].angle);
-        assert.deepEqual(shot.spec, original[index].spec, 'only front projectile origin changes');
+        assert.deepEqual(shot.spec, original[index].spec, 'skin cannot change any shot stat');
         assert.deepEqual(shot.spec.launchOrigin, { x: scene.player.x, y: scene.player.y });
       });
     }
   }
 });
 
-test('no-skin front shots and every rear shot retain their original spawn geometry', () => {
+test('all front and rear shots retain their original spawn geometry', () => {
   for (const skin of [null, ...Object.values(PREMIUM_SKINS)]) for (const weaponId of Object.keys(WEAPONS)) {
     const scene = sceneFor('shana', weaponId, skin);
     scene.state.flags.backShot = true;
@@ -149,23 +148,22 @@ test('no-skin front shots and every rear shot retain their original spawn geomet
     assert.equal(rear.spec.sourceType, 'rear');
     near(rear.x, scene.player.x + Math.cos(angle + Math.PI) * 22);
     near(rear.y, scene.player.y + Math.sin(angle + Math.PI) * 22);
-    if (!skin) for (const shot of shots.slice(0, -1)) {
+    for (const shot of shots.slice(0, -1)) {
       near(shot.x, scene.player.x + Math.cos(shot.angle) * 26);
       near(shot.y, scene.player.y + Math.sin(shot.angle) * 26);
     }
   }
 });
 
-test('real spawning sweeps player to held muzzle so point-blank enemies remain hittable', () => {
+test('real spawning sweeps the original launch segment so point-blank hits stay identical', () => {
   for (const weaponId of Object.keys(WEAPONS)) {
     const scene = sceneFor('hina', weaponId);
     const angle = .37;
     aimPose(scene, angle);
-    const muzzle = heldWeaponMuzzle(scene, angle);
     const close = {
       active: true, spawnId: 1, enemyDef: { radius: 2 },
-      x: scene.player.x + (muzzle.x - scene.player.x) * .45,
-      y: scene.player.y + (muzzle.y - scene.player.y) * .45,
+      x: scene.player.x + Math.cos(angle) * 11,
+      y: scene.player.y + Math.sin(angle) * 11,
     };
     scene.enemies.getChildren = () => [close];
     const combat = new CombatSystem(scene);
@@ -174,11 +172,14 @@ test('real spawning sweeps player to held muzzle so point-blank enemies remain h
     combat.fire(Math.cos(angle), Math.sin(angle));
     assert.equal(hits.length, WEAPONS[weaponId].projectiles);
     assert.ok(hits.every((enemy) => enemy === close));
-    for (const bullet of scene.created) { near(bullet.x, muzzle.x); near(bullet.y, muzzle.y); }
+    for (const bullet of scene.created) {
+      near(bullet.x, scene.player.x + Math.cos(bullet.trajectoryAngle) * 26);
+      near(bullet.y, scene.player.y + Math.sin(bullet.trajectoryAngle) * 26);
+    }
   }
 });
 
-test('main flash, pellet tracers, power accents and recoil strip share the bullet mouth', () => {
+test('flashes stay at the held mouth while faint directional accents follow actual pellet origins', () => {
   for (const weaponId of Object.keys(WEAPONS)) {
     const scene = sceneFor('diamond', weaponId);
     scene.state.owned = new Set(['power_shot', 'big_shot', 'reaper_rounds', 'double_shot']);
@@ -191,8 +192,12 @@ test('main flash, pellet tracers, power accents and recoil strip share the bulle
     scene.premiumVfx.emit = (frame, x, y, options) => effects.push({ frame, x, y, options });
     scene.onShot = (aim, info) => presentWeaponShot(scene, aim, info.shotAngles);
     const shots = capturedShots(scene, angle);
-    assert.ok(effects.length >= shots.length + 2, 'muzzle, real-angle tracers and multi accent are emitted');
-    for (const effect of effects) { near(effect.x, muzzle.x); near(effect.y, muzzle.y); }
+    assert.equal(effects.length, shots.length + 2, 'muzzle, real-angle afterimages and subdued power flash');
+    for (const effect of [effects[0], effects.at(-1)]) { near(effect.x, muzzle.x); near(effect.y, muzzle.y); }
+    effects.slice(1, -1).forEach((effect, index) => {
+      near(effect.x, shots[index].x); near(effect.y, shots[index].y);
+      assert.ok(effect.options.alpha <= .3);
+    });
     assert.equal(scene.rectangles.length, 1);
     near(scene.rectangles[0].x, muzzle.x); near(scene.rectangles[0].y, muzzle.y);
   }

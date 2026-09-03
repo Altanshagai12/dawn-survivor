@@ -1,5 +1,5 @@
 import { selectedWeaponSkin } from '../data/weaponSkins.js?build=20260902d';
-import { WeaponLoadoutController } from './WeaponLoadoutController.js?build=20260902d';
+import { WeaponLoadoutController } from './WeaponLoadoutController.js?build=20260903a';
 import {
   damageSourceLabel, formatSurvivalTime, savedOrDefault,
   survivalLeaderboardEntries,

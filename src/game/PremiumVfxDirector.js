@@ -1,12 +1,11 @@
 import { activePresentationRecipe, upgradePresentation } from './UpgradePresentationProfiles.js?build=20260828e';
 import { skinProjectileAnchor, skinProjectileRotation } from '../data/skins.js?build=20260902b';
-import { PREMIUM_PROJECTILE_CORE_RATIO, syncProjectileVisualRotation } from './ProjectileGeometry.js?build=20260901e';
+import { projectileCollisionRadius, syncProjectileVisualRotation } from './ProjectileGeometry.js?build=20260903b';
+import { skinProjectileEnvelope } from '../data/skinProjectileBounds.js?build=20260903b';
 import { heldWeaponMuzzle } from './SkinPresentation.js?build=20260902e';
 
 const WEAPON_FRAMES = Object.freeze({ revolver: 1, shotgun: 7, crossbow: 3, flame: 4 });
 const PROJECTILE_FRAMES = Object.freeze({ revolver: 5, shotgun: 6, crossbow: 3, flame: 4 });
-const PROJECTILE_SCALES = Object.freeze({ revolver: .19, shotgun: .1, crossbow: .33, flame: .23 });
-const TRAIL_FRAMES = Object.freeze({ revolver: 5, shotgun: 6, crossbow: 10, flame: 4 });
 const IMPACT_FRAMES = Object.freeze({ revolver: 1, shotgun: 7, crossbow: 10, flame: 4 });
 const STATUS_FRAMES = Object.freeze({ burn: 12, freeze: 13, lightning: 14, curse: 15 });
 const SPECIAL_FRAMES = Object.freeze({
@@ -14,32 +13,18 @@ const SPECIAL_FRAMES = Object.freeze({
   ice: 13, fireball: 12, glare: 14, gale: 15, blazing: 12, shield: 14,
   scythe: 10, shatter: 13,
 });
-export const PREMIUM_PROJECTILE_RENDER_BOOST = 1.65;
-export const PREMIUM_SHOT_EFFECT_BOOST = 1.12;
 
-export function premiumProjectileScale(size = 8, weaponId = 'revolver', powerScale = 1) {
-  const base = PROJECTILE_SCALES[weaponId] ?? PROJECTILE_SCALES.revolver;
-  return base * Math.max(.72, size / 8) * powerScale * PREMIUM_PROJECTILE_RENDER_BOOST;
+export function premiumProjectileScale(size = 8, weaponId = 'revolver', skin = null) {
+  return projectileCollisionRadius(size) / skinProjectileEnvelope(skin, weaponId);
 }
 
-export function premiumPowerAccent(skin, weaponId = 'revolver', trajectoryAngle = 0) {
-  return {
-    frame: PROJECTILE_FRAMES[weaponId] ?? PROJECTILE_FRAMES.revolver,
-    rotation: trajectoryAngle + skinProjectileRotation(skin, weaponId),
-  };
-}
-
-export function premiumShotLayout(skin, weaponId = 'revolver', trajectoryAngle = 0) {
+export function premiumShotLayout(weaponId = 'revolver', trajectoryAngle = 0) {
   const shotgun = weaponId === 'shotgun';
   return {
     muzzleFrame: WEAPON_FRAMES[weaponId] ?? WEAPON_FRAMES.revolver,
     muzzleOffset: shotgun ? 42 : 27,
     muzzleDepth: shotgun ? 24.4 : 37,
     muzzleRotation: shotgun ? 0 : trajectoryAngle,
-    tracerFrame: PROJECTILE_FRAMES.shotgun,
-    tracerDepth: shotgun ? 29 : 37,
-    tracerOriginX: shotgun ? .15 : .5,
-    tracerRotation: trajectoryAngle + (shotgun ? skinProjectileRotation(skin, 'shotgun') : 0),
   };
 }
 
@@ -121,16 +106,14 @@ export class PremiumVfxDirector {
   projectileFrame(weaponId) { return PROJECTILE_FRAMES[weaponId] ?? 5; }
 
   styleProjectile(bullet, size, weaponId) {
-    if (!bullet || !this.skin) return;
-    const recipe = activePresentationRecipe(this.scene.state);
-    const scale = premiumProjectileScale(size, weaponId, recipe.powerScale);
+    if (!bullet?.skin || !this.skin || !weaponId) return;
+    const scale = premiumProjectileScale(size, weaponId, bullet.skin);
     const anchor = skinProjectileAnchor(this.skin, weaponId);
     bullet.setTexture(this.skin.vfxKey, this.projectileFrame(weaponId))
       .setOrigin(anchor.x, anchor.y)
       .setScale(scale)
       .setBlendMode(Phaser.BlendModes.ADD);
     bullet.premiumVfxScale = scale;
-    bullet.projectileCoreRatio = PREMIUM_PROJECTILE_CORE_RATIO;
     bullet.visualRotationOffset = skinProjectileRotation(this.skin, weaponId);
     syncProjectileVisualRotation(bullet, bullet.trajectoryAngle || 0);
   }
@@ -138,60 +121,62 @@ export class PremiumVfxDirector {
   shot(angle, authoredAngles = []) {
     const { weapon } = this.scene.state;
     const recipe = activePresentationRecipe(this.scene.state);
-    const layout = premiumShotLayout(this.skin, weapon.id, angle);
+    const size = weapon.bulletSize * this.scene.state.multiplierStats.bulletSize;
+    const radius = projectileCollisionRadius(size);
+    const coreScale = premiumProjectileScale(size, weapon.id, this.skin);
+    const layout = premiumShotLayout(weapon.id, angle);
     const muzzle = heldWeaponMuzzle(this.scene, angle);
     const x = muzzle?.x ?? this.scene.player.x + Math.cos(angle) * layout.muzzleOffset;
     const y = muzzle?.y ?? this.scene.player.y + Math.sin(angle) * layout.muzzleOffset;
     this.emit(layout.muzzleFrame, x, y, {
       rotation: layout.muzzleRotation, depth: layout.muzzleDepth,
-      scale: (weapon.id === 'shotgun' ? .09 : .15) * PREMIUM_SHOT_EFFECT_BOOST,
-      endScale: .28 * PREMIUM_SHOT_EFFECT_BOOST,
-      duration: weapon.id === 'flame' ? 240 : 155, priority: 3,
+      scale: radius / 80, endScale: radius / 56,
+      duration: 90, alpha: .55, priority: 3,
     });
     const tracerAngles = authoredAngles.length ? authoredAngles : [angle];
     tracerAngles.forEach((shotAngle) => {
-      const tracer = premiumShotLayout(this.skin, weapon.id, shotAngle);
-      this.emit(tracer.tracerFrame, x, y, {
-        rotation: tracer.tracerRotation, originX: tracer.tracerOriginX, depth: tracer.tracerDepth,
-        scaleX: (weapon.id === 'crossbow' ? .34 : weapon.id === 'shotgun' ? .2 : .23) * PREMIUM_SHOT_EFFECT_BOOST,
-        scaleY: (weapon.id === 'flame' ? .085 : .035) * PREMIUM_SHOT_EFFECT_BOOST,
-        endScaleX: (weapon.id === 'crossbow' ? .48 : .34) * PREMIUM_SHOT_EFFECT_BOOST,
-        endScaleY: .018 * PREMIUM_SHOT_EFFECT_BOOST,
-        duration: weapon.id === 'crossbow' ? 170 : 120, alpha: .86, priority: 2,
+      const anchor = skinProjectileAnchor(this.skin, weapon.id);
+      // A faint launch afterimage follows the real pellet origin, never the
+      // cosmetic barrel offset. It cannot masquerade as a larger parallel shot.
+      this.emit(this.projectileFrame(weapon.id),
+        this.scene.player.x + Math.cos(shotAngle) * 26,
+        this.scene.player.y + Math.sin(shotAngle) * 26, {
+        rotation: shotAngle + skinProjectileRotation(this.skin, weapon.id),
+        originX: anchor.x, originY: anchor.y, depth: 29,
+        scale: coreScale, endScale: coreScale * .4,
+        duration: 60, alpha: .3, priority: 2,
       });
     });
-    if (recipe.multiTier || authoredAngles.length > 1) this.emit(11, x, y, {
-      rotation: angle, scale: .11 * PREMIUM_SHOT_EFFECT_BOOST,
-      endScale: (.26 + recipe.multiTier * .02) * PREMIUM_SHOT_EFFECT_BOOST, duration: 190, priority: 2,
-    });
     if (recipe.powerScale > 1.1) {
-      const accent = premiumPowerAccent(this.skin, weapon.id, angle);
-      this.emit(accent.frame, x, y, {
-        rotation: accent.rotation, originX: weapon.id === 'shotgun' ? .15 : .5,
-        depth: weapon.id === 'shotgun' ? 29 : 37, scale: .08 * PREMIUM_SHOT_EFFECT_BOOST,
-        endScale: .2 * recipe.powerScale * PREMIUM_SHOT_EFFECT_BOOST, duration: 175,
+      this.emit(layout.muzzleFrame, x, y, {
+        rotation: layout.muzzleRotation, depth: layout.muzzleDepth,
+        scale: radius / 100, endScale: radius / 72, duration: 80, alpha: .3,
       });
     }
   }
 
   trail(bullet) {
-    if (!bullet?.active || this.scene.time.now < (bullet.nextPremiumTrailAt || 0)) return;
+    if (!bullet?.active || !bullet.skin || !bullet.premiumVfxScale
+      || this.scene.time.now < (bullet.nextPremiumTrailAt || 0)) return;
     const recipe = activePresentationRecipe(this.scene.state);
     bullet.nextPremiumTrailAt = this.scene.time.now + Math.max(34,
       (this.scene.performance?.mobile ? 96 : 58) - recipe.trailRate * 5);
     const angle = bullet.trajectoryAngle ?? bullet.rotation ?? 0;
-    this.emit(recipe.fire && bullet.burnChance ? 12 : (TRAIL_FRAMES[bullet.weaponId] ?? 6),
-      bullet.x - Math.cos(angle) * 10, bullet.y - Math.sin(angle) * 10, {
-        rotation: angle, scale: Math.max(.035, (bullet.premiumVfxScale || .06) * .7),
-        endScale: .025, duration: 180, alpha: .7, depth: 29,
+    const anchor = skinProjectileAnchor(this.skin, bullet.weaponId);
+    const offset = (bullet.collisionRadius || 0) * .8;
+    this.emit(this.projectileFrame(bullet.weaponId),
+      bullet.x - Math.cos(angle) * offset, bullet.y - Math.sin(angle) * offset, {
+        rotation: bullet.rotation, originX: anchor.x, originY: anchor.y,
+        scale: bullet.premiumVfxScale * .65, endScale: bullet.premiumVfxScale * .1,
+        duration: 95, alpha: .3, depth: 29,
       });
   }
 
   impact(bullet, x, y) {
     const recipe = activePresentationRecipe(this.scene.state);
+    const radius = bullet?.collisionRadius || projectileCollisionRadius(this.scene.state.weapon.bulletSize);
     this.emit(IMPACT_FRAMES[bullet?.weaponId] ?? 7, x, y, {
-      scale: .1 * recipe.powerScale * PREMIUM_SHOT_EFFECT_BOOST,
-      endScale: .3 * recipe.powerScale * PREMIUM_SHOT_EFFECT_BOOST, duration: 235, priority: 2,
+      scale: radius / 80, endScale: radius / 48, duration: 135, alpha: .65, priority: 2,
     });
     if (bullet?.burnChance || recipe.fire) this.status('burn', x, y, .08);
     if (bullet?.freezeChance || recipe.frost) this.status('freeze', x, y, .075);

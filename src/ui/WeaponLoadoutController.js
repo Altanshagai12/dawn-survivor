@@ -12,6 +12,14 @@ const COPY = {
     failed: 'Хадгалсангүй. Дарж дахин оролдоно уу.' },
 };
 
+// Decision-making copy must stay visible on touch screens, not only in a tooltip.
+const ABILITIES = {
+  reroll: { en: 'Reroll · once per level', mn: 'Reroll · level бүр 1 удаа' },
+  highHp: { en: 'Starts with 6 HP', mn: '6 амьтай эхэлнэ' },
+  fireWave: { en: 'Every 3rd shot → fire', mn: '3 дахь буудалт бүр → гал' },
+  dashClone: { en: 'Dash → shooting clone', mn: 'Dash → бууддаг хуулбар' },
+};
+
 export class WeaponLoadoutController {
   constructor({ ui, platform }) {
     this.ui = ui;
@@ -37,10 +45,14 @@ export class WeaponLoadoutController {
       button.type = 'button';
       button.className = 'hero-option';
       button.dataset.hero = hero.id;
+      button.dataset.ability = hero.passive;
+      const ability = ABILITIES[hero.passive][this.ui.i18n.lang === 'mn' ? 'mn' : 'en'];
       button.innerHTML = `<img src="${hero.portrait}" alt="" draggable="false" />
-        <span class="hero-option__copy"><strong>${this.name(hero)}</strong>
-        <span>♥ ${hero.hp}</span></span><b class="selection-dot" aria-hidden="true"></b>`;
+        <span class="hero-option__copy"><span class="hero-option__heading"><strong>${this.name(hero)}</strong>
+        <span class="hero-option__health">♥ ${hero.hp}</span></span>
+        <span class="hero-option__ability" id="hero-ability-${hero.id}">${ability}</span></span>`;
       button.setAttribute('aria-label', this.name(hero));
+      button.setAttribute('aria-describedby', `hero-ability-${hero.id}`);
       button.title = heroPassiveCopy(hero, this.ui.i18n.lang);
       button.addEventListener('click', () => {
         this.ui.selectedHero = hero.id;

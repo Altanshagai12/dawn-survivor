@@ -4,13 +4,13 @@ import { handleSpecialKill } from './KillProgression.js?build=20260825r';
 import { resolveProjectileLaunchHits, resolveProjectileTravelHits } from './ProjectileLaunchCollision.js?build=20260827e';
 import { shouldConsumeAmmo, upgradedProjectileCount } from './WeaponMechanics.js?build=20260825r';
 import { presentWeaponImpact, updateProjectilePresentation } from './WeaponPresentation.js?build=20260902e';
-import { heldWeaponMuzzle, syncWeaponSkin } from './SkinPresentation.js?build=20260902e';
+import { syncWeaponSkin } from './SkinPresentation.js?build=20260902e';
 import { skinProjectileTint } from '../data/skins.js?build=20260901e';
 import {
   PROJECTILE_RENDER_MULTIPLIER, projectileBodyGeometry, projectileBodyRadius,
   projectileCollisionRadius, projectileScale, syncProjectileVisualRotation, usesSweptProjectileCollision,
   visibleProjectileCollisionRadius,
-} from './ProjectileGeometry.js?build=20260901e';
+} from './ProjectileGeometry.js?build=20260903b';
 
 export {
   PROJECTILE_RENDER_MULTIPLIER, projectileBodyGeometry, projectileBodyRadius,
@@ -60,7 +60,6 @@ export class CombatSystem {
     const weapon = state.weapon;
     const baseAngle = Math.atan2(aimY, aimX);
     syncWeaponSkin(this.scene.weaponSkin, this.scene.player, 0, baseAngle);
-    const heldMuzzle = heldWeaponMuzzle(this.scene, baseAngle);
     const count = options.projectiles || upgradedProjectileCount(
       weapon.projectiles,
       state.mods.projectilesAdd || 0,
@@ -92,8 +91,10 @@ export class CombatSystem {
       const random = count === 1 ? Phaser.Math.FloatBetween(-.5, .5) : 0;
       const angle = baseAngle + Phaser.Math.DegToRad((centered + random * .3) * spread);
       shotAngles.push(angle);
-      this.spawnBullet(heldMuzzle?.x ?? this.scene.player.x + Math.cos(angle) * 26,
-        heldMuzzle?.y ?? this.scene.player.y + Math.sin(angle) * 26, angle, {
+      // The held gun/muzzle is cosmetic. Every skin uses the original ballistic
+      // origin per pellet, so hand poses and artwork cannot change hits or range.
+      this.spawnBullet(this.scene.player.x + Math.cos(angle) * 26,
+        this.scene.player.y + Math.sin(angle) * 26, angle, {
         ...shotSpec,
         launchOrigin: { x: this.scene.player.x, y: this.scene.player.y },
       });
@@ -172,7 +173,6 @@ export class CombatSystem {
       frameHeight,
       originX: bullet.originX,
       originY: bullet.originY,
-      visualCoreRatio: bullet.projectileCoreRatio || 0,
     });
     bullet.collisionRadius = body.worldRadius;
     bullet.body.setCircle(body.localRadius, body.offsetX, body.offsetY);
@@ -283,7 +283,9 @@ export class CombatSystem {
     if (Math.abs(Phaser.Math.Angle.Wrap(angle - lensAngle)) > .3) return;
     const multiplier = this.scene.state.flags.lensDouble ? 1.6 : 1.3;
     bullet.damage *= multiplier;
-    bullet.setScale(bullet.scaleX * multiplier);
+    // Lens changes damage equally; a skin's visible core stays fitted to its
+    // unchanged hitbox (the original projectile's visual behavior is retained).
+    if (!bullet.skin) bullet.setScale(bullet.scaleX * multiplier);
     bullet.bounces += (this.scene.state.flags.lensBounceAdd || 0) * (this.scene.state.flags.lensDouble ? 2 : 1);
     if (this.scene.state.flags.lensBurn) bullet.burnChance = 1;
     bullet.setTint(0x8ffcff);

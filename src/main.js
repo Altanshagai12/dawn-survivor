@@ -3,14 +3,14 @@ import { SKIN_ACCESS_MODE } from './data/skins.js?build=20260902d';
 import { normalizeWeaponSkinProfile } from './data/weaponSkins.js?build=20260902d';
 import { WEAPONS } from './data/weapons.js?build=20260827b';
 import { BootScene } from './game/BootScene.js?build=20260901g';
-import { GameScene } from './game/GameScene.js?build=20260902e';
+import { GameScene } from './game/GameScene.js?build=20260903b';
 import { gameRenderResolution } from './game/deviceProfile.js?build=20260901f';
 import { installVisibleResume } from './game/runtimeLifecycle.js?build=20260825r';
 import { singleFlight, startFreshRun } from './game/runLifecycle.js?build=20260901i';
 import { defaultProfile, initPlatform } from './platform/usion.js?build=20260828a';
 import { createI18n } from './ui/i18n.js?build=20260826l';
 import { installInteractionGuards } from './ui/interactionGuards.js?build=20260826h';
-import { UIController } from './ui/UIController.js?build=20260902d';
+import { UIController } from './ui/UIController.js?build=20260903a';
 import { gameViewportSize, installAutoLandscape, requestLandscape } from './ui/orientation.js?build=20260826b';
 
 async function boot() {

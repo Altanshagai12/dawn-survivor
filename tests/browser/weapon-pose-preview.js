@@ -1,6 +1,8 @@
 import { directionalPose } from '../../src/game/animations.js';
 import { syncWeaponSkin } from '../../src/game/SkinPresentation.js';
 import { weaponHandPosition } from '../../src/game/WeaponHandAnchors.js';
+import { UPGRADES } from '../../src/data/upgrades.js';
+import { skinProjectileEnvelope } from '../../src/data/skinProjectileBounds.js';
 
 // Local-only real Phaser render fixture. No production entry imports this file.
 export function installWeaponPosePreview({ game, ui, heroes, weapons, skins }) {
@@ -21,6 +23,13 @@ export function installWeaponPosePreview({ game, ui, heroes, weapons, skins }) {
   const pose = select('QA direction', ['N','NE','E','SE','S','SW','W','NW'].map((id, index) => [String(index), id]));
   pose.value = '2';
   const frame = select('QA frame', Array.from({ length: 6 }, (_, index) => [String(index), `Frame ${index}`]));
+  const upgrade = select('QA upgrade', [['', 'Base stats'], ['big_shot', 'Big Shot']]);
+  const bounds = document.createElement('input');
+  bounds.type = 'checkbox';
+  bounds.setAttribute('aria-label', 'Show actual projectile hitboxes');
+  const boundsLabel = document.createElement('label');
+  boundsLabel.append(bounds, ' Hitboxes');
+  panel.append(boundsLabel);
   const status = document.createElement('div');
   const start = document.createElement('button');
   start.textContent = 'Show held weapon';
@@ -65,10 +74,26 @@ export function installWeaponPosePreview({ game, ui, heroes, weapons, skins }) {
     fire.disabled = true;
     const angle = -Math.PI / 2 + Number(pose.value) * Math.PI / 4;
     scene.inputController.snapshot = () => ({ moveX: 0, moveY: 0, aimX: Math.cos(angle), aimY: Math.sin(angle), firing: false });
-    scene.combat.fire(Math.cos(angle), Math.sin(angle), { free: true });
-    scene.scene.resume();
+    // Fire after the resumed clock has advanced; using a long-paused timestamp
+    // otherwise makes short-lived pellets expire before their first QA frame.
+    await new Promise((resolve) => {
+      scene.events.once('update', () => {
+        scene.combat.fire(Math.cos(angle), Math.sin(angle), { free: true });
+        resolve();
+      });
+      scene.scene.resume();
+    });
     await new Promise((resolve) => setTimeout(resolve, 50));
     scene.scene.pause();
+    const bullets = scene.bullets.getChildren().filter((bullet) => bullet.active);
+    status.textContent = bullets.map((bullet) => {
+      const actual = bullet.body.radius * Math.abs(bullet.scaleX);
+      const visible = bullet.skin ? skinProjectileEnvelope(bullet.skin, bullet.weaponId) * Math.abs(bullet.scaleX) : null;
+      if (bounds.checked) {
+        scene.add.graphics().lineStyle(.5, 0x65ffba, .9).strokeCircle(bullet.body.center.x, bullet.body.center.y, actual).setDepth(90);
+      }
+      return `${bullet.weaponId}: hit r=${actual.toFixed(2)}${visible == null ? '' : `, art r=${visible.toFixed(2)}`}`;
+    }).join(' | ') || 'No active projectiles';
     fire.disabled = false;
   };
   start.onclick = async () => {
@@ -82,6 +107,7 @@ export function installWeaponPosePreview({ game, ui, heroes, weapons, skins }) {
         await new Promise((resolve) => setTimeout(resolve, 30));
       }
       if (!scene.player?.active || scene.player === previous) throw new Error('Pose fixture failed to start');
+      if (upgrade.value) scene.state.applyUpgrade(UPGRADES.find(({ id }) => id === upgrade.value));
       await new Promise((resolve) => setTimeout(resolve, 150));
       scene.scene.pause();
       showPose();

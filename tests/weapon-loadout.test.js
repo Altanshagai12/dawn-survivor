@@ -48,7 +48,7 @@ function element() {
   };
 }
 
-function loadout(t, saveProfile = async () => true) {
+function loadout(t, saveProfile = async () => true, language = 'en') {
   const previous = globalThis.document;
   const nodes = new Map();
   globalThis.document = {
@@ -57,7 +57,7 @@ function loadout(t, saveProfile = async () => true) {
   };
   t.after(() => { globalThis.document = previous; });
   const ui = {
-    heroes: HEROES, weapons: WEAPONS, i18n: { lang: 'en' }, profile: {},
+    heroes: HEROES, weapons: WEAPONS, i18n: { lang: language }, profile: {},
     selectedHero: 'shana', selectedWeapon: 'revolver',
     el: Object.fromEntries(['hero-list', 'weapon-list'].map((id) => [id, element()])),
   };
@@ -75,6 +75,26 @@ function deferred() {
   let resolve;
   const promise = new Promise((done) => { resolve = done; });
   return { promise, resolve };
+}
+
+for (const [lang, copy] of Object.entries({
+  en: ['Reroll · once per level', 'Starts with 6 HP', 'Every 3rd shot → fire', 'Dash → shooting clone'],
+  mn: ['Reroll · level бүр 1 удаа', '6 амьтай эхэлнэ', '3 дахь буудалт бүр → гал', 'Dash → бууддаг хуулбар'],
+})) {
+  test(`all four hero abilities are visible without hover and accessible in ${lang}`, async (t) => {
+    const controller = loadout(t, undefined, lang);
+    for (const [index, hero] of Object.values(HEROES).entries()) {
+      const button = controller.heroButtons.get(hero.id);
+      assert.ok(button.innerHTML.includes(`id="hero-ability-${hero.id}">${copy[index]}</span>`));
+      assert.equal(button.dataset.ability, hero.passive);
+      assert.equal(button.attributes['aria-describedby'], `hero-ability-${hero.id}`);
+      assert.equal(button.attributes['aria-label'], lang === 'mn' ? hero.nameMn : hero.name);
+      button.fire('click');
+      assert.equal(button.attributes['aria-pressed'], 'true');
+      assert.equal(controller.profile.selectedHero, hero.id);
+    }
+    await controller.saveQueue;
+  });
 }
 
 test('swipe direction follows the visible carousel in horizontal and CSS-rotated layouts', () => {

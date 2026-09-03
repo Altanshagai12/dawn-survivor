@@ -39,3 +39,10 @@ test('hero rail and weapon grid share heading geometry without extra loadout tex
   assert.doesNotMatch(html, /loadout-summary|loadout-hint|hero-note|movement-description|SKIN \/ VFX \/ AUDIO|01 — 04/);
   assert.doesNotMatch(controller, /skin-count|skin-kind|SPD|hero-stat|weapon-stat|movementCopy/);
 });
+
+test('hero ability copy remains readable and wraps instead of disappearing on mobile', async () => {
+  const css = await readFile(new URL('../loadout.css', import.meta.url), 'utf8');
+  assert.match(css, /\.hero-option__ability\s*\{[^}]*white-space:\s*normal/);
+  assert.match(css, /\.hero-option__ability\s*\{[^}]*font-size:\s*10\.5px/);
+  assert.doesNotMatch(css, /\.hero-option__ability\s*\{[^}]*(?:display:\s*none|visibility:\s*hidden|opacity:\s*0|text-overflow:\s*ellipsis)/);
+});

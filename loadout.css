@@ -14,12 +14,16 @@
 .loadout-heroes, .loadout-weapons { display: grid; grid-template-rows: 14px minmax(0, 1fr); gap: 12px; min-height: 0; min-width: 0; }
 .hero-rail { display: grid; grid-template-rows: repeat(4, minmax(0, 1fr)); min-height: 0; gap: 8px; padding: 12px; border: 1px solid #302739; border-radius: 16px; background: #121019; }
 .hero-option { position: relative; display: flex; align-items: center; min-width: 0; min-height: 0; overflow: hidden; padding: 0; border: 1px solid transparent; border-radius: 11px; background: #1b1623; text-align: left; cursor: pointer; }
-.hero-option img { width: 47%; height: 100%; object-fit: cover; object-position: 50% 23%; opacity: .6; transition: opacity .18s; }
+.hero-option img { width: 35%; height: 100%; object-fit: cover; object-position: 50% 23%; opacity: .6; transition: opacity .18s; }
 .hero-option__copy { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 5px; padding: 8px; }
 .hero-option__copy strong { font-size: clamp(10px, 1.2vw, 14px); line-height: 1.15; }
-.hero-option__copy > span { font-size: 9px; color: #9d92a9; white-space: nowrap; }
+.hero-option__heading { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+.hero-option__health { flex: 0 0 auto; font-size: 10px; color: #c7b7c6; white-space: nowrap; }
+.hero-option__ability { font-size: 12px; line-height: 1.3; color: #9be9f5; white-space: normal; text-wrap: pretty; }
+.hero-option[data-ability="highHp"] .hero-option__ability { color: #ffb8cb; }
+.hero-option[data-ability="fireWave"] .hero-option__ability { color: #ffc08f; }
+.hero-option[data-ability="dashClone"] .hero-option__ability { color: #d8baff; }
 .selection-dot { width: 12px; height: 12px; border: 1px solid #52455f; border-radius: 50%; flex: 0 0 auto; }
-.hero-option > .selection-dot { position: absolute; right: 7px; top: 7px; width: 7px; height: 7px; }
 .hero-option.selected { border-color: #65e6ff; background: #17222b; }
 .hero-option.selected img { opacity: 1; }
 .hero-option.selected .selection-dot, .weapon-option.selected .selection-dot { border-color: var(--weapon-color, #65e6ff); background: var(--weapon-color, #65e6ff); box-shadow: 0 0 10px color-mix(in srgb, var(--weapon-color, #65e6ff) 40%, transparent); }
@@ -61,14 +65,15 @@
 @media (max-width: 700px), (max-height: 600px) {
   #menu { padding: 12px 18px; gap: 9px; }
   .loadout-header h1 { font-size: 25px; }
-  .loadout-selection { grid-template-columns: minmax(140px, .65fr) minmax(0, 2fr); gap: 12px; }
+  .loadout-selection { grid-template-columns: minmax(180px, .8fr) minmax(0, 2fr); gap: 12px; }
   .loadout-heroes, .loadout-weapons { gap: 7px; }
   .loadout-section-title { font-size: 9px; }
   .hero-rail { gap: 5px; padding: 9px; border-radius: 11px; }
   .hero-option { border-radius: 7px; }
   .hero-option__copy { gap: 2px; padding: 4px; }
   .hero-option__copy strong { font-size: 10px; }
-  .hero-option__copy > span { font-size: 7px; }
+  .hero-option__health { font-size: 9px; }
+  .hero-option__ability { font-size: 10.5px; line-height: 1.2; }
   .weapon-grid { gap: 8px; }
   .weapon-option { display: block; border-radius: 11px; }
   .weapon-select { position: relative; z-index: 2; padding: 7px 10px 0; }
@@ -96,6 +101,8 @@ html.mobile-rotated .loadout-header h1 { font-size: 25px; }
 @media (max-height: 360px), (max-width: 360px) {
   .loadout-header h1, html.mobile-rotated .loadout-header h1 { font-size: 21px; }
   #menu #start-button { min-height: 32px; }
+  .hero-rail { padding: 6px; gap: 4px; }
+  .hero-option__copy { padding: 2px 4px; }
 }
 @media (max-width: 480px) and (orientation: portrait) {
   html:not(.mobile-rotated) #menu { padding: 12px 10px; }

@@ -173,10 +173,10 @@ test('weapon skins retain projectile, muzzle, impact, trail and reload VFX witho
     const director = new PremiumVfxDirector(scene, skin);
     director.update(1, { moveX: 1, moveY: 0 });
     assert.equal(images.length, 0, 'movement/idle may not create body aura, motes or trails');
-    const bullet = Object.assign(node(), { weaponId: weapon.id, damage: 17, trajectoryAngle: .47 });
+    const bullet = Object.assign(node(), { skin, weaponId: weapon.id, damage: 17, trajectoryAngle: .47 });
     director.styleProjectile(bullet, weapon.bulletSize, weapon.id);
     assert.equal(bullet.texture.key, skin.vfxKey);
-    assert.equal(bullet.scaleX, premiumProjectileScale(weapon.bulletSize, weapon.id));
+    assert.equal(bullet.scaleX, premiumProjectileScale(weapon.bulletSize, weapon.id, skin));
     assert.equal(bullet.rotation, .47 + skinProjectileRotation(skin, weapon.id));
     assert.equal(bullet.originX, skinProjectileAnchor(skin, weapon.id).x);
     assert.equal(bullet.damage, 17);

@@ -13,10 +13,7 @@ import { ALL_UPGRADES } from '../src/data/upgrades.js';
 import { activePresentationRecipe, presentationCoverage } from '../src/game/UpgradePresentationProfiles.js';
 import { AUDIO_BANK_FILES } from '../src/game/WeaponAudioProfiles.js';
 import { PremiumWeaponAudio, weaponSoundProfile } from '../src/game/PremiumWeaponAudio.js';
-import {
-  premiumPowerAccent, premiumShotLayout,
-  PREMIUM_PROJECTILE_RENDER_BOOST, PREMIUM_SHOT_EFFECT_BOOST,
-} from '../src/game/PremiumVfxDirector.js';
+import { premiumShotLayout } from '../src/game/PremiumVfxDirector.js';
 import { PLAYER_DISPLAY_HEIGHT } from '../src/game/PlayerHitbox.js';
 import { weaponEffectProfile } from '../src/game/WeaponPresentation.js';
 import { decodeReceiptClaims, settleSkinPurchase } from '../api/purchase-skin.js';
@@ -127,17 +124,10 @@ test('ships two complete premium hero, weapon, projectile, and firing-audio pack
     }
     const shotgunResidual = framePrincipalAngle(raw, 6) + skinProjectileRotation(skin, 'shotgun');
     assert.ok(Math.abs(shotgunResidual) <= .02, `${skin.id} shotgun art follows its trajectory`);
-    const bigShotAccent = premiumPowerAccent(skin, 'shotgun', .47);
-    assert.equal(bigShotAccent.frame, 6, `${skin.id} Big Shot must reuse the authored shotgun projectile`);
-    assert.ok(Math.abs(framePrincipalAngle(raw, bigShotAccent.frame)
-      + bigShotAccent.rotation - .47) <= .02, `${skin.id} Big Shot accent follows the trajectory`);
-    const shotgunLayout = premiumShotLayout(skin, 'shotgun', .47);
+    const shotgunLayout = premiumShotLayout('shotgun', .47);
     assert.equal(shotgunLayout.muzzleFrame, 7, `${skin.id} shotgun muzzle is a radial flash, not a ground burst`);
     assert.ok(shotgunLayout.muzzleDepth < 25, `${skin.id} muzzle flash stays behind the hero body`);
-    assert.equal(shotgunLayout.tracerFrame, 6);
     assert.ok(shotgunLayout.muzzleOffset >= 42, `${skin.id} muzzle starts beyond the hero core`);
-    assert.ok(Math.abs(framePrincipalAngle(raw, shotgunLayout.tracerFrame)
-      + shotgunLayout.tracerRotation - .47) <= .02, `${skin.id} base tracer follows the trajectory`);
 
     const heroPath = skin.heroAtlas.file.split('?')[0].replace(/^\.\//, '../');
     const heroUrl = new URL(heroPath, import.meta.url);
@@ -303,8 +293,6 @@ test('free preview exposes every skin without granting durable paid ownership', 
 });
 
 test('each premium skin remixes all core weapon visuals and audio without changing damage stats', () => {
-  assert.ok(PREMIUM_PROJECTILE_RENDER_BOOST > 1);
-  assert.ok(PREMIUM_SHOT_EFFECT_BOOST > 1);
   for (const skin of Object.values(PREMIUM_SKINS)) {
     for (const weaponId of ['revolver', 'shotgun', 'crossbow', 'flame']) {
       const baseVisual = weaponEffectProfile(weaponId);
