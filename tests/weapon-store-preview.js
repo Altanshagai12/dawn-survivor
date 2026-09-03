@@ -1,6 +1,6 @@
 import { HEROES } from '../src/data/heroes.js?build=20260828i';
 import { WEAPONS } from '../src/data/weapons.js?build=20260827b';
-import { WeaponLoadoutController } from '../src/ui/WeaponLoadoutController.js?build=20260903d';
+import { WeaponLoadoutController } from '../src/ui/WeaponLoadoutController.js?build=20260903f';
 import { installAutoLandscape } from '../src/ui/orientation.js?build=20260826b';
 import { commerceFixture } from './helpers/skin-commerce-fixture.js';
 

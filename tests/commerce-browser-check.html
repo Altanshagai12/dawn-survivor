@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Commerce browser transport check</title>
+<body style="background:#111;color:#eee;font:16px monospace;padding:24px">
+<h1>Commerce browser transport check</h1>
+<p>No account, order or payment. Only reads this local page.</p>
+<pre id="result">Checking…</pre>
+<script type="module">
+  import { SkinCommerce } from '../src/commerce/SkinCommerce.js?build=20260903f';
+  const commerce = new SkinCommerce({ platform: {}, profile: {} });
+  const results = [];
+  try {
+    const response = await commerce.fetcher('./commerce-browser-check.html');
+    results.push(`Commerce default fetch: HTTP ${response.status}`);
+  } catch (error) { results.push(`Commerce default fetch: ${error.name}: ${error.message}`); }
+  try {
+    const response = await window.fetch('./commerce-browser-check.html');
+    results.push(`Window fetch control: HTTP ${response.status}`);
+  } catch (error) { results.push(`Window fetch control: ${error.name}: ${error.message}`); }
+  document.getElementById('result').textContent = results.join('\n');
+</script>
+</body>
+</html>

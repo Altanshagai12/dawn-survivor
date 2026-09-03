@@ -4,41 +4,29 @@ import { SKIN_PRICE_MNT, SKIN_BUNDLE_PRICE_MNT } from '../data/skinProducts.js?b
 const COPY = {
   en: {
     title: 'Weapon skins', close: 'Close', owned: 'Owned', selected: 'Selected',
-    preview: 'Images & weapon sounds are free to preview.', audio: '♪ Preview selected weapon sound',
-    wallet: 'Pay with your Usion wallet. Low balance? Choose Recharge in the payment window.',
-    buy: 'Buy', bundle: 'Complete 4-weapon set', remaining: 'remaining', separately: 'separately',
-    save: 'Save', equal: 'Same price as buying the remaining weapons separately.',
-    loading: 'Checking ownership…', working: 'Confirming purchase…', refresh: 'Refresh ownership',
-    unavailable: 'Open this game inside Usion to buy. If already in Usion, the shop is temporarily unavailable. Previews remain free.',
-    login: 'Sign in to Usion, then reopen the game to buy. Previews remain free.',
-    connecting: 'Waiting for Usion sign-in details. Refresh ownership to try again. Previews remain free.',
-    success: 'Purchase confirmed. Your weapon skin is now available.',
-    pending: 'A previous purchase needs attention. Resume it before starting another purchase.',
+    audio: '♪ Listen', buy: 'Buy', bundle: '4-weapon bundle', save: 'Save',
+    loading: 'Loading…', working: 'Confirming…', refresh: 'Try again',
+    unavailable: 'Could not connect to the shop.',
+    login: 'Sign-in required.', connecting: 'Connection timed out.',
+    success: 'Purchased.', pending: 'Unfinished purchase.',
     resume: 'Resume purchase', recover: 'Recover purchase', cancel: 'Cancel unpaid order',
-    charged: 'Payment received. Recover to finish unlocking; no second payment.',
-    cancelled: 'Purchase cancelled. No skin was unlocked.', incomplete: 'Purchase is not confirmed yet. Resume or refresh to check its status.',
-    failed: 'Could not confirm the purchase. Your ownership has not changed. Refresh or resume the pending order.',
-    refunded: 'This payment was refunded. Refresh ownership before trying again.',
-    soundFailed: 'Sound preview could not play. Tap to try again.',
+    charged: 'Paid. Restore your skin without another charge.',
+    cancelled: 'Cancelled.', incomplete: 'Payment not yet confirmed.',
+    failed: 'Could not confirm. Try again.', refunded: 'Payment refunded.',
+    soundFailed: 'Could not play audio.',
   },
   mn: {
     title: 'Бууны skin', close: 'Хаах', owned: 'Эзэмшсэн', selected: 'Сонгосон',
-    preview: 'Зураг, бууны дууг үнэгүй үзэж, сонсоно.', audio: '♪ Сонгосон бууны дуу сонсох',
-    wallet: 'Usion хэтэвчээр төлнө. Үлдэгдэл хүрэхгүй бол төлбөрийн цонхны «Цэнэглэх»-ийг сонгоно.',
-    buy: 'Авах', bundle: '4 бууны багцыг бүрдүүлэх', remaining: 'буу үлдсэн', separately: 'тус тусад нь',
-    save: 'Хэмнэлт', equal: 'Үлдсэн буунуудыг тусад нь авахтай ижил үнэ.',
-    loading: 'Эзэмшлийг шалгаж байна…', working: 'Худалдан авалтыг баталгаажуулж байна…', refresh: 'Эзэмшлийг шинэчлэх',
-    unavailable: 'Худалдан авахын тулд Usion дотроос нээнэ үү. Usion дотор байгаа бол дэлгүүр түр боломжгүй байна. Зураг, дууг үнэгүй үзэж болно.',
-    login: 'Худалдан авахын тулд Usion-д нэвтрээд тоглоомоо дахин нээнэ үү. Зураг, дууг үнэгүй үзэж болно.',
-    connecting: 'Usion-оос нэвтрэлтийн мэдээлэл хүлээж байна. Эзэмшлийг шинэчлэх дээр дарж дахин шалгана уу.',
-    success: 'Худалдан авалт баталгаажлаа. Бууны skin ашиглах боломжтой боллоо.',
-    pending: 'Өмнөх худалдан авалт дуусаагүй байна. Шинэ худалдан авалтаас өмнө үргэлжлүүлнэ үү.',
+    audio: '♪ Дуу сонсох', buy: 'Авах', bundle: '4 бууны багц', save: 'Хэмнэлт',
+    loading: 'Уншиж байна…', working: 'Баталгаажуулж байна…', refresh: 'Дахин оролдох',
+    unavailable: 'Дэлгүүртэй холбогдсонгүй.',
+    login: 'Нэвтрэх шаардлагатай.', connecting: 'Холболтын хугацаа хэтэрлээ.',
+    success: 'Худалдаж авлаа.', pending: 'Дуусаагүй худалдан авалт.',
     resume: 'Худалдан авалтыг үргэлжлүүлэх', recover: 'Худалдан авалтыг сэргээх', cancel: 'Төлөөгүй захиалгыг цуцлах',
-    charged: 'Төлбөр төлөгдсөн. Дахин төлөхгүйгээр сэргээж skin-ээ нээнэ үү.',
-    cancelled: 'Худалдан авалт цуцлагдлаа. Skin нээгдээгүй.', incomplete: 'Худалдан авалт хараахан баталгаажаагүй. Үргэлжлүүлэх эсвэл шинэчилж шалгана уу.',
-    failed: 'Худалдан авалтыг баталгаажуулж чадсангүй. Эзэмшил өөрчлөгдөөгүй. Шинэчлэх эсвэл хүлээгдэж буй захиалгыг үргэлжлүүлнэ үү.',
-    refunded: 'Энэ төлбөр буцаагдсан. Дахин оролдохын өмнө эзэмшлийг шинэчилнэ үү.',
-    soundFailed: 'Дууг тоглуулж чадсангүй. Дахин дарж оролдоно уу.',
+    charged: 'Төлбөр төлөгдсөн. Дахин төлөхгүйгээр skin-ээ сэргээнэ.',
+    cancelled: 'Цуцлагдлаа.', incomplete: 'Төлбөр хараахан баталгаажаагүй.',
+    failed: 'Баталгаажуулсангүй. Дахин оролдоно уу.', refunded: 'Төлбөр буцаагдсан.',
+    soundFailed: 'Дуу тоглуулсангүй.',
   },
 };
 
@@ -83,7 +71,7 @@ export class WeaponPurchaseModal {
       this.cards.set(weapon.id, { button, image, badge });
       grid.append(button);
     }
-    gallery.append(grid, node('p', 'preview-note', this.copy.preview));
+    gallery.append(grid);
     const details = node('div', 'details');
     this.audioButton = this.button('audio', this.copy.audio, () => this.playAudio());
     this.single = this.button('buy', '', () => this.buy(false));
@@ -99,7 +87,7 @@ export class WeaponPurchaseModal {
     this.recovery.append(this.pendingCopy, this.resume, this.cancel);
     this.refreshButton = this.button('refresh', this.copy.refresh, () => this.refresh());
     details.append(this.audioButton, this.single, this.bundle, this.savings, this.status, this.recovery,
-      this.refreshButton, node('p', 'policy', this.copy.wallet));
+      this.refreshButton);
     body.append(gallery, details);
     this.panel.append(header, body);
     this.root.append(this.panel);
@@ -174,11 +162,11 @@ export class WeaponPurchaseModal {
     this.bundle.hidden = remaining < 2;
     this.bundle.disabled = disabled || remaining < 2;
     this.bundle.textContent = `${this.copy.bundle} · ${this.money(SKIN_BUNDLE_PRICE_MNT)}`;
-    this.savings.hidden = remaining < 2;
     const separate = remaining * SKIN_PRICE_MNT;
-    this.savings.textContent = `${remaining} ${this.copy.remaining} · ${this.money(separate)} ${this.copy.separately}. `
-      + (separate > SKIN_BUNDLE_PRICE_MNT ? `${this.copy.save} ${this.money(separate - SKIN_BUNDLE_PRICE_MNT)}.` : this.copy.equal);
-    this.status.textContent = this.message || (!this.commerce.ready ? this.copy.unavailable : '');
+    this.savings.hidden = remaining < 2 || separate <= SKIN_BUNDLE_PRICE_MNT;
+    this.savings.textContent = this.savings.hidden ? '' : `${this.copy.save} ${this.money(separate - SKIN_BUNDLE_PRICE_MNT)}`;
+    this.status.textContent = this.message;
+    this.status.hidden = !this.message;
     this.recovery.hidden = !pending;
     this.pendingCopy.textContent = pending?.status === 'charged' ? this.copy.charged : this.copy.pending;
     const paid = ['charged', 'completed'].includes(pending?.status);
@@ -187,6 +175,7 @@ export class WeaponPurchaseModal {
     this.cancel.hidden = pending?.status !== 'awaiting_payment';
     this.cancel.disabled = this.busy;
     this.refreshButton.disabled = this.busy;
+    this.refreshButton.hidden = this.busy || (this.commerce.ready && !pending);
     this.audioButton.disabled = this.busy || !this.skin.audioBank;
   }
 
@@ -204,7 +193,12 @@ export class WeaponPurchaseModal {
     finally { this.busy = false; this.render(); }
   }
 
-  refresh() { return this.run(() => this.commerce.refresh()); }
+  refresh() {
+    return this.run(async () => {
+      await this.commerce.refresh();
+      if (!this.commerce.ready) throw new Error('store-unavailable');
+    });
+  }
   buy(bundle) {
     if (this.busy || !this.commerce.ready || this.commerce.pendingOrder) return;
     const { id: skinId } = this.skin;

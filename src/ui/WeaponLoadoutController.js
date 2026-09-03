@@ -1,6 +1,6 @@
 import { weaponArtForSkin } from '../data/skins.js?build=20260903d';
 import { hasWeaponSkinAccess, normalizeWeaponSkinProfile, selectedWeaponSkin, setWeaponSkin, weaponSkinOptions } from '../data/weaponSkins.js?build=20260903d';
-import { WeaponPurchaseModal } from './WeaponPurchaseModal.js?build=20260903e';
+import { WeaponPurchaseModal } from './WeaponPurchaseModal.js?build=20260903f';
 import { heroPassiveCopy } from './uiFormatters.js?build=20260828a';
 import { bindSkinSwipe } from './skinSwipe.js?build=20260902b';
 

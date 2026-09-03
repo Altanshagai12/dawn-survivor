@@ -5,7 +5,7 @@ import { waitForCommerceAuth } from './auth.js?build=20260903e';
 function failure(code, cause) { return Object.assign(new Error(code, { cause }), { code }); }
 
 export class SkinCommerce {
-  constructor({ platform, profile, fetcher = globalThis.fetch, authWait = waitForCommerceAuth }) {
+  constructor({ platform, profile, fetcher = globalThis.fetch?.bind(globalThis), authWait = waitForCommerceAuth }) {
     this.platform = platform;
     this.profile = profile;
     this.fetcher = fetcher;

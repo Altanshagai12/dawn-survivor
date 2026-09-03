@@ -95,7 +95,7 @@ test('four accurate weapon previews; opening, selecting and auditioning never pu
   }
   assert.match(modal.single.textContent, /Grave Shotgun · 500₮/);
   assert.match(modal.bundle.textContent, /1,000₮/);
-  assert.match(modal.savings.textContent, /2,000₮ separately\. Save 1,000₮/);
+  assert.equal(modal.savings.textContent, 'Save 1,000₮');
   modal.cards.get('crossbow').button.fire('click');
   await modal.playAudio();
   assert.match(sounds[0].src, /crossbow\.wav\?build=/);
@@ -106,15 +106,16 @@ test('four accurate weapon previews; opening, selecting and auditioning never pu
 });
 
 for (const lang of ['mn', 'en']) {
-  test(`purchase modal omits the extra cosmetic and account paragraphs in ${lang}`, async (t) => {
+  test(`purchase modal has no platform, wallet, preview or account explanations in ${lang}`, async (t) => {
     const { modal } = setup(t, { lang });
     await modal.open('revolver', skin);
     const descendants = (el) => el.children.flatMap((child) => [child, ...descendants(child)]);
-    const policies = descendants(modal.root).filter((el) => el.className === 'weapon-shop__policy');
-    assert.equal(policies.length, 1);
-    assert.equal(policies[0].textContent, modal.copy.wallet);
+    const policies = descendants(modal.root).filter((el) => ['weapon-shop__policy', 'weapon-shop__preview-note'].includes(el.className));
+    assert.equal(policies.length, 0);
     const text = descendants(modal.root).map((el) => el.textContent || '').join('\n');
-    assert.doesNotMatch(text, /Cosmetic only|across devices|Зөвхөн харагдац|бусад төхөөрөмж/);
+    assert.doesNotMatch(text, /Cosmetic only|across devices|Зөвхөн харагдац|бусад төхөөрөмж|Usion|free to preview|Recharge|үнэгүй|Цэнэглэх/);
+    assert.equal(modal.status.hidden, true);
+    assert.equal(modal.refreshButton.hidden, true);
     assert.match(modal.single.textContent, /500₮/);
     assert.match(modal.bundle.textContent, /1,000₮/);
   });
@@ -127,10 +128,10 @@ for (const ownedCount of [0, 1, 2, 3, 4]) {
     assert.equal(modal.single.disabled, ownedCount > 0);
     assert.equal(modal.bundle.hidden, ownedCount >= 3);
     assert.equal(modal.bundle.disabled, ownedCount >= 3);
-    assert.equal(modal.savings.hidden, ownedCount >= 3);
+    assert.equal(modal.savings.hidden, ownedCount >= 2);
     for (const [id, card] of modal.cards) assert.equal(card.badge.classList.contains('is-owned'), ids.indexOf(id) < ownedCount);
-    if (ownedCount === 1) assert.match(modal.savings.textContent, /3 remaining.*Save 500₮/);
-    if (ownedCount === 2) assert.match(modal.savings.textContent, /2 remaining.*Same price/);
+    if (ownedCount === 1) assert.equal(modal.savings.textContent, 'Save 500₮');
+    if (ownedCount === 2) assert.equal(modal.savings.textContent, '');
     if (ownedCount >= 3) { await modal.buy(true); assert.equal(calls.filter(([type]) => type === 'purchase').length, 0); }
   });
 }
@@ -168,7 +169,7 @@ test('bundle confirms all four and never changes heroes or equips optimistically
   for (const id of ids) assert.equal(hasWeaponSkinAccess(profile, id, skin.id), true);
   assert.equal(profile.selectedHero, 'diamond');
   assert.equal(profile.equippedWeaponSkins, undefined);
-  assert.match(modal.status.textContent, /Purchase confirmed/);
+  assert.equal(modal.status.textContent, 'Purchased.');
   assert.equal(modal.single.disabled, true);
   assert.equal(modal.bundle.hidden, true);
 });
@@ -178,7 +179,7 @@ test('unconfirmed result never shows success or grants ownership', async (t) => 
   await modal.open('revolver', skin);
   const before = changes();
   await modal.buy(false);
-  assert.match(modal.status.textContent, /not confirmed yet/);
+  assert.equal(modal.status.textContent, 'Payment not yet confirmed.');
   assert.equal(hasWeaponSkinAccess(profile, 'revolver', skin.id), false);
   assert.equal(changes(), before);
 });
@@ -199,7 +200,7 @@ test('pending purchase shows exact original amount; resume only and safe unpaid 
   modal.render();
   assert.equal(modal.cancel.hidden, true);
   assert.match(modal.resume.textContent, /Recover purchase · 500₮/);
-  assert.match(modal.pendingCopy.textContent, /no second payment/);
+  assert.match(modal.pendingCopy.textContent, /without another charge/);
   await modal.cancelOrder();
   assert.equal(calls.some(([type]) => type === 'cancel'), false);
   commerce.pendingOrder.status = 'awaiting_payment';
@@ -212,7 +213,7 @@ test('failed recovery preserves retry controls without offering a second purchas
   commerce.pendingOrder = { status: 'awaiting_payment', amount: 500 };
   await modal.open('revolver', skin);
   await modal.recover();
-  assert.match(modal.status.textContent, /not confirmed yet/);
+  assert.equal(modal.status.textContent, 'Payment not yet confirmed.');
   assert.equal(modal.recovery.hidden, false);
   assert.equal(modal.resume.disabled, false);
   assert.equal(modal.single.disabled, true);
@@ -229,12 +230,14 @@ test('unpaid order can be cancelled even when the current catalog is unavailable
   assert.deepEqual(calls.at(-1), ['cancel']);
 });
 
-test('unavailable shop remains a free preview with actionable localized copy', async (t) => {
+test('failed shop read gives a concise error and retry, never misleading platform instructions', async (t) => {
   const { modal, calls } = setup(t, { ready: false, lang: 'mn' });
   await modal.open('revolver', skin);
   assert.match(modal.single.textContent, /Рүн буу · 500₮/);
-  assert.match(modal.status.textContent, /Usion/);
-  assert.match(modal.status.textContent, /үнэгүй/);
+  assert.equal(modal.status.textContent, 'Дэлгүүртэй холбогдсонгүй.');
+  assert.equal(modal.status.hidden, false);
+  assert.equal(modal.refreshButton.hidden, false);
+  assert.equal(modal.refreshButton.textContent, 'Дахин оролдох');
   assert.equal(modal.single.disabled, true);
   assert.equal(modal.bundle.disabled, true);
   assert.equal(modal.audioButton.disabled, false);
@@ -258,7 +261,7 @@ test('dialog traps focus, closes on Escape and restores background inert/focus s
     return event;
   };
   assert.equal(key('Tab', true).prevented, true);
-  assert.equal(document.activeElement, modal.refreshButton);
+  assert.equal(document.activeElement, modal.bundle);
   assert.equal(key('Tab').prevented, true);
   assert.equal(document.activeElement, modal.closeButton);
   key('Escape');

@@ -44,9 +44,7 @@
 .weapon-shop .weapon-shop__buy { color: #0e0c13; background: #f3ede6; border-color: #f3ede6; }
 .weapon-shop .weapon-shop__bundle { border-color: #ab78d9; background: #442458; }
 .weapon-shop .weapon-shop__audio, .weapon-shop .weapon-shop__refresh, .weapon-shop .weapon-shop__cancel { background: transparent; }
-.weapon-shop__preview-note, .weapon-shop__policy, .weapon-shop__savings, .weapon-shop__status, .weapon-shop__pending-copy { margin: 0; font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
-.weapon-shop__preview-note { margin-top: 9px; color: #b6aabe; text-align: center; }
-.weapon-shop__policy { color: #b6aabe; }
+.weapon-shop__savings, .weapon-shop__status, .weapon-shop__pending-copy { margin: 0; font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
 .weapon-shop__savings { color: #e8c890; }
 .weapon-shop__status:empty { display: none; }
 .weapon-shop__status { color: #beeaf1; }

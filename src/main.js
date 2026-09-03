@@ -1,5 +1,5 @@
 import { HEROES } from './data/heroes.js?build=20260828i';
-import { SkinCommerce } from './commerce/SkinCommerce.js?build=20260903e';
+import { SkinCommerce } from './commerce/SkinCommerce.js?build=20260903f';
 import { normalizeWeaponSkinProfile } from './data/weaponSkins.js?build=20260903d';
 import { WEAPONS } from './data/weapons.js?build=20260827b';
 import { BootScene } from './game/BootScene.js?build=20260901g';
@@ -10,7 +10,7 @@ import { singleFlight, startFreshRun } from './game/runLifecycle.js?build=202609
 import { defaultProfile, initPlatform } from './platform/usion.js?build=20260903e';
 import { createI18n } from './ui/i18n.js?build=20260826l';
 import { installInteractionGuards } from './ui/interactionGuards.js?build=20260826h';
-import { UIController } from './ui/UIController.js?build=20260903e';
+import { UIController } from './ui/UIController.js?build=20260903f';
 import { gameViewportSize, installAutoLandscape, requestLandscape } from './ui/orientation.js?build=20260826b';
 
 async function boot() {

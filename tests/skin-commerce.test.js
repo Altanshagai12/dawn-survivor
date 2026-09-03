@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { SkinCommerce } from '../src/commerce/SkinCommerce.js?build=20260903d';
+import { SkinCommerce } from '../src/commerce/SkinCommerce.js?build=20260903f';
 import { skinProduct } from '../src/data/skinProducts.js?build=20260903d';
 import { hasWeaponSkinAccess, selectedWeaponSkin, normalizeWeaponSkinProfile } from '../src/data/weaponSkins.js?build=20260903d';
 import { commerceFixture } from './helpers/skin-commerce-fixture.js';
