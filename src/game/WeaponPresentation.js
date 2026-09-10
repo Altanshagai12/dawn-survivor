@@ -1,4 +1,5 @@
 import { triggerShotFeedback } from './PlayerFeedback.js?build=20260902e';
+import { presentSummonImpact, updateSummonTrail } from './SummonPresentation.js?build=20260910a';
 
 export const WEAPON_EFFECT_PROFILES = Object.freeze({
   revolver: Object.freeze({ color: 0xffead8, tracer: 60, shake: .00105, duration: 105, visualScale: 1.4 }),
@@ -131,6 +132,7 @@ export function presentWeaponShot(scene, angle, authoredAngles = null) {
 }
 
 export function presentWeaponImpact(scene, bullet, x, y) {
+  if (bullet?.summonKind) { presentSummonImpact(scene, bullet, x, y); return; }
   if (!bullet?.weaponId || !scene?.add?.rectangle) return;
   const skin = bullet.skin || null;
   const profile = weaponEffectProfile(bullet.weaponId, skin);
@@ -154,6 +156,7 @@ export function presentWeaponImpact(scene, bullet, x, y) {
 }
 
 export function updateProjectilePresentation(scene, bullet) {
+  if (bullet?.summonKind) { updateSummonTrail(scene, bullet); return; }
   scene.premiumVfx?.trail(bullet);
   if (bullet?.skin) return;
   if (bullet?.weaponId !== 'flame' || scene.time.now < (bullet.nextTrailAt || 0)) return;

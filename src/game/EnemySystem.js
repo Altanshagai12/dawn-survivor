@@ -1,6 +1,7 @@
 import { BOSS_ATLASES, ENEMY_ATLASES } from '../config/assets.js?build=20260825r';
 import { TEN_MINUTES_BALANCE } from '../config/balance.js?build=20260828i';
 import { playDirectional } from './animations.js?build=20260828g';
+import { isBossCharging } from './EnemyKnockback.js';
 import { restorePlayerTint, setWeaponSkinVisibility } from './SkinPresentation.js?build=20260902e';
 import { syncGroundShadow } from './VisualEffects.js?build=20260825r';
 
@@ -48,7 +49,8 @@ export class EnemySystem {
       const ny = dy / distance;
       const frozen = enemy.status.freezeUntil > now;
       const speed = enemy.speed * (frozen ? .22 : 1);
-      if (enemy.knockbackVelocity && enemy.knockbackUntil > now) {
+      if (isBossCharging(enemy, now)) this.updateBoss(enemy, nx, ny, speed, now);
+      else if (enemy.knockbackVelocity && enemy.knockbackUntil > now) {
         enemy.setVelocity(enemy.knockbackVelocity.x, enemy.knockbackVelocity.y);
       } else if (enemy.enemyDef.boss) this.updateBoss(enemy, nx, ny, speed, now);
       else this.updateRegular(enemy, nx, ny, distance, speed, now);
@@ -176,9 +178,12 @@ export class EnemySystem {
 
   updateBoss(enemy, nx, ny, speed, now) {
     if (enemy.enemyDef.id !== 'shub') { this.steeredVelocity(enemy, nx, ny, speed); return; }
-    if (enemy.chargeUntil > now) {
+    if (isBossCharging(enemy, now)) {
       const chargeSpeed = this.scene.state.hero.speed * TEN_MINUTES_BALANCE.enemy.shub.chargeRatio;
-      enemy.setVelocity(enemy.chargeVector.x * chargeSpeed, enemy.chargeVector.y * chargeSpeed);
+      // Impacts can nudge a charge, but must not replace its forward movement.
+      const knockback = enemy.knockbackUntil > now ? enemy.knockbackVelocity : null;
+      enemy.setVelocity(enemy.chargeVector.x * chargeSpeed + (knockback?.x || 0),
+        enemy.chargeVector.y * chargeSpeed + (knockback?.y || 0));
       return;
     }
     if (enemy.chargePending && now >= enemy.telegraphUntil) {

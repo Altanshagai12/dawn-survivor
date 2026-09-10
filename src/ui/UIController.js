@@ -1,14 +1,14 @@
 import { selectedWeaponSkin } from '../data/weaponSkins.js?build=20260903d';
 import { WeaponLoadoutController } from './WeaponLoadoutController.js?build=20260903f';
 import {
-  damageSourceLabel, formatSurvivalTime, savedOrDefault,
+  damageSourceLabel, formatSurvivalTime, formatSurvivalRecord, savedOrDefault,
   survivalLeaderboardEntries,
-} from './uiFormatters.js?build=20260828a';
+} from './uiFormatters.js?build=20260910a';
 
 export {
   damageSourceLabel, formatSurvivalTime, heroPassiveCopy, leaderboardDurationMs, movementCopy,
   savedOrDefault, survivalLeaderboardEntries,
-} from './uiFormatters.js?build=20260828a';
+} from './uiFormatters.js?build=20260910a';
 
 export function setFreshActivation(element, activate) {
   element.onpointerdown = (event) => {
@@ -232,7 +232,7 @@ export class UIController {
     this.el['result-modal'].classList.remove('hidden');
     this.el['result-kicker'].textContent = result.won ? 'DAWN REACHED' : 'THE NIGHT CLAIMED YOU';
     this.el['result-title'].textContent = result.won ? 'You survived.' : 'Rise again.';
-    this.el['result-score'].textContent = formatSurvivalTime(result.survivalMs);
+    this.el['result-score'].textContent = formatSurvivalRecord(result.survivalMs, result.level, this.i18n.lang);
     this.el['result-kills'].textContent = result.kills.toLocaleString();
     this.el['result-level'].textContent = result.level;
     const causePrefix = this.i18n.lang === 'mn' ? 'ЯЛАГДСАН ШАЛТГААН' : 'DEFEATED BY';
@@ -247,7 +247,7 @@ export class UIController {
       const record = document.createElement('span');
       record.className = 'friend-row__record';
       const score = document.createElement('strong');
-      score.textContent = formatSurvivalTime(durationMs);
+      score.textContent = formatSurvivalRecord(durationMs, entry.completion_level ?? entry.metadata?.level, this.i18n.lang);
       record.append(score);
       row.append(identity, record);
       return row;

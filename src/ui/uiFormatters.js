@@ -49,3 +49,9 @@ export function survivalLeaderboardEntries(entries = []) {
     return durationMs == null ? [] : [{ entry, durationMs }];
   });
 }
+
+export function formatSurvivalRecord(durationMs, level, language = 'en') {
+  const time = formatSurvivalTime(durationMs);
+  if (durationMs !== 600_000 || !Number.isInteger(level) || level < 1) return time;
+  return `${time} · ${language === 'mn' ? 'Түвшин' : 'Level'} ${level}`;
+}

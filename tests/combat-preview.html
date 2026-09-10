@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<base href="/" /><title>Combat preview · local only</title>
+<link rel="stylesheet" href="styles.css" />
+<style>
+#qa {position:absolute;top:6px;left:10px;right:10px;z-index:200;color:white;font:12px system-ui;pointer-events:none}
+#qa nav {display:flex;gap:5px;align-items:center;flex-wrap:wrap;pointer-events:auto}
+#qa button {padding:5px 9px;margin:0;border:1px solid #587079;background:#15212ee8;color:white;font-size:12px;border-radius:5px}
+#qa pre {margin:5px 0;white-space:pre-wrap;text-shadow:0 1px 3px #000;max-width:650px}
+#errors {color:#ff968c} #touch-controls {display:block}
+</style>
+<script src="https://usions.com/vendor/phaser/4.2.1/phaser.min.js"></script>
+</head><body><main id="app">
+<div id="game"></div>
+<aside id="qa"><nav><strong>LOCAL COMBAT TEST</strong>
+<button id="wave">Spawn wave</button><button id="boss">Spawn boss 2</button>
+<button id="pause">Pause</button><button id="resume">Resume</button><button id="replay">Replay</button>
+</nav><pre id="stats">Loading assets…</pre><pre id="errors">Errors: 0</pre></aside>
+<div id="touch-controls" class="touch-controls" aria-hidden="true">
+<div id="move-stick" class="stick"><i></i></div>
+<button id="ability-button" class="ability-button hidden" type="button">DASH</button>
+<div id="aim-stick" class="stick stick--aim"><i></i></div>
+</div></main><script type="module" src="tests/combat-preview.js"></script></body></html>

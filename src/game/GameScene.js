@@ -5,19 +5,19 @@ import { PREMIUM_SKINS } from '../data/skins.js?build=20260902d';
 import { TOMES, sampleUpgradeCards } from '../data/upgrades.js?build=20260826b';
 import { WEAPONS } from '../data/weapons.js?build=20260827b';
 import { createCameraFittedBackground } from './BackgroundSystem.js?build=20260826d';
-import { CombatSystem } from './CombatSystem.js?build=20260903c';
+import { CombatSystem } from './CombatSystem.js?build=20260910a';
 import { BossBarrierSystem } from './BossBarrierSystem.js?build=20260902b';
 import { CharacterAbilitySystem } from './CharacterAbilitySystem.js?build=20260902b';
-import { EnemySystem } from './EnemySystem.js?build=20260902e';
+import { EnemySystem } from './EnemySystem.js?build=20260910a';
 import { InputController } from './InputController.js?build=20260901d';
 import { LootSystem } from './LootSystem.js?build=20260826k';
 import { RunState } from './RunState.js?build=20260828f';
 import { Spawner } from './Spawner.js?build=20260828i';
-import { SummonSystem } from './SummonSystem.js?build=20260828e';
+import { SummonSystem } from './SummonSystem.js?build=20260910a';
 import { UpgradeEffectSystem } from './UpgradeEffectSystem.js?build=20260828e';
 import { WorldObstacleSystem } from './WorldObstacleSystem.js?build=20260902b';
 import { PremiumWeaponAudio } from './PremiumWeaponAudio.js?build=20260901b';
-import { presentWeaponShot } from './WeaponPresentation.js?build=20260902e';
+import { presentWeaponShot } from './WeaponPresentation.js?build=20260910a';
 import { PremiumVfxDirector } from './PremiumVfxDirector.js?build=20260903c';
 import { gameDeviceProfile } from './deviceProfile.js?build=20260901f';
 import { movementMultiplier } from './movement.js?build=20260825r';
@@ -325,6 +325,9 @@ export class GameScene extends Phaser.Scene {
     this.profile.totalKills += this.state.kills;
     this.profile.best = Math.max(this.profile.best || 0, score);
     this.profile.bestSurvivalMs = Math.max(this.profile.bestSurvivalMs || 0, survivalMs);
+    if (survivalMs === 600_000) {
+      this.profile.bestCompletionLevel = Math.max(this.profile.bestCompletionLevel || 0, result.level);
+    }
     await Promise.all([
       this.platform.saveProfile(this.profile),
       this.platform.submitScore(survivalMs, {

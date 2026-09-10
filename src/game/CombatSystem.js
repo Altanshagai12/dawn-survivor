@@ -1,9 +1,10 @@
 import { clamp } from './simulation.js?build=20260825r';
+import { enemyKnockbackRatio } from './EnemyKnockback.js';
 import { CombatEffects } from './CombatEffects.js?build=20260828e';
 import { handleSpecialKill } from './KillProgression.js?build=20260825r';
 import { resolveProjectileLaunchHits, resolveProjectileTravelHits } from './ProjectileLaunchCollision.js?build=20260827e';
 import { shouldConsumeAmmo, upgradedProjectileCount } from './WeaponMechanics.js?build=20260825r';
-import { presentWeaponImpact, updateProjectilePresentation } from './WeaponPresentation.js?build=20260902e';
+import { presentWeaponImpact, updateProjectilePresentation } from './WeaponPresentation.js?build=20260910a';
 import { syncWeaponSkin } from './SkinPresentation.js?build=20260902e';
 import { skinProjectileTint } from '../data/skins.js?build=20260901e';
 import {
@@ -235,7 +236,8 @@ export class CombatSystem {
     if (bullet.explosionDamage) this.effects.explode(impactX, impactY, bullet.explosionDamage, 90, source);
     if (bullet.fireball) this.effects.burnArea(impactX, impactY, 90, enemy);
     if (enemy.active && enemy.body?.velocity && bullet.active && bullet.body?.velocity && bullet.knockback) {
-      const velocity = bullet.body.velocity.clone().normalize().scale(bullet.knockback);
+      const strength = bullet.knockback * enemyKnockbackRatio(enemy, this.scene.time.now);
+      const velocity = bullet.body.velocity.clone().normalize().scale(strength);
       enemy.knockbackVelocity = velocity;
       enemy.knockbackUntil = this.scene.time.now + clamp(100 + bullet.knockback * .55, 115, 180);
       enemy.body.velocity.add(velocity);
