@@ -58,10 +58,10 @@ test('mobile boots directly into automatic landscape with dedicated Hina ability
   assert.match(css, /html\.mobile-rotated #app/);
   assert.match(css, /rotate\(90deg\)/);
   assert.match(css, /#game canvas[^}]*width:\s*100%\s*!important[^}]*height:\s*100%\s*!important/s);
-  assert.match(main, /GameScene\.js\?build=20260910a/);
+  assert.match(main, /GameScene\.js\?build=20260910b/);
   assert.match(main, /runLifecycle\.js\?build=20260901i/);
   assert.match(main, /UIController\.js\?build=20260910a/);
-  assert.match(html, /main\.js\?build=20260910a/);
+  assert.match(html, /main\.js\?build=20260910b/);
   assert.match(html, /weapon-shop\.css\?build=20260903f/);
   assert.match(html, /loadout\.css\?build=20260903d/);
   assert.match(main, /resolution:\s*gameRenderResolution\(window\.devicePixelRatio, renderProfile\)/);

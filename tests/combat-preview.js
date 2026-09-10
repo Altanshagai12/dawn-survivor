@@ -26,6 +26,8 @@ addEventListener('unhandledrejection', (event) => showError(event.reason));
 let message = 'All four summons enabled · WASD + mouse or touch sticks';
 let current = null;
 let replayCount = 0;
+let collectedXp = 0;
+let lastLootProbe = 'No loot probe';
 const selection = { heroId: 'shana', weaponId: 'revolver', skinId: null };
 
 function spawnWave() {
@@ -43,6 +45,13 @@ class PreviewGameScene extends GameScene {
   create() {
     super.create();
     current = this;
+    collectedXp = 0;
+    const gainXp = this.state.gainXp.bind(this.state);
+    this.state.gainXp = (amount) => { collectedXp += amount; return gainXp(amount); };
+    if (query.has('loot-cap')) {
+      this.spawner.update = () => {};
+      return;
+    }
     Object.assign(this.state.flags, {
       ghostFriend: true, magicDagger: true, magicScythe: true, electroBug: true,
     });
@@ -93,6 +102,22 @@ document.getElementById('replay').onclick = () => {
   replayCount += 1;
   startFreshRun(game.scene, selection);
 };
+document.getElementById('fill-loot').onclick = () => {
+  if (!current || current.ended) return;
+  while (current.gems.countActive() < current.performance.gemCap) {
+    current.loot.dropGem(current.player.x + 3000 + current.gems.countActive() * 6, current.player.y + 3000);
+  }
+  lastLootProbe = 'Remote pool full';
+};
+function probeDrop(distance) {
+  if (!current || current.ended) return;
+  const x = current.player.x + distance, y = current.player.y;
+  current.loot.dropGem(x, y, 3);
+  const fresh = current.gems.getChildren().find((gem) => gem.active && gem.x === x && gem.y === y);
+  lastLootProbe = `Fresh drop at death position: ${!!fresh} · value ${fresh?.xpValue ?? 0}`;
+}
+document.getElementById('drop-far').onclick = () => probeDrop(260);
+document.getElementById('drop-near').onclick = () => probeDrop(30);
 setInterval(() => {
   if (!current?.state) return;
   const boss = current.activeBoss;
@@ -103,5 +128,6 @@ setInterval(() => {
     `Time ${current.state.elapsed.toFixed(1)}s · LV ${current.state.level} · Kills ${current.state.kills} · HP ${current.state.hp}`,
     `Enemies ${live(current.enemies)} · Bullets ${live(current.bullets)} · Replays ${replayCount} · Boss ${phase}`,
     `Position ${current.player.x.toFixed(0)}, ${current.player.y.toFixed(0)} · ${game.scale.width}×${game.scale.height} · ${message}`,
+    `Gems ${live(current.gems)}/${current.performance.gemCap} · Ground XP ${current.gems.getChildren().reduce((sum, gem) => sum + (gem.active ? gem.xpValue : 0), 0)} · Collected XP ${collectedXp} · ${lastLootProbe}`,
   ].join('\n');
 }, 100);
