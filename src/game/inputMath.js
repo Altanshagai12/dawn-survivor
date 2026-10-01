@@ -84,4 +84,3 @@ export function stickOriginOffset(point, rect, rotated = false) {
     y: point.clientY - (rect.top + rect.height / 2),
   }, rotated);
 }
-
