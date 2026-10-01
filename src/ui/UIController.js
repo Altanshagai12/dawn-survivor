@@ -78,7 +78,7 @@ export class UIController {
 
   bindButtons() {
     this.el['start-button'].addEventListener('click', () => this.onStart?.(this.selection()));
-    this.el['pause-button'].addEventListener('click', () => this.onPause?.());
+    setFreshActivation(this.el['pause-button'], () => this.onPause?.());
     this.el['resume-button'].addEventListener('click', () => this.onResume?.());
     this.el['quit-button'].addEventListener('click', () => this.onQuit?.());
     this.el['again-button'].addEventListener('click', () => this.onStart?.(this.selection()));

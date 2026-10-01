@@ -1,91 +1,8 @@
-export function isRotatedMobileFallback() {
-  return typeof document !== 'undefined'
-    && document.documentElement.classList.contains('mobile-rotated');
-}
+import { aimFromClientPoint, smoothDirection, smoothStick } from './inputMath.js?build=20261001a';
+import { TouchSticks } from './TouchSticks.js?build=20261001a';
+export * from './inputMath.js?build=20261001a';
 
-export function gameVectorFromClient(vector, rotated = false) {
-  return rotated ? { x: vector.y, y: -vector.x } : { ...vector };
-}
-
-export function surfacePointFromClient(point, surface, rotated = false) {
-  const rect = surface.getBoundingClientRect();
-  if (!rect.width || !rect.height) return null;
-  if (rotated) {
-    return {
-      x: (point.clientY - rect.top) * (surface.width / rect.height),
-      y: (rect.right - point.clientX) * (surface.height / rect.width),
-    };
-  }
-  return {
-    x: (point.clientX - rect.left) * (surface.width / rect.width),
-    y: (point.clientY - rect.top) * (surface.height / rect.height),
-  };
-}
-
-export function aimFromClientPoint(
-  point,
-  surface,
-  camera,
-  player,
-  fallback = { x: 1, y: 0 },
-  rotated = isRotatedMobileFallback(),
-) {
-  if (!point || !surface || !camera || !player) return { ...fallback };
-  const screen = surfacePointFromClient(point, surface, rotated);
-  if (!screen) return { ...fallback };
-  const world = camera.getWorldPoint(screen.x, screen.y);
-  const x = world.x - player.x;
-  const y = world.y - player.y;
-  const length = Math.hypot(x, y);
-  if (!Number.isFinite(length) || length < .001) return { ...fallback };
-  return { x: x / length, y: y / length };
-}
-
-export function radialDeadZone(vector, deadZone = .08) {
-  const length = Math.hypot(vector.x, vector.y);
-  if (!Number.isFinite(length) || length <= deadZone) return { x: 0, y: 0 };
-  const magnitude = Math.min(1, (length - deadZone) / (1 - deadZone));
-  return { x: vector.x / length * magnitude, y: vector.y / length * magnitude };
-}
-
-export function smoothStick(current, target, amount = .42) {
-  const x = current.x + (target.x - current.x) * amount;
-  const y = current.y + (target.y - current.y) * amount;
-  if (Math.hypot(target.x, target.y) < .001 && Math.hypot(x, y) < .025) return { x: 0, y: 0 };
-  return { x, y };
-}
-
-export function smoothDirection(current, target, amount = .5) {
-  const targetLength = Math.hypot(target.x, target.y);
-  if (targetLength < .001) return { ...current };
-  const x = current.x + (target.x / targetLength - current.x) * amount;
-  const y = current.y + (target.y / targetLength - current.y) * amount;
-  const length = Math.hypot(x, y);
-  if (length < .001) return { x: target.x / targetLength, y: target.y / targetLength };
-  return { x: x / length, y: y / length };
-}
-
-export function anchoredStickVector(point, origin, travel, rotated = false, deadZone = .08) {
-  if (!point || !origin || !Number.isFinite(travel) || travel <= 0) {
-    return { raw: { x: 0, y: 0 }, adjusted: { x: 0, y: 0 } };
-  }
-  let { x, y } = gameVectorFromClient({
-    x: (point.clientX - origin.clientX) / travel,
-    y: (point.clientY - origin.clientY) / travel,
-  }, rotated);
-  const length = Math.hypot(x, y) || 1;
-  if (length > 1) { x /= length; y /= length; }
-  return { raw: { x, y }, adjusted: radialDeadZone({ x, y }, deadZone) };
-}
-
-export function stickOriginOffset(point, rect, rotated = false) {
-  return gameVectorFromClient({
-    x: point.clientX - (rect.left + rect.width / 2),
-    y: point.clientY - (rect.top + rect.height / 2),
-  }, rotated);
-}
-
-export function usesCanvasFire(pointerType) { return !pointerType || ['mouse', 'touch', 'pen'].includes(pointerType); }
+export function usesCanvasFire(pointerType) { return !pointerType || pointerType === 'mouse'; }
 
 export class PointerFireLatch {
   constructor() {
@@ -130,19 +47,26 @@ export class InputController {
     this.keys = scene.input.keyboard?.addKeys('W,A,S,D,UP,DOWN,LEFT,RIGHT,R,SPACE');
     this.abilityQueued = false;
     this.cleanups = [];
-    this.bindStick('move-stick', this.moveRaw, false);
-    this.bindStick('aim-stick', this.aimRaw, true);
     this.pointerFire = new PointerFireLatch();
     this.pointerPoint = null;
     this.canvas = scene.game.canvas;
+    this.touchSticks = new TouchSticks(this);
+    this.onReset = () => this.reset();
+    this.onVisibility = () => { if (document.hidden) this.reset(); };
+    window.addEventListener('blur', this.onReset);
+    window.addEventListener('resize', this.onReset);
+    window.addEventListener('orientationchange', this.onReset);
+    document.addEventListener('visibilitychange', this.onVisibility);
+    scene.events.on('pause', this.onReset);
     this.onPointerDown = (event) => {
+      if (scene.ended || scene.choiceOpen || !scene.sys.isActive()) return;
+      if (!usesCanvasFire(event.pointerType)) return;
       if (event.button === 2) {
         this.abilityQueued = true;
         this.pointerPoint = { clientX: event.clientX, clientY: event.clientY };
         event.preventDefault();
         return;
       }
-      if (!usesCanvasFire(event.pointerType)) return;
       if (!this.pointerFire.press(event.pointerId)) return;
       this.pointerPoint = { clientX: event.clientX, clientY: event.clientY };
       try { this.canvas.setPointerCapture?.(event.pointerId); } catch { /* Window fallback handles release. */ }
@@ -185,65 +109,17 @@ export class InputController {
     this.cleanups.push(() => button.removeEventListener('pointerdown', trigger));
   }
 
-  bindStick(id, target, isAim) {
-    const element = document.getElementById(id);
-    const knob = element.querySelector('i');
-    let pointerId = null;
-    let origin = null;
-    const reset = (event) => {
-      if (event && pointerId !== event.pointerId) return;
-      pointerId = null;
-      origin = null;
-      target.x = 0;
-      target.y = 0;
-      if (isAim) {
-        this.touchAimActive = false;
-        this.touchAimFiring = false;
-      }
-      element.style.transform = '';
-      knob.style.transform = '';
-    };
-    const update = (event) => {
-      if (pointerId !== event.pointerId) return;
-      const rect = element.getBoundingClientRect();
-      const travel = Math.min(rect.width, rect.height) * .34;
-      const { raw, adjusted } = anchoredStickVector(
-        event, origin, travel, isRotatedMobileFallback(), isAim ? .16 : .08,
-      );
-      target.x = adjusted.x;
-      target.y = adjusted.y;
-      if (isAim) {
-        this.touchAimActive = true;
-        if (Math.hypot(adjusted.x, adjusted.y) > .06) this.touchAimFiring = true;
-      }
-      knob.style.transform = `translate(${raw.x * 30}px, ${raw.y * 30}px)`;
-    };
-    const down = (event) => {
-      pointerId = event.pointerId;
-      element.setPointerCapture(pointerId);
-      const rect = element.getBoundingClientRect();
-      if (isAim) {
-        this.pointerPoint = null;
-        origin = { clientX: event.clientX, clientY: event.clientY };
-        const offset = stickOriginOffset(event, rect, isRotatedMobileFallback());
-        element.style.transform = `translate(${offset.x}px, ${offset.y}px)`;
-      } else {
-        origin = { clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2 };
-      }
-      update(event);
-      event.stopPropagation();
-      event.preventDefault();
-    };
-    element.addEventListener('pointerdown', down);
-    element.addEventListener('pointermove', update);
-    element.addEventListener('pointerup', reset);
-    element.addEventListener('pointercancel', reset);
-    this.cleanups.push(() => {
-      element.removeEventListener('pointerdown', down);
-      element.removeEventListener('pointermove', update);
-      element.removeEventListener('pointerup', reset);
-      element.removeEventListener('pointercancel', reset);
-    });
+  reset() {
+    this.touchSticks.reset();
+    this.move = { x: 0, y: 0 };
+    const pointerId = this.pointerFire.pointerId;
+    this.pointerFire.release();
+    this.pointerFire.queued = false;
+    this.pointerPoint = null;
+    this.abilityQueued = false;
+    try {
+      if (this.canvas.hasPointerCapture?.(pointerId)) this.canvas.releasePointerCapture(pointerId);
+    } catch { /* The browser may have already cancelled capture. */ }
   }
 
   snapshot(player) {
@@ -292,6 +168,13 @@ export class InputController {
   }
 
   destroy() {
+    this.reset();
+    this.touchSticks.destroy();
+    window.removeEventListener('blur', this.onReset);
+    window.removeEventListener('resize', this.onReset);
+    window.removeEventListener('orientationchange', this.onReset);
+    document.removeEventListener('visibilitychange', this.onVisibility);
+    this.scene.events.off('pause', this.onReset);
     this.canvas.removeEventListener('pointerdown', this.onPointerDown);
     this.canvas.removeEventListener('pointermove', this.onPointerMove);
     window.removeEventListener('pointerup', this.onPointerUp, true);

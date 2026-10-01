@@ -9,7 +9,7 @@ import { CombatSystem } from './CombatSystem.js?build=20260910a';
 import { BossBarrierSystem } from './BossBarrierSystem.js?build=20260902b';
 import { CharacterAbilitySystem } from './CharacterAbilitySystem.js?build=20260902b';
 import { EnemySystem } from './EnemySystem.js?build=20260910a';
-import { InputController } from './InputController.js?build=20260901d';
+import { InputController } from './InputController.js?build=20261001a';
 import { LootSystem } from './LootSystem.js?build=20260910b';
 import { RunState } from './RunState.js?build=20260828f';
 import { Spawner } from './Spawner.js?build=20260828i';
@@ -248,6 +248,7 @@ export class GameScene extends Phaser.Scene {
   async processChoiceQueue() {
     if (this.choiceOpen || this.ended || !this.choiceQueue.length) return;
     this.choiceOpen = true;
+    this.inputController.reset();
     this.physics.pause();
     this.time.paused = true;
     const item = this.choiceQueue.shift();
@@ -306,6 +307,7 @@ export class GameScene extends Phaser.Scene {
   async endRun(won) {
     if (this.ended) return;
     this.ended = true;
+    this.inputController.reset();
     this.physics.pause();
     this.enemyBullets.clear(true, true);
     const score = scoreForRun({ kills: this.state.kills, bosses: this.state.bosses, level: this.state.level, elapsed: this.state.elapsed, won }) + this.runScore;

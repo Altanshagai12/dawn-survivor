@@ -164,3 +164,16 @@ test('upgrade choices use icon tabs, a localized detail panel, and explicit conf
     globalThis.document = previousDocument;
   }
 });
+
+test('pause accepts a non-primary finger without a synthesized click and preserves keyboard activation', () => {
+  const ids = ['start-button', 'pause-button', 'resume-button', 'quit-button', 'again-button', 'menu-button'];
+  const el = Object.fromEntries(ids.map((id) => [id, { addEventListener() {} }]));
+  let pauses = 0;
+  UIController.prototype.bindButtons.call({ el, onPause: () => pauses++ });
+  el['pause-button'].onpointerdown({ pointerType: 'touch', isPrimary: false, preventDefault() {} });
+  assert.equal(pauses, 1);
+  el['pause-button'].onclick({ detail: 1 });
+  assert.equal(pauses, 1);
+  el['pause-button'].onclick({ detail: 0 });
+  assert.equal(pauses, 2);
+});

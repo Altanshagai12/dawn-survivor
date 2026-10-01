@@ -111,3 +111,5 @@
 - Summoned companions need semantic silhouettes and their own projectile, trail and impact presentation. Never reuse upgrade-card icons or inherit the equipped gun skin for ghost and dagger attacks; preserve their existing collision and damage values.
 - A capped loot pool must not redirect new kill XP into the first remote drop. Compact existing nearby loot to make room at the actual death position, conserve total XP, preserve in-flight attraction, and test saturated mobile/desktop pools plus real collection and level-ups.
 - When a boss feels weaker after a knockback-only change, compare authored stats, actual spawn HP and damage/status handling against the deployed baseline before changing balance. Keep attack-phase knockback resistance independent from HP, damage and other phases.
+
+- Fixed mobile sticks near physical screen edges invite system gestures, especially under CSS rotation. Anchor each stick at the initial touch in its logical gameplay half, preserve pointer ownership, and verify rotated iframe coordinates plus cancellation before release.

@@ -21,7 +21,7 @@ npm run check
 ## Controls
 
 - Desktop: WASD/arrow keys to move, hold left mouse to aim and shoot, `R` to reload.
-- Touch: left stick moves; right stick aims and fires.
+- Touch: touch anywhere on the left half to place the movement stick; touch the right half to place the aim/fire stick. Drag from that point, then lift to hide the stick. Both sticks work together and follow the game orientation.
 - Survive exactly 10:00, collect embers, choose upgrades, and defeat bosses.
 
 ## Usion contract
